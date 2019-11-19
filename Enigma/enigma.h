@@ -8,16 +8,19 @@ using namespace std;
 
 class Wheel {
     protected:
-        int* _wiring; //index i goes to value at index i
+        int* _wiring_in, *_wiring_out; //index i goes to value at index i
         int  _wires;
     public:
         Wheel();
         Wheel(int wires);
         int  get_wires();
-        int* get_wiring();
-        int get_wiring(int i);
+        int* get_wiring_in();
+        int* get_wiring_out();
+        int get_wiring_in(int i);
+        int get_wiring_out(int i);
         void randomize();
         void print();
+        int* make_inverse(int* in, int n);
         static Wheel make_random_wheel(int wires) {
             Wheel wheel=Wheel(wires);
             wheel.randomize();
@@ -32,9 +35,7 @@ class Reflector: public Wheel{
         void randomize();
         static Reflector make_random_reflector(int wires) {
             Reflector reflector=Reflector(wires);
-            cout<<"randomizing reflector\n";
             reflector.randomize();
-            cout<<"reflector randomized\n";
             return reflector;
         }
 };

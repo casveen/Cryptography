@@ -6,25 +6,50 @@ Wheel::Wheel() { }
 Wheel::Wheel(int wires) {
         _wires=wires;
         //allocate to wiring array
-        _wiring=(int*) malloc(_wires*sizeof*_wiring);
+        _wiring_in= (int*) malloc(_wires*sizeof*_wiring_in);
+        _wiring_out=(int*) malloc(_wires*sizeof*_wiring_out);
         //make a legal wiring, essentially a substitution cipher
         for(int j=0; j<_wires; j++) {
-            _wiring[j]=-1;
+            _wiring_in[j]=-1;
+            _wiring_out[j]=-1;
         }
     }
 int  Wheel::get_wires()      { return _wires; }
-int* Wheel::get_wiring()     { return _wiring; }
-int  Wheel::get_wiring(int i) { return _wiring[i]; }
+int* Wheel::get_wiring_in()     { return _wiring_in; }
+int  Wheel::get_wiring_in(int i) { return _wiring_in[i]; }
+int* Wheel::get_wiring_out()     { return _wiring_out; }
+int  Wheel::get_wiring_out(int i) { return _wiring_out[i]; }
 void Wheel::randomize() {
-    int set=0, at=0;
-    while (set<_wires) {
-        at=rand()%_wires;
-        if (_wiring[at]==-1) { _wiring[at]=set++; }
+    int p1, p2, t;
+    //init in as 012345...
+    for(int i=0; i<_wires; i++) { _wiring_in[i]=i; }
+    //mix wires randomly
+    for(int i=0; i<_wires*_wires; i++) {
+        p1=rand()%_wires;
+        p2=rand()%_wires;
+        if (p1!=p2) {
+            t=_wiring_in[p2];
+            _wiring_in[p2]=_wiring_in[p1];
+            _wiring_in[p1]=t;
+        }
+        else {
+            i--;
+        }
     }
+    //now that in is randomized, make out the inverse of in
+    _wiring_out=make_inverse(_wiring_in, _wires);
+}
+//assumes list contains all integers from 0 to n-1
+int* Wheel::make_inverse(int* in, int n) {
+    int* out=(int*) malloc(n*sizeof*out);
+    for(int i=0; i<n; i++) {
+        out[in[i]]=i;
+    }
+    return out;
 }
 void Wheel::print() {
     for (int wire=0; wire<_wires; wire++) {
-        printf("%2d: %2d\n", wire, _wiring[wire]);
+        printf("%2d: %2d\n", wire, _wiring_in[wire]);
         }
     return;
 }
@@ -32,7 +57,7 @@ Reflector::Reflector(): Wheel() {
     }
 Reflector::Reflector(int wires): Wheel(wires) {
         for(int j=0; j<wires; j++) {
-            _wiring[j]=j+1-2*(j%2);
+            _wiring_in[j]=j+1-2*(j%2);
         }
     }
 void Reflector::randomize() {
@@ -41,11 +66,11 @@ void Reflector::randomize() {
         w1=rand()%_wires;
         w2=rand()%_wires;
         //cross the wires if possible, otherwise try again
-        if (w1!=w2 && _wiring[w1]!=w2) {
-            v2       =_wiring[w2];
-            v1       =_wiring[w1];
-            _wiring[w2]=v1; _wiring[v2]=w1;
-            _wiring[w1]=v2; _wiring[v1]=w2;
+        if (w1!=w2 && _wiring_in[w1]!=w2) {
+            v2       =_wiring_in[w2];
+            v1       =_wiring_in[w1];
+            _wiring_in[w2]=v1; _wiring_in[v2]=w1;
+            _wiring_in[w1]=v2; _wiring_in[v1]=w2;
         }
         else {
             k-=1;
@@ -109,15 +134,15 @@ int  Cartridge::encrypt(int i) {
     //printf("%2d ", i);
     for (int wheel=0; wheel<_wheel_count; wheel++) {
         //printf("(%2d) ", (i+_positions[wheel])%_wires);
-        i=(_wheels[wheel].get_wiring((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
+        i=(_wheels[wheel].get_wiring_in((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
         //printf("-> %2d ", i);
     }
     //reflector
-    i=(_reflector->get_wiring((i+_reflector_position)%_wires)+_wires-_reflector_position)%_wires;
+    i=(_reflector->get_wiring_in((i+_reflector_position)%_wires)+_wires-_reflector_position)%_wires;
     //backward pass
     for (int wheel=_wheel_count-1; wheel>=0; wheel--) {
         //printf("(%2d) ", (i+_positions[wheel])%_wires);
-        i=(_wheels[wheel].get_wiring((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
+        i=(_wheels[wheel].get_wiring_out((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
         //printf("-> %2d ", i);
     }
     //printf("\n");
@@ -132,7 +157,7 @@ void   Cartridge::print() {
     for (int wire=0; wire<_wires; wire++) {
         printf("\n%2d: ", wire);
         for (int wheel=0; wheel<_wheel_count; wheel++) {
-            printf("%2d  ", _wheels[wheel].get_wiring(wire));
+            printf("%2d  ", _wheels[wheel].get_wiring_in(wire));
         }
     }
     printf("\n");

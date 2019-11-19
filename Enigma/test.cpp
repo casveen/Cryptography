@@ -3,18 +3,19 @@ using namespace std;
 
 
 
-const int MAX_TESTS=1;
+const int MAX_TESTS=100;
 const int MESSAGE_SIZE=1000;
 const int WIRES =100;
-const int WHEELS=100;
+const int WHEELS=10;
 
 
 //test if wires cross correctly
 bool test_wiring() {
     Wheel wheel=Wheel::make_random_wheel(WIRES);
-    //test if wires cross correctly
+    //test if wires cross correctly, in then out should return input.
+    //in and out should hit all numbers, which is covered by the above test
     for (int w=0; w<WIRES; w++) {
-        if (wheel.get_wiring(wheel.get_wiring(w))!=w or wheel.get_wiring(w)==w)
+        if (wheel.get_wiring_out(wheel.get_wiring_in(w))!=w)
             return false;
     }
     return true;
@@ -26,6 +27,7 @@ bool test_encryption_symmetry() {
     Enigma enigma=Enigma::make_random_enigma(WHEELS, WIRES);
     int m, c, r;
     for (int w=0; w<WIRES; w++) {
+        //cout<<w<<"\n";
         c=enigma.encrypt(w);
         enigma.reset();
         r=enigma.encrypt(c);
@@ -58,7 +60,7 @@ bool test_decryption() {
 
 int main() {
     //TEST WIRES
-    /*
+
     bool success=true;
     for (int t=0; t<MAX_TESTS; t++) {
         printf("\rTESTING WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);
@@ -70,12 +72,11 @@ int main() {
     }
     if (success)
         printf("\rWIRES WORK                      \n");
-    */
+
 
     //TEST CARTRIDGE
     success=true;
     for (int t=0; t<MAX_TESTS; t++) {
-        cout<<t<<"\n";
         printf("\rTESTING CARTRIDGE TOTAL WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);
         if (test_encryption_symmetry()==false) {
             printf("\nIMPROPER WIRING IN TOTAL CARTRIDGE\n");
