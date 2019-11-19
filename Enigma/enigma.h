@@ -7,10 +7,11 @@ using namespace std;
 #include <time.h>
 
 class Wheel {
-    private:
+    protected:
         int* _wiring; //index i goes to value at index i
         int  _wires;
     public:
+        Wheel();
         Wheel(int wires);
         int  get_wires();
         int* get_wiring();
@@ -24,21 +25,25 @@ class Wheel {
         }
 };
 
-class Wheel::Reflector;
+class Reflector: public Wheel{
     public:
         Reflector();
+        Reflector(int wires);
         void randomize();
         static Reflector make_random_reflector(int wires) {
             Reflector reflector=Reflector(wires);
+            cout<<"randomizing reflector\n";
             reflector.randomize();
+            cout<<"reflector randomized\n";
             return reflector;
         }
+};
 
 class Cartridge {
     private:
         Wheel*     _wheels;
         Reflector* _reflector;
-        int        _wheel_count, _wires; //wires?
+        int        _wheel_count, _wires, _reflector_position; //wires?
         int*       _positions;
 
     public:

@@ -2,13 +2,14 @@
 using namespace std;
 
 //WHEEL
+Wheel::Wheel() { }
 Wheel::Wheel(int wires) {
         _wires=wires;
         //allocate to wiring array
         _wiring=(int*) malloc(_wires*sizeof*_wiring);
         //make a legal wiring, essentially a substitution cipher
         for(int j=0; j<_wires; j++) {
-            _wiring[j]=(j+1)%wires;
+            _wiring[j]=-1;
         }
     }
 int  Wheel::get_wires()      { return _wires; }
@@ -18,7 +19,7 @@ void Wheel::randomize() {
     int set=0, at=0;
     while (set<_wires) {
         at=rand()%_wires;
-        if (_wiring[at]==-1) { wiring[at]=set++; }
+        if (_wiring[at]==-1) { _wiring[at]=set++; }
     }
 }
 void Wheel::print() {
@@ -27,12 +28,10 @@ void Wheel::print() {
         }
     return;
 }
-void Reflector::Reflector(int wires) {
-        _wires=wires;
-        //allocate to wiring array
-        _wiring=(int*) malloc(_wires*sizeof*_wiring);
-        //make a legal wiring, note that wires[wires[j]]=j
-        for(int j=0; j<_wires; j++) {
+Reflector::Reflector(): Wheel() {
+    }
+Reflector::Reflector(int wires): Wheel(wires) {
+        for(int j=0; j<wires; j++) {
             _wiring[j]=j+1-2*(j%2);
         }
     }
@@ -54,6 +53,8 @@ void Reflector::randomize() {
     }
 }
 
+
+
 //CARTRIDGE
 Cartridge::Cartridge() {} //XXX should really not be neccesary...
 Cartridge::Cartridge(int wheel_count, int wires) {
@@ -63,12 +64,15 @@ Cartridge::Cartridge(int wheel_count, int wires) {
     //init positions
     reset_positions();
     //make wheels
-    _wheels=make_random_wheels(wheel_count, wires);
+    _wheels   =make_random_wheels(wheel_count, wires);
+    _reflector=new Reflector();
+    *_reflector=Reflector::make_random_reflector(wires);
 }
 void Cartridge::reset_positions() {
     for (int p=0; p<_wheel_count; p++) {
         _positions[p]=0;
     }
+    _reflector_position=0;
 }
 void Cartridge::set_positions(int p) {
     reset_positions();
@@ -97,7 +101,9 @@ void Cartridge::turn(int t) {
         carry=(int) next/_wires;
     }
 }
-void Cartridge::turn() { turn(1); } //overloaded, single turn
+//overloaded, single turn
+void Cartridge::turn() { turn(1); }
+//pass integer through wires without turning
 int  Cartridge::encrypt(int i) {
     //forward pass + reflector(last)
     //printf("%2d ", i);
@@ -106,16 +112,19 @@ int  Cartridge::encrypt(int i) {
         i=(_wheels[wheel].get_wiring((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
         //printf("-> %2d ", i);
     }
+    //reflector
+    i=(_reflector->get_wiring((i+_reflector_position)%_wires)+_wires-_reflector_position)%_wires;
     //backward pass
-    for (int wheel=_wheel_count-2; wheel>=0; wheel--) {
+    for (int wheel=_wheel_count-1; wheel>=0; wheel--) {
         //printf("(%2d) ", (i+_positions[wheel])%_wires);
         i=(_wheels[wheel].get_wiring((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
         //printf("-> %2d ", i);
     }
     //printf("\n");
     return i;
-} //pass integer through wires without turning
-void Cartridge::print() {
+}
+//print the cartridge
+void   Cartridge::print() {
     printf("  ");
     for (int wheel=0; wheel<_wheel_count; wheel++) {
         printf("  W%d", wheel);
@@ -128,13 +137,14 @@ void Cartridge::print() {
     }
     printf("\n");
     return;
-}; //print the cartridge
-void Cartridge::print_positions() {
+};
+ //print positions of wheels in cartridge
+void   Cartridge::print_positions() {
     for (int p=0; p<_wheel_count; p++) {
         printf("%2d ", _positions[p]);
     }
-    printf("\n");} //print positions of wheels in cartridge
-void Cartridge::randomize() {
+    printf("\n");}
+void   Cartridge::randomize() {
     for (int w=0; w<_wheel_count; w++) {
         _wheels[w].randomize();
     }
@@ -146,6 +156,8 @@ Wheel* Cartridge::make_random_wheels(int n, int wires) {
     }
     return wheels;
 }
+
+
 
 //ENIGMA ENGINE
 Enigma::Enigma(int wheels_number, int wires) {

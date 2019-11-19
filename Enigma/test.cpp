@@ -3,7 +3,7 @@ using namespace std;
 
 
 
-const int MAX_TESTS=100;
+const int MAX_TESTS=1;
 const int MESSAGE_SIZE=1000;
 const int WIRES =100;
 const int WHEELS=100;
@@ -58,6 +58,7 @@ bool test_decryption() {
 
 int main() {
     //TEST WIRES
+    /*
     bool success=true;
     for (int t=0; t<MAX_TESTS; t++) {
         printf("\rTESTING WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);
@@ -69,11 +70,12 @@ int main() {
     }
     if (success)
         printf("\rWIRES WORK                      \n");
-
+    */
 
     //TEST CARTRIDGE
     success=true;
     for (int t=0; t<MAX_TESTS; t++) {
+        cout<<t<<"\n";
         printf("\rTESTING CARTRIDGE TOTAL WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);
         if (test_encryption_symmetry()==false) {
             printf("\nIMPROPER WIRING IN TOTAL CARTRIDGE\n");
