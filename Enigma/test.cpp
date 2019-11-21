@@ -10,30 +10,26 @@ const int WHEELS=3;
 
 //test if wires cross correctly
 bool test_wiring() {
-    Wheel *wheel=Wheel::make_random_wheel(WIRES);
+    Wheel wheel=Wheel(WIRES);
+    wheel.randomize();
     //test if wires cross correctly, in then out should return input.
     //in and out should hit all numbers, which is covered by the above test
     for (int w=0; w<WIRES; w++) {
-        if (wheel->get_wiring_out(wheel->get_wiring_in(w))!=w) {
-            delete wheel;
+        if (wheel.get_wiring_out(wheel.get_wiring_in(w))!=w) {
             return false;
         }
     }
-    delete wheel;
     return true;
 }
 
 //test if enigma encryption is symmetric,
 //ie encrypting a letter twice should give same letter
 bool test_encryption_symmetry() {
-    //Enigma enigma=Enigma::make_random_enigma(WHEELS, WIRES);
     Enigma enigma=Enigma(WHEELS, WIRES);
-    cout<<"made enigma"<<"\n";
     enigma.randomize();
     int m, c, r;
     for (int w=0; w<WIRES; w++) {
         cout<<"symmetry, testing wire "<<w<<"\n";
-        //cout<<w<<"\n";
         c=enigma.encrypt(w);
         enigma.reset();
         r=enigma.encrypt(c);
@@ -46,7 +42,7 @@ bool test_encryption_symmetry() {
 
 //test if encrypt(encrypt(m)) (with intermediate reset) returns m
 bool test_decryption() {
-    Enigma enigma=Enigma::make_random_enigma(WHEELS, WIRES);
+    Enigma enigma=Enigma(WHEELS, WIRES);
     //make random message
     int* m=(int*) malloc(MESSAGE_SIZE*sizeof*m);
     for (int i=0; i<MESSAGE_SIZE; i++) { m[i]=rand()%WIRES; }
@@ -66,6 +62,7 @@ bool test_decryption() {
 
 int main() {
     srand(time(NULL));
+
     //TEST WIRES
     //Wheel::count=0;
     bool success=true;
@@ -78,13 +75,13 @@ int main() {
         }
     }
     if (success)
-        printf("\rWIRES WORK                      \n");
+        printf("\rWIRES WORK                      \n\n\n");
 
 
     //TEST CARTRIDGE
     success=true;
     for (int t=0; t<MAX_TESTS; t++) {
-        printf("\rTESTING CARTRIDGE TOTAL WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);
+        printf("\rTESTING CARTRIDGE TOTAL WIRING (%3.0f %%)\n", ((t+1)/(float) MAX_TESTS)*100);
         if (test_encryption_symmetry()==false) {
             printf("\nIMPROPER WIRING IN TOTAL CARTRIDGE\n");
             success=false;
@@ -92,7 +89,7 @@ int main() {
         }
     }
     if (success)
-        printf("\rCARTRIDGE WORKS                        \n");
+        printf("\rCARTRIDGE WORKS                        \n\n\n");
 
 
     //TEST DECRYPTION
@@ -107,4 +104,5 @@ int main() {
     }
     if (success)
         printf("\rDECRYPTION WORKS                      \n");
+
 }

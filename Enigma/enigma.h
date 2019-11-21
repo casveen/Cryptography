@@ -12,10 +12,9 @@ class Wheel {
     protected:
         int* _wiring_in, *_wiring_out; //index i goes to value at index i
         int  _wires;
+        int  _num;
 
     public:
-        static int count;
-        int num;
         Wheel();
         Wheel(int wires);
         Wheel(Wheel const& copy);
@@ -25,17 +24,11 @@ class Wheel {
         int  get_wires();
         int* get_wiring_in();
         int* get_wiring_out();
-        int get_wiring_in(int i);
-        int get_wiring_out(int i);
+        int  get_wiring_in(int i);
+        int  get_wiring_out(int i);
         void randomize();
         void print();
         int* make_inverse(int* in, int n);
-        static Wheel* make_random_wheel(int wires) {
-            Wheel *wheel;
-            wheel=new Wheel(wires);
-            wheel->randomize();
-            return wheel;
-        }
 };
 
 class Reflector: public Wheel{
@@ -43,20 +36,14 @@ class Reflector: public Wheel{
         Reflector();
         Reflector(int wires);
         void randomize();
-        static Reflector make_random_reflector(int wires) {
-            Reflector *reflector;
-            reflector=new Reflector(wires);
-            reflector->randomize();
-            return *reflector;
-        }
 };
 
 class Cartridge {
     private:
-        Wheel*     _wheels;
-        Reflector* _reflector;
+        Wheel    **_wheels;
+        Reflector *_reflector;
         int        _wheel_count, _wires, _reflector_position; //wires?
-        int*       _positions;
+        int       *_positions;
 
     public:
         Cartridge(); //XXX stupitt
@@ -77,11 +64,6 @@ class Cartridge {
         void print_positions(); //print positions of the wheels
         void randomize();
         Wheel* make_random_wheels(int n, int wires); //make array of n random wheels
-        //FACTORY
-        static Cartridge make_random_cartridge(int wheels, int wires) {
-            return Cartridge(wheels, wires);
-        }
-
         //make cartridge from file, using standard coding A->0, B->1, ...english letters
         /*syntax
         rotors:NUMBER_OF_WHEELS(excl reflector) wires:NUMBER OF WIRES(here, 26)

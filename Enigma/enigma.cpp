@@ -1,24 +1,30 @@
 #include "enigma.h"
 using namespace std;
-
+static int cc=0;
 
 //WHEEL
-Wheel::Wheel() {  }
+Wheel::Wheel() {
+    _num=++cc;
+    cout<<"empty wheel "<<_num<<" made\n";
+}
 Wheel::Wheel(int wires):_wires{wires} {
-        num=count++;
+        _num=++cc;
+        cout<<"CONSTR: wheel "<<_num<<"\n";
         //allocate to wiring array
         _wiring_in= new int[_wires];
         _wiring_out=new int[_wires];
         //make a legal wiring, essentially a substitution cipher
+        cout<<"CONSTR: wheel "<<_num<<" making standard wiring\n";
         for(int j=0; j<_wires; j++) {
             _wiring_in[j]=j;
             _wiring_out[j]=j;
         }
+        cout<<"CONSTR: wheel "<<_num<<" made standard wiring\n";
     }
 Wheel::~Wheel() {
     delete _wiring_in;
     delete _wiring_out;
-    cout<<"wheel "<<num<<" cleaned up\n";
+    cout<<"->wheel "<<_num<<" cleaned up\n";
 }
 // Copy constructor, very important, assures there is no shallow copy
 Wheel::Wheel(Wheel const& copy) {
@@ -46,10 +52,10 @@ void Wheel::swap(Wheel& s) noexcept {
     swap(this->_wiring_out,s._wiring_out);
     swap(this->_wires ,s._wires);
 }
-int  Wheel::get_wires()      { return _wires; }
-int* Wheel::get_wiring_in()     { return _wiring_in; }
-int  Wheel::get_wiring_in(int i) { return _wiring_in[i]; }
-int* Wheel::get_wiring_out()     { return _wiring_out; }
+int  Wheel::get_wires()           { return _wires; }
+int* Wheel::get_wiring_in()       { return _wiring_in; }
+int  Wheel::get_wiring_in(int i)  { return _wiring_in[i]; }
+int* Wheel::get_wiring_out()      { return _wiring_out; }
 int  Wheel::get_wiring_out(int i) { return _wiring_out[i]; }
 void Wheel::randomize() {
     int p1, p2, t;
@@ -93,6 +99,7 @@ Reflector::Reflector(int wires): Wheel(wires) {
         }
     }
 void Reflector::randomize() {
+    cout<<"REFLECTOR: randomizing\n";
     int w1, w2, v1, v2;
     for(int k=0; k<_wires*_wires; k++) {
         w1=rand()%_wires;
@@ -118,23 +125,26 @@ Cartridge::Cartridge(int wheel_count, int wires): _wheel_count{wheel_count}, _wi
     _positions=new int[wheel_count];
     //init positions
     reset_positions();
-    //make wheels
-    _wheels   =new Wheel[wheel_count];
+    //make random wheels
+    _wheels   =new Wheel*[wheel_count];
     for(int w=0; w<wheel_count; w++) {
-        cout<<"CONSTR CARTRIDGE: making a wheel\n";
-        _wheels[w]=Wheel(wires);
-        cout<<"CONSTR CARTRIDGE: randomizing\n";
-        _wheels[w].randomize();
+        //cout<<"CONSTR CARTRIDGE: making a wheel\n";
+        _wheels[w]=new Wheel(wires);
+        //cout<<"CONSTR CARTRIDGE: randomizing\n";
+        _wheels[w]->randomize();
+        _wheels[w]->print();
     }
-    _reflector=new Reflector();
-    *_reflector=Reflector::make_random_reflector(wires);
+    _reflector=new Reflector(wires);
+    _reflector->randomize();
+    //_reflector->print();
+    //print();
 }
 Cartridge::Cartridge(Cartridge const& copy) {
     cout<<"CARTRIDGE:copy constructor\n";
     //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     _wires             =copy._wires;
     _wheel_count       =copy._wheel_count;
-    _wheels            =new Wheel[_wheel_count];
+    _wheels            =new Wheel*[_wheel_count];
     _reflector         =copy._reflector;
     _positions         =new int[_wheel_count];
     _reflector_position=copy._reflector_position;
@@ -153,7 +163,7 @@ Cartridge& Cartridge::operator=(Cartridge rhs) { // Pass by value (thus generati
     return *this;
 }
 void Cartridge::swap(Cartridge& s) noexcept {
-    cout<<"cartridge swapping\n";
+    cout<<"CARTRIDGE: swapping\n";
     using std::swap;
     swap(this->_wires, s._wires);
     swap(this->_wheel_count,s._wheel_count);
@@ -161,12 +171,15 @@ void Cartridge::swap(Cartridge& s) noexcept {
     swap(this->_reflector ,s._reflector);
     swap(this->_positions ,s._positions);
     swap(this->_reflector_position ,s._reflector_position);
-
 }
 Cartridge::~Cartridge() {
+    cout<<"-->cleaning cartridge\n";
+    for(int w=0; w<_wheel_count; w++) {
+        delete _wheels[w];
+    }
     delete [] _wheels;
     delete _reflector;
-    cout<<"cartridge cleared\n";
+    cout<<"-->cartridge cleaned up\n";
 }
 void Cartridge::reset_positions() {
     for (int p=0; p<_wheel_count; p++) {
@@ -209,7 +222,7 @@ int  Cartridge::encrypt(int i) {
     //printf("%2d ", i);
     for (int wheel=0; wheel<_wheel_count; wheel++) {
         //printf("(%2d) ", (i+_positions[wheel])%_wires);
-        i=(_wheels[wheel].get_wiring_in((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
+        i=(_wheels[wheel]->get_wiring_in((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
         //printf("-> %2d ", i);
     }
     //reflector
@@ -217,7 +230,7 @@ int  Cartridge::encrypt(int i) {
     //backward pass
     for (int wheel=_wheel_count-1; wheel>=0; wheel--) {
         //printf("(%2d) ", (i+_positions[wheel])%_wires);
-        i=(_wheels[wheel].get_wiring_out((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
+        i=(_wheels[wheel]->get_wiring_out((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
         //printf("-> %2d ", i);
     }
     //printf("\n");
@@ -232,7 +245,7 @@ void   Cartridge::print() {
     for (int wire=0; wire<_wires; wire++) {
         printf("\n%2d: ", wire);
         for (int wheel=0; wheel<_wheel_count; wheel++) {
-            printf("%2d  ", _wheels[wheel].get_wiring_in(wire));
+            printf("%2d  ", _wheels[wheel]->get_wiring_in(wire));
         }
     }
     printf("\n");
@@ -246,11 +259,11 @@ void   Cartridge::print_positions() {
     printf("\n");}
 void   Cartridge::randomize() {
     for (int w=0; w<_wheel_count; w++) {
-        _wheels[w].randomize();
+        _wheels[w]->randomize();
     }
 }
 //XXX cut
-Wheel* Cartridge::make_random_wheels(int n, int wires) {
+/*Wheel* Cartridge::make_random_wheels(int n, int wires) {
     cout<<"cartridge is making random wheels\n";
     Wheel* wheels=new Wheel[n];
     for(int w=0; w<n; w++) {
@@ -261,22 +274,20 @@ Wheel* Cartridge::make_random_wheels(int n, int wires) {
     }
     //cout<<"cartridge made some random wheels\n";
     return wheels;
-}
+}*/
 
 
 
 //ENIGMA ENGINE
-Enigma::Enigma(int wheels_number, int wires) {
-
-    _cartridge=new Cartridge();
-    cout<<"ENIGMA:const cartridge\n";
-    *_cartridge=Cartridge(wheels_number, wires);
-    cout<<"ENIGMA:set cartridge\n";
-    _wires=wires;
-    _wheels_number=wheels_number;
+Enigma::Enigma(int wheels_number, int wires): _wheels_number{wheels_number}, _wires{wires} {
+    cout<<"--->ENIGMA:make cartridge\n";
+    _cartridge=new Cartridge(wheels_number, wires);
+    cout<<"--->ENIGMA:cartridge made\n";
 }
 Enigma::~Enigma() {
-    //delete _cartridge;
+    cout<<"--->cleaning enigma\n";
+    delete _cartridge;
+    cout<<"--->enigma cleaned up\n";
 }
 void Enigma::randomize() {
     _cartridge->randomize();
