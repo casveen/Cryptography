@@ -5,6 +5,8 @@ using namespace std;
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <stdio.h>
 
 class Wheel {
     protected:
@@ -13,6 +15,7 @@ class Wheel {
     public:
         Wheel();
         Wheel(int wires);
+        ~Wheel();
         int  get_wires();
         int* get_wiring_in();
         int* get_wiring_out();
@@ -22,9 +25,10 @@ class Wheel {
         void print();
         int* make_inverse(int* in, int n);
         static Wheel make_random_wheel(int wires) {
-            Wheel wheel=Wheel(wires);
-            wheel.randomize();
-            return wheel;
+            Wheel *wheel;
+            wheel=new Wheel(wires);
+            wheel->randomize();
+            return *wheel;
         }
 };
 
@@ -34,9 +38,10 @@ class Reflector: public Wheel{
         Reflector(int wires);
         void randomize();
         static Reflector make_random_reflector(int wires) {
-            Reflector reflector=Reflector(wires);
-            reflector.randomize();
-            return reflector;
+            Reflector *reflector;
+            reflector=new Reflector(wires);
+            reflector->randomize();
+            return *reflector;
         }
 };
 
@@ -50,6 +55,7 @@ class Cartridge {
     public:
         Cartridge(); //XXX stupitt
         Cartridge(int wheel_count, int wires); //CONSTRUCTOR, random wheels
+        ~Cartridge();
         void reset_positions();
         void set_positions(int p);
         void set_positions(int* p);
@@ -67,6 +73,42 @@ class Cartridge {
             Cartridge cartridge=Cartridge(wheels, wires);
             return cartridge;
         }
+
+        //make cartridge from file, using standard coding A->0, B->1, ...english letters
+        /*syntax
+        rotors:NUMBER_OF_WHEELS(excl reflector) wires:NUMBER OF WIRES(here, 26)
+        ABCDEFGHIJKLMNOPQRSTUVWXYZ   //first wheel, pass-through in this case
+        BADCFEHGJILKNMPORQTSVUXWZY   //second wheel,
+        ...
+        --.--                        //last wheel, must be a reflector, ie symmetric
+        */
+        static Cartridge from_file(char* filename) {
+            Cartridge out;
+            ssize_t    read;
+            int wheels_number, wires;
+            char * line=NULL;
+            size_t len=0;
+            FILE*  file = fopen(filename, "r");
+            if (file==NULL) {
+                printf("ERROR: Opening file %s failed", filename);
+                return out;
+            }
+            //read first line to get number of wheels and wires
+            read = getline(&line, &len, file);
+            sscanf(line, "rotors:%d wires:%d", &wheels_number, &wires);
+            Wheel* wheels=(Wheel*) malloc(wheels_number*sizeof*wheels);
+            //read in the rotors
+            int* wiring=(int*) malloc(wires*sizeof*wiring);
+            while ((read = getline(&line, &len, file)) != -1) {
+                Wheel wheel=Wheel(wires);
+                for (int i=0; i<len; i++) {
+                    wheel.get_wiring_in()[i]=(int) line[i]-(int) 'A';
+                    wheel.get_wiring_out()[(int) line[i]-(int) 'A']=i;
+                }
+                wheel.print();
+            }
+            return out;
+        }
 };
 
 class Enigma {
@@ -76,6 +118,7 @@ class Enigma {
 
     public:
         Enigma(int wheels_number, int wires);
+        ~Enigma();
         void set_coder();
         void reset();
         void randomize();
@@ -85,9 +128,13 @@ class Enigma {
         void print();
         //FACTORY
         static Enigma make_random_enigma(int wheels, int wires) {
-            Enigma enigma=Enigma(wheels, wires);
-            enigma.randomize();
-            return enigma;
+            cout<<"init enigma\n";
+            Enigma *enigma;
+            enigma=new Enigma(wheels, wires);
+            cout<<"randomize enigma\n";
+            enigma->randomize();
+            cout<<"return enigma\n";
+            return *enigma;
         }
 };
 

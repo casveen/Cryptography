@@ -3,11 +3,10 @@ using namespace std;
 
 
 
-const int MAX_TESTS=100;
-const int MESSAGE_SIZE=1000;
-const int WIRES =100;
-const int WHEELS=10;
-
+const int MAX_TESTS=3;
+const int MESSAGE_SIZE=10;
+const int WIRES =8;
+const int WHEELS=3;
 
 //test if wires cross correctly
 bool test_wiring() {
@@ -24,14 +23,17 @@ bool test_wiring() {
 //test if enigma encryption is symmetric,
 //ie encrypting a letter twice should give same letter
 bool test_encryption_symmetry() {
-    Enigma enigma=Enigma::make_random_enigma(WHEELS, WIRES);
+    //Enigma enigma=Enigma::make_random_enigma(WHEELS, WIRES);
+    Enigma *enigma=new Enigma(WHEELS, WIRES);
+    enigma->randomize();
     int m, c, r;
     for (int w=0; w<WIRES; w++) {
+        cout<<"symmetry, testing wire "<<w<<"\n";
         //cout<<w<<"\n";
-        c=enigma.encrypt(w);
-        enigma.reset();
-        r=enigma.encrypt(c);
-        enigma.reset();
+        c=enigma->encrypt(w);
+        enigma->reset();
+        r=enigma->encrypt(c);
+        enigma->reset();
         if (r!=w or c==w)
             return false;
     }
@@ -59,6 +61,7 @@ bool test_decryption() {
 
 
 int main() {
+    srand(time(NULL));
     //TEST WIRES
 
     bool success=true;

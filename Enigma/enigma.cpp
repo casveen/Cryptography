@@ -3,17 +3,21 @@ using namespace std;
 
 //WHEEL
 Wheel::Wheel() { }
-Wheel::Wheel(int wires) {
-        _wires=wires;
+Wheel::Wheel(int wires):_wires{wires} {
         //allocate to wiring array
         _wiring_in= (int*) malloc(_wires*sizeof*_wiring_in);
         _wiring_out=(int*) malloc(_wires*sizeof*_wiring_out);
         //make a legal wiring, essentially a substitution cipher
         for(int j=0; j<_wires; j++) {
-            _wiring_in[j]=-1;
-            _wiring_out[j]=-1;
+            _wiring_in[j]=j;
+            _wiring_out[j]=j;
         }
     }
+Wheel::~Wheel() {
+    free(_wiring_in);
+    free(_wiring_out);
+    cout<<"wheel cleaned up\n";
+}
 int  Wheel::get_wires()      { return _wires; }
 int* Wheel::get_wiring_in()     { return _wiring_in; }
 int  Wheel::get_wiring_in(int i) { return _wiring_in[i]; }
@@ -82,9 +86,7 @@ void Reflector::randomize() {
 
 //CARTRIDGE
 Cartridge::Cartridge() {} //XXX should really not be neccesary...
-Cartridge::Cartridge(int wheel_count, int wires) {
-    _wheel_count=wheel_count;
-    _wires=wires;
+Cartridge::Cartridge(int wheel_count, int wires): _wheel_count{wheel_count}, _wires{wires} {
     _positions=(int*) malloc(_wheel_count*sizeof*_positions);
     //init positions
     reset_positions();
@@ -92,6 +94,12 @@ Cartridge::Cartridge(int wheel_count, int wires) {
     _wheels   =make_random_wheels(wheel_count, wires);
     _reflector=new Reflector();
     *_reflector=Reflector::make_random_reflector(wires);
+}
+Cartridge::~Cartridge() {
+    /*
+    free(_wheels);
+    delete _reflector;
+    */
 }
 void Cartridge::reset_positions() {
     for (int p=0; p<_wheel_count; p++) {
@@ -175,10 +183,12 @@ void   Cartridge::randomize() {
     }
 }
 Wheel* Cartridge::make_random_wheels(int n, int wires) {
-    Wheel* wheels=(Wheel*) malloc(n*sizeof(Wheel));
+    Wheel* wheels=new Wheel[n];
     for(int w=0; w<n; w++) {
+        cout<<"cartridge making some andom wheels\n";
         wheels[w]=Wheel::make_random_wheel(wires);
     }
+    cout<<"cartridge made some random wheels\n";
     return wheels;
 }
 
@@ -190,6 +200,9 @@ Enigma::Enigma(int wheels_number, int wires) {
     *_cartridge=Cartridge::make_random_cartridge(wheels_number, wires);
     _wires=wires;
     _wheels_number=wheels_number;
+}
+Enigma::~Enigma() {
+    //delete _cartridge;
 }
 void Enigma::randomize() {
     _cartridge->randomize();
