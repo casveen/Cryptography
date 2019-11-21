@@ -10,13 +10,16 @@ const int WHEELS=3;
 
 //test if wires cross correctly
 bool test_wiring() {
-    Wheel wheel=Wheel::make_random_wheel(WIRES);
+    Wheel *wheel=Wheel::make_random_wheel(WIRES);
     //test if wires cross correctly, in then out should return input.
     //in and out should hit all numbers, which is covered by the above test
     for (int w=0; w<WIRES; w++) {
-        if (wheel.get_wiring_out(wheel.get_wiring_in(w))!=w)
+        if (wheel->get_wiring_out(wheel->get_wiring_in(w))!=w) {
+            delete wheel;
             return false;
+        }
     }
+    delete wheel;
     return true;
 }
 
@@ -24,16 +27,17 @@ bool test_wiring() {
 //ie encrypting a letter twice should give same letter
 bool test_encryption_symmetry() {
     //Enigma enigma=Enigma::make_random_enigma(WHEELS, WIRES);
-    Enigma *enigma=new Enigma(WHEELS, WIRES);
-    enigma->randomize();
+    Enigma enigma=Enigma(WHEELS, WIRES);
+    cout<<"made enigma"<<"\n";
+    enigma.randomize();
     int m, c, r;
     for (int w=0; w<WIRES; w++) {
         cout<<"symmetry, testing wire "<<w<<"\n";
         //cout<<w<<"\n";
-        c=enigma->encrypt(w);
-        enigma->reset();
-        r=enigma->encrypt(c);
-        enigma->reset();
+        c=enigma.encrypt(w);
+        enigma.reset();
+        r=enigma.encrypt(c);
+        enigma.reset();
         if (r!=w or c==w)
             return false;
     }
@@ -63,7 +67,7 @@ bool test_decryption() {
 int main() {
     srand(time(NULL));
     //TEST WIRES
-
+    //Wheel::count=0;
     bool success=true;
     for (int t=0; t<MAX_TESTS; t++) {
         printf("\rTESTING WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);

@@ -12,7 +12,10 @@ class Wheel {
     protected:
         int* _wiring_in, *_wiring_out; //index i goes to value at index i
         int  _wires;
+
     public:
+        static int count;
+        int num;
         Wheel();
         Wheel(int wires);
         Wheel(Wheel const& copy);
@@ -27,11 +30,11 @@ class Wheel {
         void randomize();
         void print();
         int* make_inverse(int* in, int n);
-        static Wheel make_random_wheel(int wires) {
+        static Wheel* make_random_wheel(int wires) {
             Wheel *wheel;
             wheel=new Wheel(wires);
             wheel->randomize();
-            return *wheel;
+            return wheel;
         }
 };
 
@@ -58,6 +61,9 @@ class Cartridge {
     public:
         Cartridge(); //XXX stupitt
         Cartridge(int wheel_count, int wires); //CONSTRUCTOR, random wheels
+        Cartridge(Cartridge const& copy);
+        Cartridge& operator=(Cartridge rhs);
+        void swap(Cartridge& s) noexcept;
         ~Cartridge();
         void reset_positions();
         void set_positions(int p);
@@ -73,8 +79,7 @@ class Cartridge {
         Wheel* make_random_wheels(int n, int wires); //make array of n random wheels
         //FACTORY
         static Cartridge make_random_cartridge(int wheels, int wires) {
-            Cartridge cartridge=Cartridge(wheels, wires);
-            return cartridge;
+            return Cartridge(wheels, wires);
         }
 
         //make cartridge from file, using standard coding A->0, B->1, ...english letters

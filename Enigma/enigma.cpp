@@ -1,12 +1,14 @@
 #include "enigma.h"
 using namespace std;
 
+
 //WHEEL
-Wheel::Wheel() { }
+Wheel::Wheel() {  }
 Wheel::Wheel(int wires):_wires{wires} {
+        num=count++;
         //allocate to wiring array
-        _wiring_in= (int*) malloc(_wires*sizeof*_wiring_in);
-        _wiring_out=(int*) malloc(_wires*sizeof*_wiring_out);
+        _wiring_in= new int[_wires];
+        _wiring_out=new int[_wires];
         //make a legal wiring, essentially a substitution cipher
         for(int j=0; j<_wires; j++) {
             _wiring_in[j]=j;
@@ -14,13 +16,13 @@ Wheel::Wheel(int wires):_wires{wires} {
         }
     }
 Wheel::~Wheel() {
-    free(_wiring_in);
-    free(_wiring_out);
-    cout<<"wheel cleaned up\n";
+    delete _wiring_in;
+    delete _wiring_out;
+    cout<<"wheel "<<num<<" cleaned up\n";
 }
 // Copy constructor, very important, assures there is no shallow copy
 Wheel::Wheel(Wheel const& copy) {
-    cout<<"in copy constructor\n";
+    cout<<"WHEEL: copy constructor\n";
     //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     _wires     =copy._wires;
     _wiring_in =new int[_wires];
@@ -32,6 +34,7 @@ Wheel::Wheel(Wheel const& copy) {
     std::copy(&copy._wiring_out[0],&copy._wiring_out[_wires],_wiring_out);
 }
 Wheel& Wheel::operator=(Wheel rhs) { // Pass by value (thus generating a copy)
+    cout<<"WHEEL: copy assignment\n";
     rhs.swap(*this); // Now swap data with the copy.
                      // The rhs parameter will delete the array when it
                      // goes out of scope at the end of the function
@@ -118,21 +121,52 @@ Cartridge::Cartridge(int wheel_count, int wires): _wheel_count{wheel_count}, _wi
     //make wheels
     _wheels   =new Wheel[wheel_count];
     for(int w=0; w<wheel_count; w++) {
-        cout<<"->cartridge making some random wheels\n";
+        cout<<"CONSTR CARTRIDGE: making a wheel\n";
         _wheels[w]=Wheel(wires);
+        cout<<"CONSTR CARTRIDGE: randomizing\n";
         _wheels[w].randomize();
-        //wheels[w]=Wheel::make_random_wheel(wires);
     }
-
-    //_wheels   =make_random_wheels(wheel_count, wires);
     _reflector=new Reflector();
     *_reflector=Reflector::make_random_reflector(wires);
 }
+Cartridge::Cartridge(Cartridge const& copy) {
+    cout<<"CARTRIDGE:copy constructor\n";
+    //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
+    _wires             =copy._wires;
+    _wheel_count       =copy._wheel_count;
+    _wheels            =new Wheel[_wheel_count];
+    _reflector         =copy._reflector;
+    _positions         =new int[_wheel_count];
+    _reflector_position=copy._reflector_position;
+    // Don't need to worry about copying integers.
+    // But if the object has a copy constructor then
+    // it would also need to worry about throws from the copy constructor.
+    _wheels=copy._wheels; //wheels know how to copy, so we good
+    //XXX copy wheels
+    std::copy(&copy._positions[0], &copy._positions[_wires], _positions);
+}
+Cartridge& Cartridge::operator=(Cartridge rhs) { // Pass by value (thus generating a copy)
+    cout<<"CARTRIDGE:copy assignment\n";
+    rhs.swap(*this); // Now swap data with the copy.
+                     // The rhs parameter will delete the array when it
+                     // goes out of scope at the end of the function
+    return *this;
+}
+void Cartridge::swap(Cartridge& s) noexcept {
+    cout<<"cartridge swapping\n";
+    using std::swap;
+    swap(this->_wires, s._wires);
+    swap(this->_wheel_count,s._wheel_count);
+    swap(this->_wheels ,s._wheels);
+    swap(this->_reflector ,s._reflector);
+    swap(this->_positions ,s._positions);
+    swap(this->_reflector_position ,s._reflector_position);
+
+}
 Cartridge::~Cartridge() {
-    /*
-    free(_wheels);
+    delete [] _wheels;
     delete _reflector;
-    */
+    cout<<"cartridge cleared\n";
 }
 void Cartridge::reset_positions() {
     for (int p=0; p<_wheel_count; p++) {
@@ -217,14 +251,15 @@ void   Cartridge::randomize() {
 }
 //XXX cut
 Wheel* Cartridge::make_random_wheels(int n, int wires) {
+    cout<<"cartridge is making random wheels\n";
     Wheel* wheels=new Wheel[n];
     for(int w=0; w<n; w++) {
-        cout<<"->cartridge making some random wheels\n";
-        wheels[w]=Wheel(wires);
-        wheels[w].randomize();
-        //wheels[w]=Wheel::make_random_wheel(wires);
+        //cout<<"->cartridge making some random wheels\n";
+        //wheels[w]=Wheel(wires);
+        //wheels[w].randomize();
+        wheels[w]=*(Wheel::make_random_wheel(wires));
     }
-    cout<<"cartridge made some random wheels\n";
+    //cout<<"cartridge made some random wheels\n";
     return wheels;
 }
 
@@ -232,8 +267,11 @@ Wheel* Cartridge::make_random_wheels(int n, int wires) {
 
 //ENIGMA ENGINE
 Enigma::Enigma(int wheels_number, int wires) {
+
     _cartridge=new Cartridge();
-    *_cartridge=Cartridge::make_random_cartridge(wheels_number, wires);
+    cout<<"ENIGMA:const cartridge\n";
+    *_cartridge=Cartridge(wheels_number, wires);
+    cout<<"ENIGMA:set cartridge\n";
     _wires=wires;
     _wheels_number=wheels_number;
 }
