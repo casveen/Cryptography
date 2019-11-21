@@ -15,6 +15,9 @@ class Wheel {
     public:
         Wheel();
         Wheel(int wires);
+        Wheel(Wheel const& copy);
+        Wheel& operator=(Wheel rhs);
+        void swap(Wheel& s) noexcept;
         ~Wheel();
         int  get_wires();
         int* get_wiring_in();

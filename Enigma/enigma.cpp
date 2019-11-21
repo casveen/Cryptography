@@ -18,6 +18,31 @@ Wheel::~Wheel() {
     free(_wiring_out);
     cout<<"wheel cleaned up\n";
 }
+// Copy constructor, very important, assures there is no shallow copy
+Wheel::Wheel(Wheel const& copy) {
+    cout<<"in copy constructor\n";
+    //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
+    _wires     =copy._wires;
+    _wiring_in =new int[_wires];
+    _wiring_out=new int[_wires];
+    // Don't need to worry about copying integers.
+    // But if the object has a copy constructor then
+    // it would also need to worry about throws from the copy constructor.
+    std::copy(&copy._wiring_in[0], &copy._wiring_in[_wires], _wiring_in);
+    std::copy(&copy._wiring_out[0],&copy._wiring_out[_wires],_wiring_out);
+}
+Wheel& Wheel::operator=(Wheel rhs) { // Pass by value (thus generating a copy)
+    rhs.swap(*this); // Now swap data with the copy.
+                     // The rhs parameter will delete the array when it
+                     // goes out of scope at the end of the function
+    return *this;
+}
+void Wheel::swap(Wheel& s) noexcept {
+    using std::swap;
+    swap(this->_wiring_in, s._wiring_in);
+    swap(this->_wiring_out,s._wiring_out);
+    swap(this->_wires ,s._wires);
+}
 int  Wheel::get_wires()      { return _wires; }
 int* Wheel::get_wiring_in()     { return _wiring_in; }
 int  Wheel::get_wiring_in(int i) { return _wiring_in[i]; }
@@ -87,11 +112,19 @@ void Reflector::randomize() {
 //CARTRIDGE
 Cartridge::Cartridge() {} //XXX should really not be neccesary...
 Cartridge::Cartridge(int wheel_count, int wires): _wheel_count{wheel_count}, _wires{wires} {
-    _positions=(int*) malloc(_wheel_count*sizeof*_positions);
+    _positions=new int[wheel_count];
     //init positions
     reset_positions();
     //make wheels
-    _wheels   =make_random_wheels(wheel_count, wires);
+    _wheels   =new Wheel[wheel_count];
+    for(int w=0; w<wheel_count; w++) {
+        cout<<"->cartridge making some random wheels\n";
+        _wheels[w]=Wheel(wires);
+        _wheels[w].randomize();
+        //wheels[w]=Wheel::make_random_wheel(wires);
+    }
+
+    //_wheels   =make_random_wheels(wheel_count, wires);
     _reflector=new Reflector();
     *_reflector=Reflector::make_random_reflector(wires);
 }
@@ -182,11 +215,14 @@ void   Cartridge::randomize() {
         _wheels[w].randomize();
     }
 }
+//XXX cut
 Wheel* Cartridge::make_random_wheels(int n, int wires) {
     Wheel* wheels=new Wheel[n];
     for(int w=0; w<n; w++) {
-        cout<<"cartridge making some andom wheels\n";
-        wheels[w]=Wheel::make_random_wheel(wires);
+        cout<<"->cartridge making some random wheels\n";
+        wheels[w]=Wheel(wires);
+        wheels[w].randomize();
+        //wheels[w]=Wheel::make_random_wheel(wires);
     }
     cout<<"cartridge made some random wheels\n";
     return wheels;
