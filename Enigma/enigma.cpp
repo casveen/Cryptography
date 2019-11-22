@@ -4,11 +4,10 @@ static int cc=0;
 
 
 //WHEEL
-Rotor::Rotor() {
-    _num=++cc;
-}
+Rotor::Rotor() { }
 Rotor::Rotor(int wires):_wires{wires} {
-        _num=++cc;
+        _notches=1;
+        _notch=new int[_notches]; _notch[0]=0; //corresponds to notch at A
         //allocate to wiring array
         _wiring_in= new int[_wires];
         _wiring_out=new int[_wires];
@@ -19,34 +18,46 @@ Rotor::Rotor(int wires):_wires{wires} {
         }
     }
 Rotor::Rotor(string in) {
+    _notches=1;
+    _notch=new int[_notches]; _notch[0]=0; //corresponds to notch at A
     _wires=in.length();
     //allocate to wiring array
     _wiring_in= new int[_wires];
     _wiring_out=new int[_wires];
     int wire;
     for(int i=0; i<_wires; i++)  {
-        //cout<<"("<<in[i]<<")---   "<<i<<"->"<<(int) in[i]-(int) 'A'<<"   ---\n";
         wire=(int) in[i]-(int) 'A';
         _wiring_in[i] =wire;
         _wiring_out[wire]=i;
     }
 }
+Rotor::Rotor(string in, string notch): Rotor(in) {
+    _notches=notch.length();
+    _notch=new int[_notches];
+    for(int i=0; i<_notches; i++)  {
+        _notch[i]=(int) notch[i]-(int) 'A';
+    }
+}
 Rotor::~Rotor() {
     delete _wiring_in;
     delete _wiring_out;
+    delete _notch;
     //cout<<"->rotor "<<_num<<" cleaned up\n";
 }
 Rotor::Rotor(Rotor const& copy) {
     // Copy constructor, very important, assures there is no shallow copy
     //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     _wires     =copy._wires;
+    _notches   =copy._notches;
     _wiring_in =new int[_wires];
     _wiring_out=new int[_wires];
+    _notch     =new int[_notches];
     // Don't need to worry about copying integers.
     // But if the object has a copy constructor then
     // it would also need to worry about throws from the copy constructor.
     std::copy(&copy._wiring_in[0], &copy._wiring_in[_wires], _wiring_in);
     std::copy(&copy._wiring_out[0],&copy._wiring_out[_wires],_wiring_out);
+    std::copy(&copy._notch[0],     &copy._notch[_notches],    _notch);
 }
 Rotor& Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
@@ -59,13 +70,17 @@ void Rotor::swap(Rotor& s) noexcept {
     using std::swap;
     swap(this->_wiring_in, s._wiring_in);
     swap(this->_wiring_out,s._wiring_out);
-    swap(this->_wires ,s._wires);
+    swap(this->_notches,   s._notches);
+    swap(this->_wires ,    s._wires);
+    swap(this->_notch ,    s._notch);
 }
 int  Rotor::get_wires()           { return _wires; }
 int* Rotor::get_wiring_in()       { return _wiring_in; }
 int  Rotor::get_wiring_in(int i)  { return _wiring_in[i]; }
 int* Rotor::get_wiring_out()      { return _wiring_out; }
 int  Rotor::get_wiring_out(int i) { return _wiring_out[i]; }
+int* Rotor::get_notch()           { return _notch; }
+int  Rotor::get_notches()         { return _notches; }
 void Rotor::randomize() {
     //cout<<"randomizing rotor\n";
     int p1, p2, t;
@@ -86,9 +101,9 @@ void Rotor::randomize() {
     }
     //now that in is randomized, make out the inverse of in
     _wiring_out=make_inverse(_wiring_in, _wires);
-}
-//assumes list contains all integers from 0 to n-1
+
 int* Rotor::make_inverse(int* in, int n) {
+    //assumes list contains all integers from 0 to n-1
     int* out=(int*) malloc(n*sizeof*out);
     for(int i=0; i<n; i++) {
         out[in[i]]=i;
@@ -224,6 +239,12 @@ void Cartridge::set_positions(int p) {
 void Cartridge::set_positions(int* p_in) {
     for (int p=0; p<_rotor_count; p++) {
         _positions[p]=p_in[p];
+    }
+}
+void Cartridge::set_positions(string in) {
+    //assumes string is all capital english letters
+    for (int p=0; p<_rotor_count; p++) {
+        _positions[p]=(int) in[p]-(int) 'A';
     }
 }
 int* Cartridge::get_positions() { return _positions; }

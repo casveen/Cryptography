@@ -16,14 +16,15 @@ class Plugboard: public Reflector {
 
 class Rotor {
     protected:
-        int* _wiring_in, *_wiring_out; //index i goes to value at index i
-        int  _wires;
-        int  _num;
+        int *_wiring_in, *_wiring_out, *_notch; //index i goes to value at index i
+        int _wires, _notches;
+        int _num;
 
     public:
         Rotor();
         Rotor(int wires);
         Rotor(string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
+        Rotor(string, string);
         Rotor(Rotor const& copy);
         Rotor& operator=(Rotor rhs);
         void swap(Rotor& s) noexcept;
@@ -33,6 +34,8 @@ class Rotor {
         int* get_wiring_out();
         int  get_wiring_in(int i);
         int  get_wiring_out(int i);
+        int* get_notch();
+        int  get_notches();
         void randomize();
         void print();
         int* make_inverse(int* in, int n);
@@ -66,6 +69,7 @@ class Cartridge {
         void reset_positions();
         void set_positions(int p);
         void set_positions(int* p);
+        void set_positions(string in);
         int* get_positions();
         int  get_positions_as_int();
         void turn(int t);
