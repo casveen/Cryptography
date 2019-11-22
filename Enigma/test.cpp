@@ -1,7 +1,34 @@
 #include "enigma.h"
 using namespace std;
-
-
+static Wheel IC=  Wheel("DMTWSILRUYQNKFEJCAZBPGXOHV");
+static Wheel IIC= Wheel("HQZGPJTMOBLNCIFDYAWVEUSRKX");
+static Wheel IIIC=Wheel("UQNTLSZFMREHDPXKIBVYGJCWOA");
+static Wheel IR=  Wheel("JGDQOXUSCAMIFRVTPNEWKBLZYH");
+static Wheel IIR= Wheel("NTZPSFBOKMWRCJDIVLAEYUXHGQ");
+static Wheel IIIR=Wheel("JVIUBHTCDYAKEQZPOSGXNRMWFL");
+static Wheel UKWR=Wheel("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
+static Wheel ETWR=Wheel("QWERTZUIOASDFGHJKPYXCVBNML");
+static Wheel IK=  Wheel("PEZUOHXSCVFMTBGLRINQJWAYDK");
+static Wheel IIK= Wheel("ZOUESYDKFWPCIQXHMVBLGNJRAT");
+static Wheel IIIK=Wheel("EHRVXGAOBQUSIMZFLYNWKTPDJC");
+static Wheel UKWK=Wheel("IMETCGFRAYSQBZXWLHKDVUPOJN"); //ref
+static Wheel ETWK=Wheel("QWERTZUIOASDFGHJKPYXCVBNML");
+static Wheel I=   Wheel("EKMFLGDQVZNTOWYHXUSPAIBRCJ");
+static Wheel II=  Wheel("AJDKSIRUXBLHWTMCQGZNPYFVOE");
+static Wheel III= Wheel("BDFHJLCPRTXVZNYEIWGAKMUSQO");
+static Wheel IV=  Wheel("ESOVPZJAYQUIRHXLNFTGKDCMWB");
+static Wheel V=   Wheel("VZBRGITYUPSDNHLXAWMJQOFECK");
+static Wheel VI=  Wheel("JPGVOUMFYQBENHZRDKASXLICTW");
+static Wheel VII= Wheel("NZJHGRCXMYSWBOUFAIVLPEKQDT");
+static Wheel VIII=Wheel("FKQHTLXOCBJSPDZRAMEWNIUYGV");
+static Wheel Beta=          Wheel("LEYJVCNIXWPBQMDRTAKZGFUHOS");
+static Wheel Gamma=         Wheel("FSOKANUERHMBTIYCWLQPZXVGJD");
+static Wheel ReflectorA=    Wheel("EJMZALYXVBWFCRQUONTSPIKHGD");
+static Wheel ReflectorB=    Wheel("YRUHQSLDPXNGOKMIEBFZCWVJAT");
+static Wheel ReflectorC=    Wheel("FVPJIAOYEDRZXWGCTKUQSBNMHL");
+static Wheel ThinReflectorB=Wheel("ENKQAUYWJICOPBLMDXZVFTHRGS");
+static Wheel ThinReflectorC=Wheel("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
+static Wheel ETW=           Wheel("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 const int MAX_TESTS=3;
 const int MESSAGE_SIZE=10;
@@ -29,7 +56,6 @@ bool test_encryption_symmetry() {
     enigma.randomize();
     int m, c, r;
     for (int w=0; w<WIRES; w++) {
-        cout<<"symmetry, testing wire "<<w<<"\n";
         c=enigma.encrypt(w);
         enigma.reset();
         r=enigma.encrypt(c);
@@ -52,7 +78,7 @@ bool test_decryption() {
     //r should be m
     for (int i=0; i<MESSAGE_SIZE; i++) {
         if (m[i]!=r[i]) {
-            printf("m[%2d]=%2d   =/=   %2d=encrypt(encrypt(m[%2d]))\n", i, m[i], r[i], i);
+            printf("m[%2d]=%2d   =/=   %2d=encrypt(encrypt(m[%2d]))", i, m[i], r[i], i);
             return false;
         }
     }
@@ -61,6 +87,9 @@ bool test_decryption() {
 
 
 int main() {
+    Cartridge::from_file("rotors.txt");
+
+
     srand(time(NULL));
 
     //TEST WIRES
@@ -75,13 +104,13 @@ int main() {
         }
     }
     if (success)
-        printf("\rWIRES WORK                      \n\n\n");
+        printf("\rWIRES WORK                      \n");
 
 
     //TEST CARTRIDGE
     success=true;
     for (int t=0; t<MAX_TESTS; t++) {
-        printf("\rTESTING CARTRIDGE TOTAL WIRING (%3.0f %%)\n", ((t+1)/(float) MAX_TESTS)*100);
+        printf("\rTESTING CARTRIDGE TOTAL WIRING (%3.0f %%)", ((t+1)/(float) MAX_TESTS)*100);
         if (test_encryption_symmetry()==false) {
             printf("\nIMPROPER WIRING IN TOTAL CARTRIDGE\n");
             success=false;
@@ -89,7 +118,7 @@ int main() {
         }
     }
     if (success)
-        printf("\rCARTRIDGE WORKS                        \n\n\n");
+        printf("\rCARTRIDGE WORKS                        \n");
 
 
     //TEST DECRYPTION
@@ -105,4 +134,7 @@ int main() {
     if (success)
         printf("\rDECRYPTION WORKS                      \n");
 
+
+        //print a known rotor
+        //IC.print();
 }

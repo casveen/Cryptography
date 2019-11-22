@@ -7,6 +7,12 @@ using namespace std;
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
+#include <fstream>
+/*
+class Plugboard: public Reflector {
+}*/
+
+
 
 class Wheel {
     protected:
@@ -17,6 +23,7 @@ class Wheel {
     public:
         Wheel();
         Wheel(int wires);
+        Wheel(string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
         Wheel(Wheel const& copy);
         Wheel& operator=(Wheel rhs);
         void swap(Wheel& s) noexcept;
@@ -29,6 +36,7 @@ class Wheel {
         void randomize();
         void print();
         int* make_inverse(int* in, int n);
+        bool is_valid();
 };
 
 class Reflector: public Wheel{
@@ -36,6 +44,7 @@ class Reflector: public Wheel{
         Reflector();
         Reflector(int wires);
         void randomize();
+        bool is_valid();
 };
 
 class Cartridge {
@@ -52,6 +61,8 @@ class Cartridge {
         Cartridge& operator=(Cartridge rhs);
         void swap(Cartridge& s) noexcept;
         ~Cartridge();
+        Wheel** get_wheels();
+        Reflector*  get_reflector();
         void reset_positions();
         void set_positions(int p);
         void set_positions(int* p);
@@ -72,31 +83,47 @@ class Cartridge {
         ...
         --.--                        //last wheel, must be a reflector, ie symmetric
         */
-        static Cartridge from_file(char* filename) {
-            Cartridge out;
+        static Cartridge* from_file(const char* filename) {
             ssize_t    read;
-            int wheels_number, wires;
-            char * line=NULL;
+            int wheels_number, wires, k=0, wire, i;
+            string line;
             size_t len=0;
-            FILE*  file = fopen(filename, "r");
-            if (file==NULL) {
+            ifstream file(filename);
+            if (!file) {
                 printf("ERROR: Opening file %s failed", filename);
-                return out;
+                return nullptr;
             }
             //read first line to get number of wheels and wires
-            read = getline(&line, &len, file);
-            sscanf(line, "rotors:%d wires:%d", &wheels_number, &wires);
-            Wheel* wheels=(Wheel*) malloc(wheels_number*sizeof*wheels);
+            getline(file, line);
+            sscanf(line.c_str(), "rotors:%d wires:%d", &wheels_number, &wires);
+
+            Cartridge *out=new Cartridge(wheels_number, wires);
+            Wheel **wheels=out->get_wheels();
+            Reflector *reflector=out->get_reflector();
             //read in the rotors
-            int* wiring=(int*) malloc(wires*sizeof*wiring);
-            while ((read = getline(&line, &len, file)) != -1) {
-                Wheel wheel=Wheel(wires);
-                for (int i=0; i<len; i++) {
-                    wheel.get_wiring_in()[i]=(int) line[i]-(int) 'A';
-                    wheel.get_wiring_out()[(int) line[i]-(int) 'A']=i;
+            while (file) {
+                getline(file, line);
+                i=0;
+                //cout<<line<<"\n";
+                //cout<<line.length()<<"\n";
+                if (k<wheels_number) { //a wheel
+                    //cout<<"a wheel, length="<<len<<"\n";
+                    for(int i=0; i<wires; i++)  {
+                        //cout<<"("<<line[i]<<")---   "<<i<<"->"<<(int) line[i]-(int) 'A'<<"   ---\n";
+                        wire=(int) line[i]-(int) 'A';
+                        wheels[k]->get_wiring_in()[i] =wire;
+                        wheels[k]->get_wiring_out()[wire]=i;
+                    }
+                    //wheels[k]->print();
                 }
-                wheel.print();
+                else { //a reflector
+                    for (int i=0; i<len; i++) {
+                        reflector->get_wiring_in()[i]=(int) line[i]-(int) 'A';
+                    }
+                }
+                k++;
             }
+            //out->print();
             return out;
         }
 };
@@ -118,12 +145,12 @@ class Enigma {
         void print();
         //FACTORY
         static Enigma make_random_enigma(int wheels, int wires) {
-            cout<<"init enigma\n";
+            //cout<<"init enigma\n";
             Enigma *enigma;
             enigma=new Enigma(wheels, wires);
-            cout<<"randomize enigma\n";
+            //cout<<"randomize enigma\n";
             enigma->randomize();
-            cout<<"return enigma\n";
+            //cout<<"return enigma\n";
             return *enigma;
         }
 };
