@@ -14,20 +14,20 @@ class Plugboard: public Reflector {
 
 
 
-class Wheel {
+class Rotor {
     protected:
         int* _wiring_in, *_wiring_out; //index i goes to value at index i
         int  _wires;
         int  _num;
 
     public:
-        Wheel();
-        Wheel(int wires);
-        Wheel(string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
-        Wheel(Wheel const& copy);
-        Wheel& operator=(Wheel rhs);
-        void swap(Wheel& s) noexcept;
-        ~Wheel();
+        Rotor();
+        Rotor(int wires);
+        Rotor(string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
+        Rotor(Rotor const& copy);
+        Rotor& operator=(Rotor rhs);
+        void swap(Rotor& s) noexcept;
+        ~Rotor();
         int  get_wires();
         int* get_wiring_in();
         int* get_wiring_out();
@@ -39,7 +39,7 @@ class Wheel {
         bool is_valid();
 };
 
-class Reflector: public Wheel{
+class Reflector: public Rotor{
     public:
         Reflector();
         Reflector(int wires);
@@ -49,19 +49,19 @@ class Reflector: public Wheel{
 
 class Cartridge {
     private:
-        Wheel    **_wheels;
+        Rotor    **_rotors;
         Reflector *_reflector;
-        int        _wheel_count, _wires, _reflector_position; //wires?
+        int        _rotor_count, _wires, _reflector_position; //wires?
         int       *_positions;
 
     public:
         Cartridge(); //XXX stupitt
-        Cartridge(int wheel_count, int wires); //CONSTRUCTOR, random wheels
+        Cartridge(int rotor_count, int wires); //CONSTRUCTOR, random rotors
         Cartridge(Cartridge const& copy);
         Cartridge& operator=(Cartridge rhs);
         void swap(Cartridge& s) noexcept;
         ~Cartridge();
-        Wheel** get_wheels();
+        Rotor** get_rotors();
         Reflector*  get_reflector();
         void reset_positions();
         void set_positions(int p);
@@ -72,20 +72,20 @@ class Cartridge {
         void turn(); //overloaded, single turn
         int encrypt(int i); //pass integer through wires without turning
         void print(); //PRINT cartridge
-        void print_positions(); //print positions of the wheels
+        void print_positions(); //print positions of the rotors
         void randomize();
-        Wheel* make_random_wheels(int n, int wires); //make array of n random wheels
+        Rotor* make_random_rotors(int n, int wires); //make array of n random rotors
         //make cartridge from file, using standard coding A->0, B->1, ...english letters
         /*syntax
         rotors:NUMBER_OF_WHEELS(excl reflector) wires:NUMBER OF WIRES(here, 26)
-        ABCDEFGHIJKLMNOPQRSTUVWXYZ   //first wheel, pass-through in this case
-        BADCFEHGJILKNMPORQTSVUXWZY   //second wheel,
+        ABCDEFGHIJKLMNOPQRSTUVWXYZ   //first rotor, pass-through in this case
+        BADCFEHGJILKNMPORQTSVUXWZY   //second rotor,
         ...
-        --.--                        //last wheel, must be a reflector, ie symmetric
+        --.--                        //last rotor, must be a reflector, ie symmetric
         */
         static Cartridge* from_file(const char* filename) {
             ssize_t    read;
-            int wheels_number, wires, k=0, wire, i;
+            int rotors_number, wires, k=0, wire, i;
             string line;
             size_t len=0;
             ifstream file(filename);
@@ -93,12 +93,12 @@ class Cartridge {
                 printf("ERROR: Opening file %s failed", filename);
                 return nullptr;
             }
-            //read first line to get number of wheels and wires
+            //read first line to get number of rotors and wires
             getline(file, line);
-            sscanf(line.c_str(), "rotors:%d wires:%d", &wheels_number, &wires);
+            sscanf(line.c_str(), "rotors:%d wires:%d", &rotors_number, &wires);
 
-            Cartridge *out=new Cartridge(wheels_number, wires);
-            Wheel **wheels=out->get_wheels();
+            Cartridge *out=new Cartridge(rotors_number, wires);
+            Rotor **rotors=out->get_rotors();
             Reflector *reflector=out->get_reflector();
             //read in the rotors
             while (file) {
@@ -106,15 +106,15 @@ class Cartridge {
                 i=0;
                 //cout<<line<<"\n";
                 //cout<<line.length()<<"\n";
-                if (k<wheels_number) { //a wheel
-                    //cout<<"a wheel, length="<<len<<"\n";
+                if (k<rotors_number) { //a rotor
+                    //cout<<"a rotor, length="<<len<<"\n";
                     for(int i=0; i<wires; i++)  {
                         //cout<<"("<<line[i]<<")---   "<<i<<"->"<<(int) line[i]-(int) 'A'<<"   ---\n";
                         wire=(int) line[i]-(int) 'A';
-                        wheels[k]->get_wiring_in()[i] =wire;
-                        wheels[k]->get_wiring_out()[wire]=i;
+                        rotors[k]->get_wiring_in()[i] =wire;
+                        rotors[k]->get_wiring_out()[wire]=i;
                     }
-                    //wheels[k]->print();
+                    //rotors[k]->print();
                 }
                 else { //a reflector
                     for (int i=0; i<len; i++) {
@@ -131,10 +131,10 @@ class Cartridge {
 class Enigma {
     private:
         Cartridge* _cartridge;
-        int _wheels_number, _wires;
+        int _rotors_number, _wires;
 
     public:
-        Enigma(int wheels_number, int wires);
+        Enigma(int rotors_number, int wires);
         ~Enigma();
         void set_coder();
         void reset();
@@ -144,10 +144,10 @@ class Enigma {
         void print_positions();
         void print();
         //FACTORY
-        static Enigma make_random_enigma(int wheels, int wires) {
+        static Enigma make_random_enigma(int rotors, int wires) {
             //cout<<"init enigma\n";
             Enigma *enigma;
-            enigma=new Enigma(wheels, wires);
+            enigma=new Enigma(rotors, wires);
             //cout<<"randomize enigma\n";
             enigma->randomize();
             //cout<<"return enigma\n";

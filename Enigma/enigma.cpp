@@ -4,10 +4,10 @@ static int cc=0;
 
 
 //WHEEL
-Wheel::Wheel() {
+Rotor::Rotor() {
     _num=++cc;
 }
-Wheel::Wheel(int wires):_wires{wires} {
+Rotor::Rotor(int wires):_wires{wires} {
         _num=++cc;
         //allocate to wiring array
         _wiring_in= new int[_wires];
@@ -18,7 +18,7 @@ Wheel::Wheel(int wires):_wires{wires} {
             _wiring_out[j]=j;
         }
     }
-Wheel::Wheel(string in) {
+Rotor::Rotor(string in) {
     _wires=in.length();
     //allocate to wiring array
     _wiring_in= new int[_wires];
@@ -31,12 +31,12 @@ Wheel::Wheel(string in) {
         _wiring_out[wire]=i;
     }
 }
-Wheel::~Wheel() {
+Rotor::~Rotor() {
     delete _wiring_in;
     delete _wiring_out;
-    //cout<<"->wheel "<<_num<<" cleaned up\n";
+    //cout<<"->rotor "<<_num<<" cleaned up\n";
 }
-Wheel::Wheel(Wheel const& copy) {
+Rotor::Rotor(Rotor const& copy) {
     // Copy constructor, very important, assures there is no shallow copy
     //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     _wires     =copy._wires;
@@ -48,26 +48,26 @@ Wheel::Wheel(Wheel const& copy) {
     std::copy(&copy._wiring_in[0], &copy._wiring_in[_wires], _wiring_in);
     std::copy(&copy._wiring_out[0],&copy._wiring_out[_wires],_wiring_out);
 }
-Wheel& Wheel::operator=(Wheel rhs) {
+Rotor& Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
     rhs.swap(*this); // Now swap data with the copy.
                      // The rhs parameter will delete the array when it
                      // goes out of scope at the end of the function
     return *this;
 }
-void Wheel::swap(Wheel& s) noexcept {
+void Rotor::swap(Rotor& s) noexcept {
     using std::swap;
     swap(this->_wiring_in, s._wiring_in);
     swap(this->_wiring_out,s._wiring_out);
     swap(this->_wires ,s._wires);
 }
-int  Wheel::get_wires()           { return _wires; }
-int* Wheel::get_wiring_in()       { return _wiring_in; }
-int  Wheel::get_wiring_in(int i)  { return _wiring_in[i]; }
-int* Wheel::get_wiring_out()      { return _wiring_out; }
-int  Wheel::get_wiring_out(int i) { return _wiring_out[i]; }
-void Wheel::randomize() {
-    //cout<<"randomizing wheel\n";
+int  Rotor::get_wires()           { return _wires; }
+int* Rotor::get_wiring_in()       { return _wiring_in; }
+int  Rotor::get_wiring_in(int i)  { return _wiring_in[i]; }
+int* Rotor::get_wiring_out()      { return _wiring_out; }
+int  Rotor::get_wiring_out(int i) { return _wiring_out[i]; }
+void Rotor::randomize() {
+    //cout<<"randomizing rotor\n";
     int p1, p2, t;
     //init in as 012345...
     for(int i=0; i<_wires; i++) { _wiring_in[i]=i; }
@@ -88,20 +88,20 @@ void Wheel::randomize() {
     _wiring_out=make_inverse(_wiring_in, _wires);
 }
 //assumes list contains all integers from 0 to n-1
-int* Wheel::make_inverse(int* in, int n) {
+int* Rotor::make_inverse(int* in, int n) {
     int* out=(int*) malloc(n*sizeof*out);
     for(int i=0; i<n; i++) {
         out[in[i]]=i;
     }
     return out;
 }
-void Wheel::print() {
+void Rotor::print() {
     for (int wire=0; wire<_wires; wire++) {
         printf("%2d: %2d\n", wire, _wiring_in[wire]);
         }
     return;
 }
-bool Wheel::is_valid() {
+bool Rotor::is_valid() {
     //is out the inverse? is the mapping surjective?(covered by w spanning all wires)
     for (int w=0; w<_wires; w++) {
         if (get_wiring_out(get_wiring_in(w))!=w) {
@@ -110,9 +110,9 @@ bool Wheel::is_valid() {
     }
     return true;
 }
-Reflector::Reflector(): Wheel() {
+Reflector::Reflector(): Rotor() {
     }
-Reflector::Reflector(int wires): Wheel(wires) {
+Reflector::Reflector(int wires): Rotor(wires) {
         for(int j=0; j<wires; j++) {
             _wiring_in[j]=j+1-2*(j%2);
         }
@@ -150,17 +150,17 @@ bool Reflector::is_valid() {
 
 //CARTRIDGE
 Cartridge::Cartridge() {} //XXX should really not be neccesary...
-Cartridge::Cartridge(int wheel_count, int wires): _wheel_count{wheel_count}, _wires{wires} {
-    _positions=new int[wheel_count];
+Cartridge::Cartridge(int rotor_count, int wires): _rotor_count{rotor_count}, _wires{wires} {
+    _positions=new int[rotor_count];
     //init positions
     reset_positions();
-    //make random wheels
-    _wheels   =new Wheel*[wheel_count];
-    for(int w=0; w<wheel_count; w++) {
-        //cout<<"CONSTR CARTRIDGE: making a wheel\n";
-        _wheels[w]=new Wheel(wires);
+    //make random rotors
+    _rotors   =new Rotor*[rotor_count];
+    for(int w=0; w<rotor_count; w++) {
+        //cout<<"CONSTR CARTRIDGE: making a rotor\n";
+        _rotors[w]=new Rotor(wires);
         //cout<<"CONSTR CARTRIDGE: randomizing\n";
-        _wheels[w]->randomize();
+        _rotors[w]->randomize();
     }
     _reflector=new Reflector(wires);
     _reflector->randomize();
@@ -170,15 +170,15 @@ Cartridge::Cartridge(int wheel_count, int wires): _wheel_count{wheel_count}, _wi
 Cartridge::Cartridge(Cartridge const& copy) {
     //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     _wires             =copy._wires;
-    _wheel_count       =copy._wheel_count;
-    _wheels            =new Wheel*[_wheel_count];
+    _rotor_count       =copy._rotor_count;
+    _rotors            =new Rotor*[_rotor_count];
     _reflector         =copy._reflector;
-    _positions         =new int[_wheel_count];
+    _positions         =new int[_rotor_count];
     _reflector_position=copy._reflector_position;
     // Don't need to worry about copying integers.
     // But if the object has a copy constructor then
     // it would also need to worry about throws from the copy constructor.
-    _wheels=copy._wheels; //wheels know how to copy, so we good
+    _rotors=copy._rotors; //rotors know how to copy, so we good
     std::copy(&copy._positions[0], &copy._positions[_wires], _positions);
 }
 Cartridge& Cartridge::operator=(Cartridge rhs) { // Pass by value (thus generating a copy)
@@ -190,29 +190,29 @@ Cartridge& Cartridge::operator=(Cartridge rhs) { // Pass by value (thus generati
 void Cartridge::swap(Cartridge& s) noexcept {
     using std::swap;
     swap(this->_wires, s._wires);
-    swap(this->_wheel_count,s._wheel_count);
-    swap(this->_wheels ,s._wheels);
+    swap(this->_rotor_count,s._rotor_count);
+    swap(this->_rotors ,s._rotors);
     swap(this->_reflector ,s._reflector);
     swap(this->_positions ,s._positions);
     swap(this->_reflector_position ,s._reflector_position);
 }
 Cartridge::~Cartridge() {
     //cout<<"-->cleaning cartridge\n";
-    for(int w=0; w<_wheel_count; w++) {
-        delete _wheels[w];
+    for(int w=0; w<_rotor_count; w++) {
+        delete _rotors[w];
     }
-    delete [] _wheels;
+    delete [] _rotors;
     delete _reflector;
     //cout<<"-->cartridge cleaned up\n";
 }
 void Cartridge::reset_positions() {
-    for (int p=0; p<_wheel_count; p++) {
+    for (int p=0; p<_rotor_count; p++) {
         _positions[p]=0;
     }
     _reflector_position=0;
 }
-Wheel** Cartridge::get_wheels() {
-    return _wheels;
+Rotor** Cartridge::get_rotors() {
+    return _rotors;
 }
 Reflector* Cartridge::get_reflector() {
     return _reflector;
@@ -222,7 +222,7 @@ void Cartridge::set_positions(int p) {
     turn(p);
 }
 void Cartridge::set_positions(int* p_in) {
-    for (int p=0; p<_wheel_count; p++) {
+    for (int p=0; p<_rotor_count; p++) {
         _positions[p]=p_in[p];
     }
 }
@@ -230,7 +230,7 @@ int* Cartridge::get_positions() { return _positions; }
 int  Cartridge::get_positions_as_int() {
     int turn=0;
     int mult=1;
-    for (int p=0; p<_wheel_count; p++) {
+    for (int p=0; p<_rotor_count; p++) {
         turn+=_positions[p]*mult;
         mult*=_wires;
     }
@@ -238,7 +238,7 @@ int  Cartridge::get_positions_as_int() {
 }
 void Cartridge::turn(int t) {
     int carry=t, next;
-    for (int p=0; p<_wheel_count && carry>0; p++) {
+    for (int p=0; p<_rotor_count && carry>0; p++) {
         next=_positions[p]+carry;
         _positions[p]=next%_wires;
         carry=(int) next/_wires;
@@ -250,17 +250,17 @@ void Cartridge::turn() { turn(1); }
 int  Cartridge::encrypt(int i) {
     //forward pass + reflector(last)
     //printf("%2d ", i);
-    for (int wheel=0; wheel<_wheel_count; wheel++) {
-        //printf("(%2d) ", (i+_positions[wheel])%_wires);
-        i=(_wheels[wheel]->get_wiring_in((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
+    for (int rotor=0; rotor<_rotor_count; rotor++) {
+        //printf("(%2d) ", (i+_positions[rotor])%_wires);
+        i=(_rotors[rotor]->get_wiring_in((i+_positions[rotor])%_wires)+_wires-_positions[rotor])%_wires;
         //printf("-> %2d ", i);
     }
     //reflector
     i=(_reflector->get_wiring_in((i+_reflector_position)%_wires)+_wires-_reflector_position)%_wires;
     //backward pass
-    for (int wheel=_wheel_count-1; wheel>=0; wheel--) {
-        //printf("(%2d) ", (i+_positions[wheel])%_wires);
-        i=(_wheels[wheel]->get_wiring_out((i+_positions[wheel])%_wires)+_wires-_positions[wheel])%_wires;
+    for (int rotor=_rotor_count-1; rotor>=0; rotor--) {
+        //printf("(%2d) ", (i+_positions[rotor])%_wires);
+        i=(_rotors[rotor]->get_wiring_out((i+_positions[rotor])%_wires)+_wires-_positions[rotor])%_wires;
         //printf("-> %2d ", i);
     }
     //printf("\n");
@@ -269,35 +269,35 @@ int  Cartridge::encrypt(int i) {
 //print the cartridge
 void   Cartridge::print() {
     printf("  ");
-    for (int wheel=0; wheel<_wheel_count; wheel++) {
-        printf("  W%d", wheel);
+    for (int rotor=0; rotor<_rotor_count; rotor++) {
+        printf("  W%d", rotor);
     }
     for (int wire=0; wire<_wires; wire++) {
         printf("\n%2d: ", wire);
-        for (int wheel=0; wheel<_wheel_count; wheel++) {
-            printf("%2d  ", _wheels[wheel]->get_wiring_in(wire));
+        for (int rotor=0; rotor<_rotor_count; rotor++) {
+            printf("%2d  ", _rotors[rotor]->get_wiring_in(wire));
         }
     }
     printf("\n");
     return;
 };
- //print positions of wheels in cartridge
+ //print positions of rotors in cartridge
 void   Cartridge::print_positions() {
-    for (int p=0; p<_wheel_count; p++) {
+    for (int p=0; p<_rotor_count; p++) {
         printf("%2d ", _positions[p]);
     }
     printf("\n");}
 void   Cartridge::randomize() {
-    for (int w=0; w<_wheel_count; w++) {
-        _wheels[w]->randomize();
+    for (int w=0; w<_rotor_count; w++) {
+        _rotors[w]->randomize();
     }
 }
 
 
 
 //ENIGMA ENGINE
-Enigma::Enigma(int wheels_number, int wires): _wheels_number{wheels_number}, _wires{wires} {
-    _cartridge=new Cartridge(wheels_number, wires);
+Enigma::Enigma(int rotors_number, int wires): _rotors_number{rotors_number}, _wires{wires} {
+    _cartridge=new Cartridge(rotors_number, wires);
 }
 Enigma::~Enigma() {
     //cout<<"--->cleaning enigma\n";
@@ -337,8 +337,8 @@ void Enigma::print() {
 /*
 int main() {
     srand(time(NULL));
-    //Wheel wheel=Wheel::make_random_wheel(20);
-    //wheel.print();
+    //Rotor rotor=Rotor::make_random_rotor(20);
+    //rotor.print();
     Cartridge cartridge=Cartridge::make_random_cartridge(3,8);
     //cartridge.print();
     //5test pos
@@ -354,4 +354,4 @@ int main() {
     return 0;
 }*/
 
-//wheel good, cart good, turn good, encrypt in cartridge good
+//rotor good, cart good, turn good, encrypt in cartridge good
