@@ -16,9 +16,10 @@ class Plugboard: public Reflector {
 
 class Rotor {
     protected:
-        int *_wiring_in, *_wiring_out, *_notch; //index i goes to value at index i
-        int _wires, _notches;
+        int *m_wiring_in, *m_wiring_out, *m_notch; //index i goes to value at index i
+        int m_wires, m_notches;
         int _num;
+        bool m_verbose;
 
     public:
         Rotor();
@@ -36,6 +37,7 @@ class Rotor {
         int  get_wiring_out(int i);
         int* get_notch();
         int  get_notches();
+        void set_verbose(int);
         void randomize();
         void print();
         int* make_inverse(int* in, int n);
@@ -52,10 +54,10 @@ class Reflector: public Rotor{
 
 class Cartridge {
     private:
-        Rotor    **_rotors;
-        Reflector *_reflector;
-        int        _rotor_count, _wires, _reflector_position; //wires?
-        int       *_positions;
+        Rotor    **m_rotors;
+        Reflector *m_reflector;
+        int        m_rotor_count, m_wires, m_reflector_position; //wires?
+        int       *m_positions;
 
     public:
         Cartridge(); //XXX stupitt
@@ -72,6 +74,7 @@ class Cartridge {
         void set_positions(string in);
         int* get_positions();
         int  get_positions_as_int();
+        string get_positions_as_string();
         void turn(int t);
         void turn(); //overloaded, single turn
         int encrypt(int i); //pass integer through wires without turning
@@ -134,8 +137,8 @@ class Cartridge {
 
 class Enigma {
     private:
-        Cartridge* _cartridge;
-        int _rotors_number, _wires;
+        Cartridge* m_cartridge;
+        int m_rotors_number, m_wires;
 
     public:
         Enigma(int rotors_number, int wires);
