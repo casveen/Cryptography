@@ -59,8 +59,9 @@ class Cartridge {
         Rotor    **m_rotors;
         Reflector *m_reflector;
         int        m_rotor_count, m_wires, m_reflector_position; //wires?
-        int       *m_positions;
+        int       *m_positions, *m_ring_setting; //ringscthellung, moves the notches in the wheels
         bool       m_verbose=true;
+        int       *m_notch_position;
 
     public:
         Cartridge(); //XXX stupitt
@@ -72,12 +73,18 @@ class Cartridge {
         Rotor** get_rotors();
         Reflector*  get_reflector();
         void reset_positions();
+        void reset_ring_setting();
         void set_positions(int p);
         void set_positions(int* p);
         void set_positions(string in);
         int* get_positions();
         int  get_positions_as_int();
         string get_positions_as_string();
+        void set_ring_setting(int* p);
+        void set_ring_setting(string in);
+        int* get_ring_setting();
+        //int  get_ring_setting_as_int();
+        string get_ring_setting_as_string();
         void set_verbose(int);
         void turn(int t);
         void turn(); //overloaded, single turn
@@ -142,13 +149,21 @@ class Enigma {
         Cartridge* m_cartridge;
         int m_rotors_number, m_wires;
         bool m_verbose=true;
+        int  *m_rotor_position, m_ring_setting;
 
     public:
         Enigma(int rotors_number, int wires);
         ~Enigma();
         void set_coder();
         void set_verbose(int);
+        void set_rotor_position(string);
+        void set_rotor_position(int*);
+        int* get_rotor_position();
+        string get_rotor_position_as_string();
         void set_ring_setting(string);
+        void set_ring_setting(int*);
+        int* get_ring_setting();
+        string get_ring_setting_as_string();
         //void indicator_procedure_early(string, string);
         //void indicator_procedure_WW2(string, string); //wehrmacht luftwaffe
         //void indicator_procedure_kriegsmarine(string, string);

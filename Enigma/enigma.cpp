@@ -188,8 +188,10 @@ bool Reflector::is_valid() {
 Cartridge::Cartridge() {} //XXX should really not be neccesary...
 Cartridge::Cartridge(int rotor_count, int wires): m_rotor_count{rotor_count}, m_wires{wires} {
     m_positions=new int[rotor_count];
+    m_ring_setting=new int[rotor_count];
     //init positions
     reset_positions();
+    reset_ring_setting();
     //make random rotors
     m_rotors   =new Rotor*[rotor_count];
     for(int w=0; w<rotor_count; w++) {
@@ -207,12 +209,14 @@ Cartridge::Cartridge(Cartridge const& copy) {
     m_rotors            =new Rotor*[m_rotor_count];
     m_reflector         =copy.m_reflector;
     m_positions         =new int[m_rotor_count];
+    m_ring_setting      =new int[m_rotor_count];
     m_reflector_position=copy.m_reflector_position;
     // Don't need to worry about copying integers.
     // But if the object has a copy constructor then
     // it would also need to worry about throws from the copy constructor.
     m_rotors=copy.m_rotors; //rotors know how to copy, so we good
-    std::copy(&copy.m_positions[0], &copy.m_positions[m_wires], m_positions);
+    std::copy(&copy.m_positions[0],    &copy.m_positions[m_wires],    m_positions);
+    std::copy(&copy.m_ring_setting[0], &copy.m_ring_setting[m_wires], m_ring_setting);
 }
 Cartridge& Cartridge::operator=(Cartridge rhs) { // Pass by value (thus generating a copy)
     rhs.swap(*this); // Now swap data with the copy.
@@ -227,6 +231,7 @@ void Cartridge::swap(Cartridge& s) noexcept {
     swap(this->m_rotors ,s.m_rotors);
     swap(this->m_reflector ,s.m_reflector);
     swap(this->m_positions ,s.m_positions);
+    swap(this->m_ring_setting ,s.m_ring_setting);
     swap(this->m_reflector_position ,s.m_reflector_position);
 }
 Cartridge::~Cartridge() {
@@ -235,12 +240,19 @@ Cartridge::~Cartridge() {
     }
     delete [] m_rotors;
     delete m_reflector;
+    delete m_positions;
+    delete m_ring_setting;
 }
 void Cartridge::reset_positions() {
     for (int p=0; p<m_rotor_count; p++) {
         m_positions[p]=0;
     }
     m_reflector_position=0;
+}
+void Cartridge::reset_ring_setting() {
+    for (int p=0; p<m_rotor_count; p++) {
+        m_ring_setting[p]=0;
+    }
 }
 Rotor** Cartridge::get_rotors() {
     return m_rotors;
@@ -278,6 +290,24 @@ string Cartridge::get_positions_as_string() {
     out="";
     for(int w=0; w<m_rotor_count; w++) {
         out+=(char)(m_positions[w]+(int) 'A');
+    }
+    return out;
+}
+void   Cartridge::set_ring_setting(int* p) {
+    m_ring_setting=p;
+}
+void   Cartridge::set_ring_setting(string in) {
+    for (int i=0; i<m_rotor_count; i++) {
+        m_ring_setting[i]=(int) (in[i])-(int) ('A');
+    }
+}
+int*   Cartridge::get_ring_setting() {
+    return m_ring_setting;
+}
+string Cartridge::get_ring_setting_as_string() {
+    string out="";
+    for (int i=0; i<m_rotor_count; i++) {
+        out+=(char) (m_ring_setting[i]+(int) 'A');
     }
     return out;
 }
@@ -379,6 +409,27 @@ void Enigma::set_verbose(int set) {
     m_cartridge->set_verbose(set);
     m_verbose=false;
 }
+void Enigma::set_rotor_position(int* in) {
+    m_cartridge->set_positions(in);
+}
+void Enigma::set_rotor_position(string in) {
+    m_cartridge->set_positions(in);
+}
+string Enigma::get_rotor_position_as_string() {
+    return m_cartridge->get_positions_as_string();
+}
+void   Enigma::set_ring_setting(string in) {
+    m_cartridge->set_ring_setting(in);
+}
+void   Enigma::set_ring_setting(int* in) {
+    m_cartridge->set_ring_setting(in);
+}
+int*   Enigma::get_ring_setting() {
+    return m_cartridge->get_ring_setting();
+}
+string Enigma::get_ring_setting_as_string() {
+    return m_cartridge->get_ring_setting_as_string();
+}
 void Enigma::reset() {
     m_cartridge->reset_positions();
 }
@@ -400,7 +451,8 @@ int  Enigma::encrypt(int m) {
             else                    { cout<<" "; }
         }
         //print posiions
-        cout<<" --- "<<m_cartridge->get_positions_as_string();
+        cout<<" --- "<<get_rotor_position_as_string();
+        cout<<" --- "<<get_ring_setting_as_string();
         cout<<"\n";
     }
     m_cartridge->turn();
@@ -413,6 +465,12 @@ int* Enigma::encrypt(int* m, int n) {
         for (int i=0; i<m_wires; i++) {
             cout<<(char)(i+(int)'A')<<" ";
         }
+        cout<<"    R.POS.  R.SET.";
+        cout<<"\n              ";
+        for (int i=0; i<m_wires; i++) {
+            cout<<"| ";
+        }
+        cout<<"     |||     |||  ";
         cout<<"\n";
     }
 
