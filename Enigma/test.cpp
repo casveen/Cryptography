@@ -30,9 +30,9 @@ static Rotor ThinReflectorB=Rotor("ENKQAUYWJICOPBLMDXZVFTHRGS");
 static Rotor ThinReflectorC=Rotor("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
 static Rotor ETW=           Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-const int MAX_TESTS=3;
-const int MESSAGE_SIZE=10;
-const int WIRES =8;
+const int MAX_TESTS=1;
+const int MESSAGE_SIZE=52;
+const int WIRES =26;
 const int WHEELS=3;
 
 //test if wires cross correctly
@@ -54,7 +54,8 @@ bool test_wiring() {
 bool test_encryption_symmetry() {
     Enigma enigma=Enigma(WHEELS, WIRES);
     enigma.randomize();
-    int m, c, r;
+    enigma.set_verbose(false);
+    int c, r;
     for (int w=0; w<WIRES; w++) {
         c=enigma.encrypt(w);
         enigma.reset();

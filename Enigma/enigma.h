@@ -19,7 +19,7 @@ class Rotor {
         int *m_wiring_in, *m_wiring_out, *m_notch; //index i goes to value at index i
         int m_wires, m_notches;
         int _num;
-        bool m_verbose;
+        bool m_verbose=true;
 
     public:
         Rotor();
@@ -37,6 +37,8 @@ class Rotor {
         int  get_wiring_out(int i);
         int* get_notch();
         int  get_notches();
+        int  encrypt_in(int, int);
+        int  encrypt_out(int, int);
         void set_verbose(int);
         void randomize();
         void print();
@@ -58,6 +60,7 @@ class Cartridge {
         Reflector *m_reflector;
         int        m_rotor_count, m_wires, m_reflector_position; //wires?
         int       *m_positions;
+        bool       m_verbose=true;
 
     public:
         Cartridge(); //XXX stupitt
@@ -75,6 +78,7 @@ class Cartridge {
         int* get_positions();
         int  get_positions_as_int();
         string get_positions_as_string();
+        void set_verbose(int);
         void turn(int t);
         void turn(); //overloaded, single turn
         int encrypt(int i); //pass integer through wires without turning
@@ -91,10 +95,9 @@ class Cartridge {
         --.--                        //last rotor, must be a reflector, ie symmetric
         */
         static Cartridge* from_file(const char* filename) {
-            ssize_t    read;
-            int rotors_number, wires, k=0, wire, i;
+            int rotors_number, wires, k=0, wire;
             string line;
-            size_t len=0;
+            int len=0;
             ifstream file(filename);
             if (!file) {
                 printf("ERROR: Opening file %s failed", filename);
@@ -110,7 +113,6 @@ class Cartridge {
             //read in the rotors
             while (file) {
                 getline(file, line);
-                i=0;
                 //cout<<line<<"\n";
                 //cout<<line.length()<<"\n";
                 if (k<rotors_number) { //a rotor
@@ -139,11 +141,17 @@ class Enigma {
     private:
         Cartridge* m_cartridge;
         int m_rotors_number, m_wires;
+        bool m_verbose=true;
 
     public:
         Enigma(int rotors_number, int wires);
         ~Enigma();
         void set_coder();
+        void set_verbose(int);
+        void set_ring_setting(string);
+        //void indicator_procedure_early(string, string);
+        //void indicator_procedure_WW2(string, string); //wehrmacht luftwaffe
+        //void indicator_procedure_kriegsmarine(string, string);
         void reset();
         void randomize();
         int encrypt(int m);

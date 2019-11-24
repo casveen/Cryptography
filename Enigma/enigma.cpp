@@ -1,14 +1,11 @@
 #include "enigma.h"
 using namespace std;
-static int cc=0;
-
 
 //WHEEL
 Rotor::Rotor() { }
 Rotor::Rotor(int wires): m_wires{wires} {
         m_notches=1;
         m_notch=new int[m_notches]; m_notch[0]=0; //corresponds to notch at A
-        m_verbose=false;
         //allocate to wiring array
         m_wiring_in= new int[m_wires];
         m_wiring_out=new int[m_wires];
@@ -22,7 +19,6 @@ Rotor::Rotor(string in) {
     m_notches=1;
     m_notch=new int[m_notches]; m_notch[0]=0; //corresponds to notch at A
     m_wires=in.length();
-    m_verbose=false;
     //allocate to wiring array
     m_wiring_in= new int[m_wires];
     m_wiring_out=new int[m_wires];
@@ -83,6 +79,28 @@ int* Rotor::get_wiring_out()      { return m_wiring_out; }
 int  Rotor::get_wiring_out(int i) { return m_wiring_out[i]; }
 int* Rotor::get_notch()           { return m_notch; }
 int  Rotor::get_notches()         { return m_notches; }
+int  Rotor::encrypt_in(int i, int offset) {
+    int out=(m_wiring_in[(i+offset)%m_wires]+m_wires-offset)%m_wires;
+    if (m_verbose==true) {
+        for (int j=0; j<m_wires; j++) {
+            if (j==out) { cout<<"("; }
+            cout<<(char) ((m_wiring_in[(j+offset)%m_wires]+m_wires-offset)%m_wires+(int)'A');
+            if (j==out) { cout<<")"; }
+        }
+    }
+    return out;
+}
+int  Rotor::encrypt_out(int i, int offset) {
+    int out=(m_wiring_out[(i+offset)%m_wires]+m_wires-offset)%m_wires;
+    if (m_verbose) {
+        for (int j=0; j<m_wires; j++) {
+            if (j==out) { cout<<"("; }
+            cout<<(char) ((m_wiring_out[(j+offset)%m_wires]+m_wires-offset)%m_wires+(int)'A');
+            if (j==out) { cout<<")"; }
+        }
+    }
+    return out;
+}
 void Rotor::set_verbose(int set)  { m_verbose=set; }
 void Rotor::randomize() {
     //cout<<"randomizing rotor\n";
@@ -259,9 +277,17 @@ string Cartridge::get_positions_as_string() {
     string out;
     out="";
     for(int w=0; w<m_rotor_count; w++) {
-        out+=to_string(m_positions[w]+(int) 'A');
+        out+=(char)(m_positions[w]+(int) 'A');
     }
     return out;
+}
+void Cartridge::set_verbose(int set)  {
+    //set verbose of self, and all my parts
+    for(int w=0; w<m_rotor_count; w++) {
+        m_rotors[w]->set_verbose(set);
+    }
+    m_reflector->set_verbose(set);
+    m_verbose=set;
 }
 void Cartridge::turn(int t) {
     int carry=t, next;
@@ -275,22 +301,34 @@ void Cartridge::turn(int t) {
 void Cartridge::turn() { turn(1); }
 //pass integer through wires without turning
 int  Cartridge::encrypt(int i) {
-    //forward pass + reflector(last)
-    //printf("%2d ", i);
+    if (m_verbose) {
+        cout<<(char) (i +(int) 'A')<<" ------> ";
+        //printf("%s ------> ", );
+        for (int j=0; j<m_wires; j++) {
+            cout<<(char) (j+(int) 'A');
+        }
+        cout<<"\n";
+        //XXX plugboard!!!
+    }
+    //forward pass
     for (int rotor=0; rotor<m_rotor_count; rotor++) {
-        //printf("(%2d) ", (i+_positions[rotor])%_wires);
-        i=(m_rotors[rotor]->get_wiring_in((i+m_positions[rotor])%m_wires)+m_wires-m_positions[rotor])%m_wires;
-        //printf("-> %2d ", i);
+        if (m_verbose) { cout<<"  W"<<rotor<<"("<<(char)(i+(int) 'A')<<")-> "; }
+        i=m_rotors[rotor]->encrypt_in(i, m_positions[rotor]);
+        if (m_verbose) { cout<<" "<<(char)(m_positions[rotor]+(int)'A')<<"\n"; }
+        //
     }
     //reflector
-    i=(m_reflector->get_wiring_in((i+m_reflector_position)%m_wires)+m_wires-m_reflector_position)%m_wires;
+    //i=(m_reflector->get_wiring_in((i+m_reflector_position)%m_wires)+m_wires-m_reflector_position)%m_wires;
+    if (m_verbose) { cout<<"  R"<<"("<<(char)(i+(int) 'A')<<")--> "; }
+    i=m_reflector->encrypt_in(i, 0);
+    if (m_verbose) { cout<<" "<<(char)(m_reflector_position+(int)'A')<<"\n"; }
     //backward pass
     for (int rotor=m_rotor_count-1; rotor>=0; rotor--) {
-        //printf("(%2d) ", (i+_positions[rotor])%_wires);
-        i=(m_rotors[rotor]->get_wiring_out((i+m_positions[rotor])%m_wires)+m_wires-m_positions[rotor])%m_wires;
-        //printf("-> %2d ", i);
+        if (m_verbose) { cout<<"  W"<<rotor<<"("<<(char)(i+(int) 'A')<<")-> "; }
+        i=m_rotors[rotor]->encrypt_out(i, m_positions[rotor]);
+        if (m_verbose) { cout<<" "<<(char)(m_positions[rotor]+(int)'A')<<"\n"; }
+        //i=(m_rotors[rotor]->get_wiring_out((i+m_positions[rotor])%m_wires)+m_wires-m_positions[rotor])%m_wires;
     }
-    //printf("\n");
     return i;
 }
 //print the cartridge
@@ -337,17 +375,53 @@ void Enigma::randomize() {
 void Enigma::set_coder() {
     //set code for language
 }
+void Enigma::set_verbose(int set) {
+    m_cartridge->set_verbose(set);
+    m_verbose=false;
+}
 void Enigma::reset() {
     m_cartridge->reset_positions();
 }
 int  Enigma::encrypt(int m) {
+    if (m_verbose) {
+        //set parts to non-verbose
+        m_cartridge->set_verbose(false);
+    }
     int c=m_cartridge->encrypt(m);
+    if (m_verbose) {
+        cout<<(char) (m+(int)'A')<<" ->";
+        if (m==0) { cout<<"["; }
+        else      { cout<<" "; }
+        //encrypt all possible letters and print
+        for (int i=0; i<m_wires; i++) {
+            cout<<(char) (m_cartridge->encrypt(i)+(int)'A');
+            if (i==m || m==m_wires) { cout<<"]"; }
+            else if (i==m-1)           { cout<<"["; }
+            else                    { cout<<" "; }
+        }
+        //print posiions
+        cout<<" --- "<<m_cartridge->get_positions_as_string();
+        cout<<"\n";
+    }
     m_cartridge->turn();
     return c;
 }
 int* Enigma::encrypt(int* m, int n) {
+    //int digits=ceil(log(n));
+    if (m_verbose) {
+        cout<<"\n              ";
+        for (int i=0; i<m_wires; i++) {
+            cout<<(char)(i+(int)'A')<<" ";
+        }
+        cout<<"\n";
+    }
+
     int* e=(int*) malloc(n*sizeof(e));
     for (int i=0; i<n; i++) {
+        if (m_verbose) {
+            printf("m[%3d] = ", i);
+            //<<(char)m[i]+(int)'A'<<" -> ";
+        }
         e[i]=encrypt(m[i]);
     }
     return e;
@@ -358,27 +432,3 @@ void Enigma::print_positions() {
 void Enigma::print() {
     m_cartridge->print();
 }
-
-
-
-/*
-int main() {
-    srand(time(NULL));
-    //Rotor rotor=Rotor::make_random_rotor(20);
-    //rotor.print();
-    Cartridge cartridge=Cartridge::make_random_cartridge(3,8);
-    //cartridge.print();
-    //5test pos
-    /*for (int t=0; t<100; t++) {
-        cartridge.print_positions();
-        cartridge.turn();
-    }
-    for (int t=0; t<8; t++) {
-        printf("%2d -> %2d\n", t, cartridge.encrypt(t));
-    }
-    //cartridge.randomize();
-    //cartridge.print();
-    return 0;
-}*/
-
-//rotor good, cart good, turn good, encrypt in cartridge good
