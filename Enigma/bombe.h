@@ -29,6 +29,7 @@ class DiagonalBoard {
     void print();
     void connect_enigma(vector<int> , int, int);
     void wipe();
+    void reset();
     bool bundle_contradiction(int);
 };
 

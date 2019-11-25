@@ -61,6 +61,13 @@ void DiagonalBoard::wipe() {
         }
     }
 }
+void DiagonalBoard::reset() {
+    for(int bundle=0; bundle<m_bundles.size(); ++bundle) {
+        for(int wire=0; wire<=bundle; ++wire) {
+            m_bundles.at(bundle).at(wire)->reset();
+        }
+    }
+}
 void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2, int t_wire_2) {
     m_bundles.at(t_bundle_1).at(t_wire_1)->connect(m_bundles.at(t_bundle_2).at(t_wire_2));
     m_bundles.at(t_bundle_2).at(t_wire_2)->connect(m_bundles.at(t_bundle_1).at(t_wire_1));
@@ -171,8 +178,11 @@ void Bombe::analyze(string ciphertext, string crib) {
         //m_diagonal_board->print();
         //cout<<"HELL\n";
         for(int j=0; j<total_permutations; j++) {
-            cout<<"\n";
+            //cout<<"\n";
             printf("\r%5d/%5d", j, total_permutations);
+            //reset board
+            m_diagonal_board->reset();
+            //setup connections in board
             setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
             if (check_wiring()) {
                 cout<<"VALID CONFIGURATION FOUND\n";
