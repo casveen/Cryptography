@@ -4,7 +4,7 @@ FLAGS      = -Wall
 TESTDEP    = enigma.cpp
 DEP        = enigma.cpp bombe.cpp
 HEADER     = enigma.h   bombe.h
-PROGRAMS = $(patsubst %.c, %.exe, $(wildcard *.c))
+PROGRAMS = $(patsubst %.cpp, %.exe, $(wildcard *.cpp))
 
 .PHONY : all clean test
 
@@ -18,7 +18,7 @@ test.exe : test.cpp
 	$(CC) $< -o $@ $(FLAGS) $(TESTDEP)
 
 clean :
-	rm -f *.o $(PROGRAMS)
+	rm -f $(PROGRAMS)
 
 serial:
 	./serial_code.exe              $(KAPPA) $(ITERATIONS) $(IMAGE) $(patsubst %.jpg, %_smoothed.jpg, $(IMAGE))          0

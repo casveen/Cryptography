@@ -1,5 +1,6 @@
 #include "enigma.h"
 using namespace std;
+/*
 static Rotor IC=  Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
 static Rotor IIC= Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
 static Rotor IIIC=Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
@@ -29,9 +30,10 @@ static Rotor ReflectorC=    Rotor("FVPJIAOYEDRZXWGCTKUQSBNMHL");
 static Rotor ThinReflectorB=Rotor("ENKQAUYWJICOPBLMDXZVFTHRGS");
 static Rotor ThinReflectorC=Rotor("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
 static Rotor ETW=           Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+*/
 
 const int MAX_TESTS=1;
-const int MESSAGE_SIZE=52;
+const int MESSAGE_SIZE=26*10;
 const int WIRES =26;
 const int WHEELS=3;
 
@@ -71,7 +73,7 @@ bool test_encryption_symmetry() {
 bool test_decryption() {
     Enigma enigma=Enigma(WHEELS, WIRES);
     //make random message
-    int* m=(int*) malloc(MESSAGE_SIZE*sizeof*m);
+    int* m=new int[MESSAGE_SIZE];
     for (int i=0; i<MESSAGE_SIZE; i++) { m[i]=rand()%WIRES; }
     int* c=enigma.encrypt(m, MESSAGE_SIZE); //ciphertext
     enigma.reset();          //reset
@@ -80,15 +82,21 @@ bool test_decryption() {
     for (int i=0; i<MESSAGE_SIZE; i++) {
         if (m[i]!=r[i]) {
             printf("m[%2d]=%2d   =/=   %2d=encrypt(encrypt(m[%2d]))", i, m[i], r[i], i);
+            delete [] m;
+            delete [] c;
+            delete [] r;
             return false;
         }
     }
+    delete [] m;
+    delete [] c;
+    delete [] r;
     return true;
 }
 
 
 int main() {
-    Cartridge::from_file("rotors.txt");
+    //Cartridge::from_file("rotors.txt");
 
 
     srand(time(NULL));

@@ -31,15 +31,14 @@ Rotor::Rotor(string in) {
 }
 Rotor::Rotor(string in, string notch): Rotor(in) {
     m_notches=notch.length();
-    m_notch=new int[m_notches];
     for(int i=0; i<m_notches; i++)  {
         m_notch[i]=(int) notch[i]-(int) 'A';
     }
 }
 Rotor::~Rotor() {
-    delete m_wiring_in;
-    delete m_wiring_out;
-    delete m_notch;
+    delete [] m_wiring_in;
+    delete [] m_wiring_out;
+    delete [] m_notch;
     //cout<<"->rotor "<<_num<<" cleaned up\n";
 }
 Rotor::Rotor(Rotor const& copy) {
@@ -122,15 +121,13 @@ void Rotor::randomize() {
         }
     }
     //now that in is randomized, make out the inverse of in
-    m_wiring_out=make_inverse(m_wiring_in, m_wires);
+    make_inverse(m_wiring_in, m_wiring_out, m_wires);
 }
-int* Rotor::make_inverse(int* in, int n) {
+void Rotor::make_inverse(int* in, int* out, int n) {
     //assumes list contains all integers from 0 to n-1
-    int* out=(int*) malloc(n*sizeof*out);
     for(int i=0; i<n; i++) {
         out[in[i]]=i;
     }
-    return out;
 }
 void Rotor::print() {
     for (int wire=0; wire<m_wires; wire++) {
@@ -188,7 +185,7 @@ bool Reflector::is_valid() {
 //CARTRIDGE
 Cartridge::Cartridge() {} //XXX should really not be neccesary...
 Cartridge::Cartridge(int rotor_count, int wires): m_rotor_count{rotor_count}, m_wires{wires} {
-    m_positions=new int[rotor_count];
+    m_positions=   new int[rotor_count];
     m_ring_setting=new int[rotor_count];
     //init positions
     reset_positions();
@@ -240,9 +237,9 @@ Cartridge::~Cartridge() {
         delete m_rotors[w];
     }
     delete [] m_rotors;
-    delete m_reflector;
-    delete m_positions;
-    delete m_ring_setting;
+    delete  m_reflector;
+    delete [] m_positions;
+    delete [] m_ring_setting;
 }
 void Cartridge::reset_positions() {
     for (int p=0; p<m_rotor_count; p++) {
@@ -493,11 +490,10 @@ int* Enigma::encrypt(int* m, int n) {
         cout<<"\n";
     }
 
-    int* e=(int*) malloc(n*sizeof(e));
+    int* e=new int[n];
     for (int i=0; i<n; i++) {
         if (m_verbose) {
             printf("m[%3d] = ", i);
-            //<<(char)m[i]+(int)'A'<<" -> ";
         }
         e[i]=encrypt(m[i]);
     }

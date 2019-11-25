@@ -19,7 +19,7 @@ class Rotor {
         int *m_wiring_in, *m_wiring_out, *m_notch; //index i goes to value at index i
         int m_wires, m_notches;
         int _num;
-        bool m_verbose=true;
+        bool m_verbose=false;
 
     public:
         Rotor();
@@ -43,7 +43,7 @@ class Rotor {
         void set_verbose(int);
         void randomize();
         void print();
-        int* make_inverse(int* in, int n);
+        void make_inverse(int* in, int* out, int n);
         bool is_valid();
 };
 
@@ -61,7 +61,7 @@ class Cartridge {
         Reflector *m_reflector;
         int        m_rotor_count, m_wires, m_reflector_position; //wires?
         int       *m_positions, *m_ring_setting; //ringscthellung, moves the notches in the wheels
-        bool       m_verbose=true;
+        bool       m_verbose=false;
         int       *m_notch_position;
 
     public:
@@ -149,7 +149,7 @@ class Enigma {
     private:
         Cartridge* m_cartridge;
         int m_rotors_number, m_wires;
-        bool m_verbose=true;
+        bool m_verbose=false;
         int  *m_rotor_position, m_ring_setting;
 
     public:
