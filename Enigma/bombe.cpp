@@ -65,10 +65,11 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2, int t_
     m_bundles.at(t_bundle_1).at(t_wire_1)->connect(m_bundles.at(t_bundle_2).at(t_wire_2));
     m_bundles.at(t_bundle_2).at(t_wire_2)->connect(m_bundles.at(t_bundle_1).at(t_wire_1));
 }
-void DiagonalBoard::connect_enigma(unique_ptr<int[]> encryption, int t_from, int t_to) {
+
+void DiagonalBoard::connect_enigma(vector<int> encryption, int t_from, int t_to) {
     for (int i=0; i<m_bundles.size(); i++) {
         //cout<<i<<"/"<<t_enigma->get_wires()<<": "<<encryption[i]<<"\n";
-        connect(t_from, i, t_to, encryption[i]);
+        connect(t_from, i, t_to, encryption.at(i));
     }
     //cout<<"finished connecting\n";
 }
@@ -136,16 +137,19 @@ vector<int> Bombe::probable_search(string ciphertext, string crib) {
     return candidates;
 }
 void Bombe::init_enigma_encryptions(int encryptions) {
+    cout<<"intitialising encryptions\n";
     m_enigma_encryptions.clear();
     for(int i=0; i<encryptions; ++i) {
+        cout<<i<<"\n";
         m_enigma_encryptions.push_back(m_enigma->get_encryption());
         m_enigma->turn();
     }
+    cout<<"encryptions done\n";
 }
 void Bombe::setup_diagonal_board(string ciphertext, string crib) {
     //cout<<"setting up DB\n";
     for(int j=0; j<crib.length(); j++) {
-        unique_ptr<int[]> encryption=m_enigma_encryptions.at(j);
+        vector<int> encryption=m_enigma_encryptions.at(j);
         m_diagonal_board->connect_enigma(encryption, (int)crib[j]-(int)'A', (int)ciphertext[j]-(int)'A');
     }
 }
@@ -165,7 +169,9 @@ void Bombe::analyze(string ciphertext, string crib) {
         //setup crib.length() enigma encryptions
         init_enigma_encryptions(crib.length());
         //m_diagonal_board->print();
+        //cout<<"HELL\n";
         for(int j=0; j<total_permutations; j++) {
+            cout<<"\n";
             printf("\r%5d/%5d", j, total_permutations);
             setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
             if (check_wiring()) {
@@ -173,9 +179,10 @@ void Bombe::analyze(string ciphertext, string crib) {
             }
             //take out oldest, put in new encryption after enigma turns
             m_enigma->turn();
-            m_enigma_encryptions.erase(0); //erase first/oldest
-            m_enigma_encryptions.push_back(m_engima->get_encryption()); //add new
+            m_enigma_encryptions.erase(m_enigma_encryptions.begin());; //erase first/oldest
+            m_enigma_encryptions.push_back(m_enigma->get_encryption()); //add new
         }
+        cout<<"UUU\n";
     }
 
 }

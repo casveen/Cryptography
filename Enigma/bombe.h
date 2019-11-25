@@ -2,9 +2,6 @@
 #define BOMBE_H
 
 using namespace std;
-#include <iostream>
-#include <vector>
-#include <memory>
 #include "enigma.h"
 
 //wiring
@@ -30,7 +27,7 @@ class DiagonalBoard {
     void activate(int, int);
     void connect(int, int, int, int);
     void print();
-    void connect_enigma(unique_ptr<int[]> , int, int);
+    void connect_enigma(vector<int> , int, int);
     void wipe();
     bool bundle_contradiction(int);
 };
@@ -40,7 +37,7 @@ class Bombe {
         int                 m_letters=26;
         DiagonalBoard*      m_diagonal_board;
         Enigma*             m_enigma;
-        vector < unique_ptr<int[]> > m_enigma_encryptions; //keep track of encryptions
+        vector<vector<int>> m_enigma_encryptions; //keep track of encryptions
         //could be vector vector but im trying to familiarize myelf with these
         //Enigma*        enigma;
     public:

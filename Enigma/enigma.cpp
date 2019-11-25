@@ -517,12 +517,12 @@ void Enigma::print_positions() {
 void Enigma::print() {
     m_cartridge->print();
 }
-unique_ptr<int[]> Enigma::get_encryption() {
+vector<int> Enigma::get_encryption() {
     //return encryption at current step
     //encrypt all letters
-    unique_ptr<int[]> input(new int[m_wires]);
+    vector<int> input;
     for(int i=0; i<m_wires; i++) {
-        input[i]=encrypt_without_turning(i);
+        input.push_back(encrypt_without_turning(i)); //XXX or front?
     }
     return input;
 }
