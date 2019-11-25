@@ -175,6 +175,7 @@ class Enigma {
         void reset();
         void randomize();
         int encrypt(int m);
+        int encrypt_without_turning(int m);
         int* encrypt(int* m, int n);
         void print_positions();
         void print();

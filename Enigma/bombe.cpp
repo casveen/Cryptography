@@ -1,5 +1,5 @@
 //#include "enigma.h";
-#include "bombe.h" //wire
+#include "bombe.h" //wire, diagonal board
 #include "enigma.h"
 
 void         Wire::flow() {
@@ -66,7 +66,6 @@ void DiagonalBoard::connect_enigma(Enigma* t_enigma, int t_from, int t_to) {
     }
     //cout<<"finished connecting\n";
 }
-//void DiagonalBoard::
 void DiagonalBoard::print() {
     int bundle_size=m_bundles.size();
     //cout<<"bundle size "<<bundle_size<<"\n";
@@ -89,10 +88,12 @@ void DiagonalBoard::print() {
     }
 }
 
-
-
-
-int probable_search(string ciphertext, string crib) {
+Bombe::Bombe() {
+    m_diagonal_board=new DiagonalBoard(26);
+    m_enigma=        new Enigma(3, 26);
+}
+vector<int> Bombe::probable_search(string ciphertext, string crib) {
+    vector<int> candidates;
     //find suitable pattern
     int ciphertext_length=ciphertext.length(), crib_length=crib.length();
     bool suitable;
@@ -108,30 +109,32 @@ int probable_search(string ciphertext, string crib) {
         if (suitable) {
             cout<<"suitable substring at "<<i<<"\n";
             cout<<ciphertext.substr(i, crib_length)<<"\n"<<crib<<"\n\n";
-            return i; //XXX make general!
+            candidates.push_back(i);
         }
     }
-    return -1;
+    return candidates;
+}
+void Bombe::setup_diagonal_board(string ciphertext, string crib) {
+    cout<<"setting up DB\n";
+    for(int j=0; j<crib.length(); j++) {
+        m_diagonal_board->connect_enigma(m_enigma, (int)crib[j]-(int)'A', (int)ciphertext[j]-(int)'A');
+        m_enigma->turn();
+    }
+    cout<<"set up DB\n";
+}
+void Bombe::analyze(string ciphertext, string crib) {
+    cout<<"analyzing\n";
+    //find candidates
+    vector<int> candidates=probable_search(ciphertext, crib);
+    //analyze each candidate
+    for(int i=0; i<candidates.size(); i++) {
+        //setup the wiring for the candidate
+        cout<<"candidate "<<i<<"\n";
+        setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
+    }
+    m_diagonal_board->print();
 }
 
-void bombe(string ciphertext, string crib) {
-    Enigma* enigma=new Enigma(3, 26);
-    DiagonalBoard board(26);
-    int i=probable_search(ciphertext, crib);
-    for(int j=0; j<crib.length(); j++) {
-        //connect letter of crib and corresponding letter in cipher
-        //cout<<"connecting "<<crib[j]<<" and "<<ciphertext[i+j]<<"\n";
-        board.connect_enigma(enigma, (int)crib[j]-(int)'A', (int)ciphertext[i+j]-(int)'A');
-        //cout<<"outside\n";
-        enigma->turn();
-        //cout<<"turned\n";
-    }
-    //cout<<"printing resut \n";
-    board.activate(0,1); //b wire in A bundle
-    //board.activate(2,4); //b wire in A bundle
-    //board.activate(5,3); //f wire in D bundle
-    board.print();
-}
 
 
 
@@ -147,6 +150,7 @@ int main() {
     //board.activate(0,1); //b wire in A bundle
     //board.activate(2,4); //b wire in A bundle
     //board.activate(5,3); //f wire in D bundle
-    bombe("EEEEEEEEEEEEEEEEEEEDBGEAHDBDDDDDDDDDDDDD", "BEACHHEAD");
-
+    Bombe* bombe=new Bombe();
+    bombe->analyze("EEEEEEEEEEEEEEEEEEEDBGEAHDBDDDDDDDDDDDDD", "BEACHHEAD");
+    delete bombe;
 }

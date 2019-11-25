@@ -463,7 +463,7 @@ int  Enigma::encrypt(int m) {
         //set parts to non-verbose
         m_cartridge->set_verbose(false);
     }
-    int c=m_cartridge->encrypt(m);
+    int c=encrypt_without_turning(m);
     if (m_verbose) {
         cout<<(char) (m+(int)'A')<<" ->";
         if (m==0) { cout<<"["; }
@@ -472,7 +472,7 @@ int  Enigma::encrypt(int m) {
         for (int i=0; i<m_wires; i++) {
             cout<<(char) (m_cartridge->encrypt(i)+(int)'A');
             if (i==m || m==m_wires) { cout<<"]"; }
-            else if (i==m-1)           { cout<<"["; }
+            else if (i==m-1)        { cout<<"["; }
             else                    { cout<<" "; }
         }
         //print posiions
@@ -482,6 +482,9 @@ int  Enigma::encrypt(int m) {
     }
     m_cartridge->turn();
     return c;
+}
+int  Enigma::encrypt_without_turning(int m) {
+    return m_cartridge->encrypt(m);
 }
 int* Enigma::encrypt(int* m, int n) {
     //int digits=ceil(log(n));
@@ -518,10 +521,8 @@ unique_ptr<int[]> Enigma::get_encryption() {
     //return encryption at current step
     //encrypt all letters
     unique_ptr<int[]> input(new int[m_wires]);
-    //
     for(int i=0; i<m_wires; i++) {
-        input[i]=encrypt(i);
-        reset();
+        input[i]=encrypt_without_turning(i);
     }
     return input;
 }

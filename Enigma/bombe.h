@@ -11,7 +11,6 @@ class Wire {
     private:
     vector<Wire*> m_connections;
     int m_live=0;   //0: dead, 1: live, -1: just activated
-
     public:
     void flow();    //make wire live, and also wires connected to it
     int get_live(); //0 dead, -1 just set to live, 1 live
@@ -31,10 +30,21 @@ class DiagonalBoard {
     void connect(int, int, int, int);
     void print();
     void connect_enigma(Enigma*, int, int);
+    void wipe_current();
+};
 
-
-
-
+class Bombe {
+    private:
+        int            m_letters=26;
+        DiagonalBoard* m_diagonal_board;
+        Enigma*        m_enigma;
+        //Enigma*        enigma;
+    public:
+        Bombe();
+        vector<int> probable_search(string, string);
+        void analyze(string, string);
+        void setup_diagonal_board(string, string);
+        //void set_rotors();
 
 
 };
