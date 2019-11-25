@@ -4,6 +4,7 @@
 using namespace std;
 #include <iostream>
 #include <vector>
+#include <memory>
 #include "enigma.h"
 
 //wiring
@@ -29,24 +30,27 @@ class DiagonalBoard {
     void activate(int, int);
     void connect(int, int, int, int);
     void print();
-    void connect_enigma(Enigma*, int, int);
-    void wipe_current();
+    void connect_enigma(unique_ptr<int[]> , int, int);
+    void wipe();
+    bool bundle_contradiction(int);
 };
 
 class Bombe {
     private:
-        int            m_letters=26;
-        DiagonalBoard* m_diagonal_board;
-        Enigma*        m_enigma;
+        int                 m_letters=26;
+        DiagonalBoard*      m_diagonal_board;
+        Enigma*             m_enigma;
+        vector < unique_ptr<int[]> > m_enigma_encryptions; //keep track of encryptions
+        //could be vector vector but im trying to familiarize myelf with these
         //Enigma*        enigma;
     public:
         Bombe();
         vector<int> probable_search(string, string);
+        void init_enigma_encryptions(int);
         void analyze(string, string);
         void setup_diagonal_board(string, string);
-        //void set_rotors();
-
-
+        bool check_wiring();
+        bool bundle_contradiction(int);
 };
 
 #endif
