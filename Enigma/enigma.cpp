@@ -421,6 +421,12 @@ void Enigma::randomize() {
 void Enigma::set_coder() {
     //set code for language
 }
+int Enigma::get_wires() {
+    return m_wires;
+}
+int Enigma::get_rotors() {
+    return m_rotors_number;
+}
 void Enigma::set_verbose(int set) {
     m_cartridge->set_verbose(set);
     m_verbose=false;
@@ -448,6 +454,9 @@ string Enigma::get_ring_setting_as_string() {
 }
 void Enigma::reset() {
     m_cartridge->reset_positions();
+}
+void Enigma::turn() {
+    m_cartridge->turn();
 }
 int  Enigma::encrypt(int m) {
     if (m_verbose) {
@@ -504,4 +513,15 @@ void Enigma::print_positions() {
 }
 void Enigma::print() {
     m_cartridge->print();
+}
+unique_ptr<int[]> Enigma::get_encryption() {
+    //return encryption at current step
+    //encrypt all letters
+    unique_ptr<int[]> input(new int[m_wires]);
+    //
+    for(int i=0; i<m_wires; i++) {
+        input[i]=encrypt(i);
+        reset();
+    }
+    return input;
 }

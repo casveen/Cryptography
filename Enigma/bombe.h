@@ -4,6 +4,7 @@
 using namespace std;
 #include <iostream>
 #include <vector>
+#include "enigma.h"
 
 //wiring
 class Wire {
@@ -29,6 +30,7 @@ class DiagonalBoard {
     void activate(int, int);
     void connect(int, int, int, int);
     void print();
+    void connect_enigma(Enigma*, int, int);
 
 
 

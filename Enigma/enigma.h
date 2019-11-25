@@ -8,6 +8,7 @@ using namespace std;
 #include <string.h>
 #include <stdio.h>
 #include <fstream>
+#include <memory>
 /*
 class Plugboard: public Reflector {
 }*/
@@ -157,6 +158,9 @@ class Enigma {
         ~Enigma();
         void set_coder();
         void set_verbose(int);
+        void turn();
+        int get_wires();
+        int get_rotors();
         void set_rotor_position(string);
         void set_rotor_position(int*);
         int* get_rotor_position();
@@ -174,6 +178,7 @@ class Enigma {
         int* encrypt(int* m, int n);
         void print_positions();
         void print();
+        unique_ptr<int[]> get_encryption();
         //FACTORY
         static Enigma make_random_enigma(int rotors, int wires) {
             //cout<<"init enigma\n";

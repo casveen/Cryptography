@@ -1,5 +1,6 @@
 //#include "enigma.h";
 #include "bombe.h" //wire
+#include "enigma.h"
 
 void         Wire::flow() {
     m_live=-1;
@@ -57,6 +58,15 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2, int t_
     m_bundles.at(t_bundle_1).at(t_wire_1)->connect(m_bundles.at(t_bundle_2).at(t_wire_2));
     m_bundles.at(t_bundle_2).at(t_wire_2)->connect(m_bundles.at(t_bundle_1).at(t_wire_1));
 }
+void DiagonalBoard::connect_enigma(Enigma* t_enigma, int t_from, int t_to) {
+    unique_ptr<int[]> encryption=t_enigma->get_encryption();
+    for (int i=0; i<t_enigma->get_wires(); i++) {
+        //cout<<i<<"/"<<t_enigma->get_wires()<<": "<<encryption[i]<<"\n";
+        connect(t_from, i, t_to, encryption[i]);
+    }
+    //cout<<"finished connecting\n";
+}
+//void DiagonalBoard::
 void DiagonalBoard::print() {
     int bundle_size=m_bundles.size();
     //cout<<"bundle size "<<bundle_size<<"\n";
@@ -82,7 +92,7 @@ void DiagonalBoard::print() {
 
 
 
-void bombe(string ciphertext, string crib) {
+int probable_search(string ciphertext, string crib) {
     //find suitable pattern
     int ciphertext_length=ciphertext.length(), crib_length=crib.length();
     bool suitable;
@@ -98,9 +108,29 @@ void bombe(string ciphertext, string crib) {
         if (suitable) {
             cout<<"suitable substring at "<<i<<"\n";
             cout<<ciphertext.substr(i, crib_length)<<"\n"<<crib<<"\n\n";
+            return i; //XXX make general!
         }
-        //XXX run bombe on suitable stirng
     }
+    return -1;
+}
+
+void bombe(string ciphertext, string crib) {
+    Enigma* enigma=new Enigma(3, 26);
+    DiagonalBoard board(26);
+    int i=probable_search(ciphertext, crib);
+    for(int j=0; j<crib.length(); j++) {
+        //connect letter of crib and corresponding letter in cipher
+        //cout<<"connecting "<<crib[j]<<" and "<<ciphertext[i+j]<<"\n";
+        board.connect_enigma(enigma, (int)crib[j]-(int)'A', (int)ciphertext[i+j]-(int)'A');
+        //cout<<"outside\n";
+        enigma->turn();
+        //cout<<"turned\n";
+    }
+    //cout<<"printing resut \n";
+    board.activate(0,1); //b wire in A bundle
+    //board.activate(2,4); //b wire in A bundle
+    //board.activate(5,3); //f wire in D bundle
+    board.print();
 }
 
 
@@ -108,13 +138,15 @@ void bombe(string ciphertext, string crib) {
 
 
 int main() {
-    DiagonalBoard board(26);
-    board.connect(0,1,5,3); //connect Ab to Df
-    board.connect(0,1,2,3); //connect Ab to Df
-    board.activate(0,1); //b wire in A bundle
+
+
+
+    //board.connect(0,1,5,3); //connect Ab to Df
+    //board.connect(0,1,2,3); //connect Ab to Df
+    //board.connect_enigma(enigma, 0, 3); //A and D connected
+    //board.activate(0,1); //b wire in A bundle
     //board.activate(2,4); //b wire in A bundle
     //board.activate(5,3); //f wire in D bundle
-    board.print();
-    //bombe("EEEEEEEEEEEEEEEEEEEDBGEAHDBDDDDDDDDDDDDD", "BEACHHEAD");
+    bombe("EEEEEEEEEEEEEEEEEEEDBGEAHDBDDDDDDDDDDDDD", "BEACHHEAD");
 
 }
