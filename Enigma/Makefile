@@ -6,7 +6,7 @@ DEP        = enigma.cpp bombe.cpp
 HEADER     = enigma.h   bombe.h
 PROGRAMS = $(patsubst %.cpp, %.exe, $(wildcard *.cpp))
 
-.PHONY : all clean test
+.PHONY : all clean test valgrind
 
 all:
 	$(MAKE) $(PROGRAMS)
@@ -17,25 +17,15 @@ enigma.exe: enigma.cpp $(DEP)
 test.exe : test.cpp
 	$(CC) $< -o $@ $(FLAGS) $(TESTDEP)
 
+bombe.exe : bombe.cpp
+	$(CC) $< -o $@ $(FLAGS) bombe.h
+
+
 clean :
 	rm -f $(PROGRAMS)
 
-serial:
-	./serial_code.exe              $(KAPPA) $(ITERATIONS) $(IMAGE) $(patsubst %.jpg, %_smoothed.jpg, $(IMAGE))          0
-
-parallel:
-	mpirun -np 4 parallel_code.exe $(KAPPA) $(ITERATIONS) $(IMAGE) $(patsubst %.jpg, %_parallel_smoothed.jpg, $(IMAGE)) 0
-
-test:
-	printf "\rMaking serial denoising"; \
-	./serial_code.exe $(KAPPA) $(ITERATIONS) $(IMAGE) $(patsubst %.jpg,%_smoothed.jpg,$(IMAGE)) 0;
-	for number in `seq 1 37`; do \
-		p=`expr $$number \* 100 / 37`; \
-		printf "\rTesting... %3.0f%%" $$p; \
-		mpirun -np $$number parallel_code.exe $(KAPPA) $(ITERATIONS) $(IMAGE) $(patsubst %.jpg, %_parallel_smoothed.jpg, $(IMAGE)) 0; \
-		./test.exe $(patsubst %.jpg, %_parallel_smoothed.jpg, $(IMAGE)) $(patsubst %.jpg, %_smoothed.jpg, $(IMAGE)); \
-	done
-	printf "\n"
+valgrind :
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./test.exe
 
 print:
 	echo $(PROGRAMS)
