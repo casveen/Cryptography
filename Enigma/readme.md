@@ -1,7 +1,101 @@
-#bombe
+# Enigma and the Bombe
+This repository contains code for encrypting/decrypting with an enigma, and breaking enigma encryptions with the algorithm used for the bombe.
 
-##How I want it to work:
-Engigma is implemented.
+Currently the enigma is very general, and there is no practical procedure for using standard wheels(only random but legally wired ones). There are some mechanical flaws, such as double-stepping not being implemented due to uncertainty as to how it works for arbitrary many wheels, and there is no automation of indicator procedure.
+
+The Bombe is in progress and non-functional. Currently wiring is being modeled for, after which the basic framework is ready.
+
+Information on the algorithm for the Bombe can be found [here](http://www.ellsbury.com/bombe1.htm) and [wikipedia](https://en.wikipedia.org/wiki/Bombe)
+
+Information on the Enigma can be found [here](http://users.telenet.be/d.rijmenants/en/enigmatech.htm), [here](https://plus.maths.org/content/exploring-enigma) and for a mediocre article, on [wikipedia](https://en.wikipedia.org/wiki/Enigma_machine)([details on the rotors](https://en.wikipedia.org/wiki/Enigma_rotor_details)). There is also [this article](http://www.intelligenia.org/downloads/enigvar2.pdf) documenting variations on the enigma.
+
+## Elements of the Enigma
+### Rotors
+### Plugboard
+### Ring setting
+### Initial position
+### Indicator Procedure
+
+
+## Usage
+
+### Enigma
+To create a randomly wired enigma machine with a specified number of rotors(pluss a reflector), run 
+```c++
+Enigma enigma(number_of_rotors, number_of_letters);
+```
+*WIP* to create a specific enigma, run
+```c++
+Enigma enigma(Rotor_1, Rotor_2, Rotor_3, ... , Reflector); // f.ex enigma(IV, VI, I, R);
+```
+*WIP* where the rotors are provided as static variables in [...]
+
+The enigma then has to be properly configured, setting the ring setting(ringscthellung), plugboard(steckering), initial rotor positions and proper indicator procedure.
+```c++
+enigma.set_ring_setting("AEG");
+enigma.set_plugboard("AB CD EF GH IJ KL");
+enigma.set_position("AAA");
+enigma.indicator_early("KGR");
+```
+We are now ready to encrypt. You can encrypt a string, a file or an integer array
+```c++
+enigma.encrypt("ATTACKXATXDAWN"); 
+enigma.encrypt_file("plaintext.txt", "ciphertext.txt");
+enigma.encrypt({0,,,0,,,0,,,0,,}) //whatever attackatdawn represents
+```
+which returns a corresponding object.
+### Bombe
+First we make a bombe
+```c++
+Bombe bombe(number_of_letters); //number_of_letters is ususally 26
+```
+Then we have to provide the bombe with the rotors we suspect are used
+```c++
+bombe.set_rotors(rotor_1, rotor_2, rotor_3, ... , reflector);
+```
+Given that we suspect a given word(called a crib) is in the plaintext of a ciphertext, we provide the ciphertext together with the crib to the analyze function
+```c++
+bombe.analyze(ciphertext, crib);
+```
+From here the bombe does a exhaustive search by ruling out most possible rotor- and plugboard settings.
+
+[XXX] more research needs to be done...
+
+## To be done:
+* Enigma
+  - [ ] Plugborad/Steckerbrettt
+  - [ ] Find appropriate method to make static Rotor objects representing the usual rotors.
+     Candidates:
+    * in the enigma header (probably really bad practice)
+    * in the enigma.cpp, then enigma.cpp has to be included for the rotors to be used
+    * as a separate file that can be read and made into wheels, makes naming unpractical
+    * In an entirely separate file, say, rotors.cpp
+  - [ ] Implement the various indicator methods
+  - [ ] Make subclasses of the very general class Enigma, representing the more specific types of Enigma
+  - [ ] Double stepping. Sources are very vague on how to implement this in general cases.
+  - [ ] Encrypt from file
+  - [ ] Test on a known cipher- plaintext pair. (requires doublestepping, and correct indicator procedure)
+  - [ ] Make efficient version of Enigma::get_encryption(),  which gets the whole transformation of the enigma at a given rotation. Used in the Bombe, and needs to be quick
+  - [ ] Parallelize
+      * mpi?
+      * openmp? wiring arrays might slosh if shared between threads
+* Bombe
+  - [ ] 
+  - [ ] Make it work
+  - [ ] Make efficient wiring of diagonal board to the enigma
+  - [ ] Parallelize
+      * mpi? probably most suitable, one thread on each rotor composition
+      * openmp? again, sloshing might be a problem
+* Coding practice
+  - [ ] Const all possible variables
+  - [ ] Use consistent names
+  - [ ] delete unused functions 
+* Other
+  - [ ] make a vocabulary/code class, so that we are not restricted to just the standard 26 capital english letters
+## Bombe
+
+### How I want it to work:
+Enigma is implemented.
 
 To implement the wiring of the enigma, we make the diagonal board, with
 a class Wire representing each wire.
