@@ -36,6 +36,7 @@ class Rotor {
         int  get_wiring_in(int i);
         int  get_wiring_out(int i);
         int* get_notch();
+        int  get_notch(int);
         int  get_notches();
         int  encrypt_in(int, int);
         int  encrypt_out(int, int);
@@ -74,7 +75,7 @@ class Cartridge {
         Reflector*  get_reflector();
         void reset_positions();
         void reset_ring_setting();
-        void set_positions(int p);
+        //void set_positions(int p);
         void set_positions(int* p);
         void set_positions(string in);
         int* get_positions();

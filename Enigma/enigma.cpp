@@ -78,6 +78,7 @@ int  Rotor::get_wiring_in(int i)  { return m_wiring_in[i]; }
 int* Rotor::get_wiring_out()      { return m_wiring_out; }
 int  Rotor::get_wiring_out(int i) { return m_wiring_out[i]; }
 int* Rotor::get_notch()           { return m_notch; }
+int  Rotor::get_notch(int n)      { return m_notch[n]; }
 int  Rotor::get_notches()         { return m_notches; }
 int  Rotor::encrypt_in(int i, int offset) {
     int out=(m_wiring_in[(i+offset)%m_wires]+m_wires-offset)%m_wires;
@@ -260,10 +261,10 @@ Rotor** Cartridge::get_rotors() {
 Reflector* Cartridge::get_reflector() {
     return m_reflector;
 }
-void Cartridge::set_positions(int p) {
+/*void Cartridge::set_positions(int p) {
     reset_positions();
     turn(p);
-}
+}*/
 void Cartridge::set_positions(int* p_in) {
     for (int p=0; p<m_rotor_count; p++) {
         m_positions[p]=p_in[p];
@@ -319,16 +320,34 @@ void Cartridge::set_verbose(int set)  {
     m_reflector->set_verbose(set);
     m_verbose=set;
 }
-void Cartridge::turn(int t) {
+/*void Cartridge::turn(int t) {
     int carry=t, next;
     for (int p=0; p<m_rotor_count && carry>0; p++) {
         next=m_positions[p]+carry;
         m_positions[p]=next%m_wires;
-        carry=(int) next/m_wires;
+
+
+        carry=m_positions[p]
+        //carry=(int) next/m_wires; //only carry if exceeded a notch - ring setting[p]
+    }
+}*/
+//overloaded, single turn
+void Cartridge::turn() {
+    //{ turn(1); }
+    int carry=1, next;
+    for (int p=0; p<m_rotor_count && carry>0; p++) {
+        next=m_positions[p]+carry;
+        //check m_notch
+        carry=0;
+        for (int n=0; n<m_rotors[p]->get_notches(); n++) {
+            if (m_rotors[p]->get_notch(n)==m_positions[p]) { //carry only if on notch and moving
+                carry=1;
+            }
+        }
+        m_positions[p]=next%m_wires;
+        //carry=(int) next/m_wires; //only carry if exceeded a notch - ring setting[p]
     }
 }
-//overloaded, single turn
-void Cartridge::turn() { turn(1); }
 //pass integer through wires without turning
 int  Cartridge::encrypt(int i) {
     if (m_verbose) {
