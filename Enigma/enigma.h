@@ -50,19 +50,19 @@ class Rotor {
         int  encrypt_in(int, int) const;
         int  encrypt_out(int, int) const;
         void randomize();
-        void print();
-        void make_inverse(int* in, int* out, int n);
-        bool is_valid();
+        void print() const;
+        void make_inverse(const int* in, int* out, int n) const;
+        bool is_valid() const;
 };
 
 class Reflector: public Rotor{
     public:
         Reflector();
         Reflector(int wires);
-        Reflector(string);
-        Reflector(string, string);
+        Reflector(const string);
+        Reflector(const string, const string);
         void randomize();
-        bool is_valid();
+        bool is_valid() const;
 };
 
 class Cartridge {
@@ -77,34 +77,38 @@ class Cartridge {
     public:
         Cartridge(); //XXX stupitt
         Cartridge(int rotor_count, int wires); //CONSTRUCTOR, random rotors
-        Cartridge(std::initializer_list<Rotor> rotors, Reflector reflector);
+        Cartridge(const std::initializer_list<Rotor> rotors, Reflector reflector);
         Cartridge(Cartridge const& copy);
         Cartridge& operator=(Cartridge rhs);
         void swap(Cartridge& s) noexcept;
         ~Cartridge();
-        Rotor** get_rotors();
-        Reflector*  get_reflector();
+        //getters
+        const Rotor** get_rotors() const;
+        const Reflector*  get_reflector() const;
+        const int* get_positions() const;
+        int        get_positions_as_int() const;
+        int        get_reflector_position() const;
+        const int* get_ring_setting() const;
+        const string get_positions_as_string() const;
+        const string get_ring_setting_as_string() const;
+        //setters
+        void set_rotor(int, const Rotor*);
+        void set_reflector(const Reflector*);
+        void set_positions(const int* p);
+        void set_positions(const string in);
+        void set_ring_setting(const int* p);
+        void set_ring_setting(const string in);
+        void set_verbose(bool);
+        //other
         void reset_positions();
         void reset_ring_setting();
-        //void set_positions(int p);
-        void set_positions(int* p);
-        void set_positions(string in);
-        int* get_positions();
-        int  get_positions_as_int();
-        string get_positions_as_string();
-        void set_ring_setting(int* p);
-        void set_ring_setting(string in);
-        int* get_ring_setting();
-        //int  get_ring_setting_as_int();
-        string get_ring_setting_as_string();
-        void set_verbose(int);
-        void turn(int t);
         void turn(); //overloaded, single turn
-        int encrypt(int i); //pass integer through wires without turning
-        void print(); //PRINT cartridge
-        void print_positions(); //print positions of the rotors
+        int  encrypt_without_turning(int i) const; //pass integer through wires without turning
+        void print() const; //PRINT cartridge
+        void print_positions() const; //print positions of the rotors
         void randomize();
-        Rotor* make_random_rotors(int n, int wires); //make array of n random rotors
+        //Rotor* make_random_rotors(int n, int wires); //make array of n random rotors
+
         //make cartridge from file, using standard coding A->0, B->1, ...english letters
         /*syntax
         rotors:NUMBER_OF_WHEELS(excl reflector) wires:NUMBER OF WIRES(here, 26)
@@ -127,31 +131,29 @@ class Cartridge {
             sscanf(line.c_str(), "rotors:%d wires:%d", &rotors_number, &wires);
 
             Cartridge *out=new Cartridge(rotors_number, wires);
-            Rotor **rotors=out->get_rotors();
-            Reflector *reflector=out->get_reflector();
             //read in the rotors
             while (file) {
                 getline(file, line);
-                //cout<<line<<"\n";
-                //cout<<line.length()<<"\n";
                 if (k<rotors_number) { //a rotor
+                    Rotor* rotor=new Rotor(wires);
                     //cout<<"a rotor, length="<<len<<"\n";
                     for(int i=0; i<wires; i++)  {
                         //cout<<"("<<line[i]<<")---   "<<i<<"->"<<(int) line[i]-(int) 'A'<<"   ---\n";
                         wire=(int) line[i]-(int) 'A';
-                        rotors[k]->set_wiring_in(i, wire);
-                        rotors[k]->set_wiring_out(wire,i);
+                        rotor->set_wiring_in(i, wire);
+                        rotor->set_wiring_out(wire,i);
                     }
-                    //rotors[k]->print();
+                    out->set_rotor(k, rotor);
                 }
                 else { //a reflector
+                    Reflector* reflector=new Reflector(wires);
                     for (int i=0; i<len; i++) {
                         reflector->set_wiring_in(i, (int) line[i]-(int) 'A');
                     }
+                    out->set_reflector(reflector);
                 }
                 k++;
             }
-            //out->print();
             return out;
         }
 };
@@ -165,32 +167,35 @@ class Enigma {
 
     public:
         Enigma(int rotors_number, int wires);
-        Enigma(std::initializer_list<Rotor> rotors, Reflector reflector);
+        Enigma(const std::initializer_list<Rotor> rotors, const Reflector reflector);
         ~Enigma();
+        //getters
+        int get_wires() const;
+        int get_rotors() const;
+        const int* get_rotor_position() const;
+        string get_rotor_position_as_string() const;
+        const int* get_ring_setting() const;
+        string get_ring_setting_as_string() const;
+        vector<int> get_encryption() const;
+        //setters
         void set_coder();
-        void set_verbose(int);
-        void turn();
-        int get_wires();
-        int get_rotors();
-        void set_rotor_position(string);
-        void set_rotor_position(int*);
-        int* get_rotor_position();
-        string get_rotor_position_as_string();
-        void set_ring_setting(string);
-        void set_ring_setting(int*);
-        int* get_ring_setting();
-        string get_ring_setting_as_string();
+        void set_verbose(bool);
+        void set_rotor_position(const string);
+        void set_rotor_position(const int*);
+        void set_ring_setting(const string);
+        void set_ring_setting(const int*);
+        //other
         //void indicator_procedure_early(string, string);
         //void indicator_procedure_WW2(string, string); //wehrmacht luftwaffe
         //void indicator_procedure_kriegsmarine(string, string);
+        void turn();
         void reset();
         void randomize();
         int encrypt(int m);
-        int encrypt_without_turning(int m);
-        int* encrypt(int* m, int n);
-        void print_positions();
-        void print();
-        vector<int> get_encryption();
+        int encrypt_without_turning(int m) const;
+        int* encrypt(const int* m, int n);
+        void print_positions() const;
+        void print() const;
         //FACTORY
         static Enigma make_random_enigma(int rotors, int wires) {
             //cout<<"init enigma\n";

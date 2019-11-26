@@ -115,4 +115,45 @@ int main() {
 
         //print a known rotor
         //IC.print();
+
+    static Rotor IC=                Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
+    static Rotor IIC=               Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
+    static Rotor IIIC=              Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
+    static Rotor IR=                Rotor("JGDQOXUSCAMIFRVTPNEWKBLZYH");
+    static Rotor IIR=               Rotor("NTZPSFBOKMWRCJDIVLAEYUXHGQ");
+    static Rotor IIIR=              Rotor("JVIUBHTCDYAKEQZPOSGXNRMWFL");
+    static Reflector UKWR=      Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
+    static Rotor ETWR=              Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
+    static Rotor IK=                Rotor("PEZUOHXSCVFMTBGLRINQJWAYDK");
+    static Rotor IIK=               Rotor("ZOUESYDKFWPCIQXHMVBLGNJRAT");
+    static Rotor IIIK=              Rotor("EHRVXGAOBQUSIMZFLYNWKTPDJC");
+    static Reflector UKWK=      Reflector("IMETCGFRAYSQBZXWLHKDVUPOJN"); //ref
+    static Rotor ETWK=              Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
+    static Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
+    static Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
+    static Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
+    static Rotor IV=                Rotor("ESOVPZJAYQUIRHXLNFTGKDCMWB", "J");
+    static Rotor V=                 Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z");
+    static Rotor VI=                Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
+    static Rotor VII=               Rotor("NZJHGRCXMYSWBOUFAIVLPEKQDT", "ZM");
+    static Rotor VIII=              Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
+    static Rotor Beta=              Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
+    static Rotor Gamma=             Rotor("FSOKANUERHMBTIYCWLQPZXVGJD");
+    static Rotor ReflectorA=        Rotor("EJMZALYXVBWFCRQUONTSPIKHGD");
+    static Rotor ReflectorB=        Rotor("YRUHQSLDPXNGOKMIEBFZCWVJAT");
+    static Rotor ReflectorC=        Rotor("FVPJIAOYEDRZXWGCTKUQSBNMHL");
+    static Reflector ThinReflectorB=Reflector("ENKQAUYWJICOPBLMDXZVFTHRGS");
+    static Reflector ThinReflectorC=Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
+    static Rotor ETW=               Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    //I.print();
+    Enigma enigma({I, II, III}, UKWR);
+    //cout<<"encrypting\n";
+    //enigma.print();
+    vector<int> encryption=enigma.get_encryption();
+    for (auto i : encryption) { cout<<i<<" "; }
+    cout<<"\n";
+    cout<<enigma.encrypt_without_turning(0);
+    cout<<"\n";
+    for (auto i : {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) { cout<<enigma.encrypt(i)<<" "; }
+    cout<<"\n";
 }
