@@ -10,6 +10,7 @@ using namespace std;
 #include <fstream>
 #include <memory>
 #include <vector>
+#include <initializer_list>
 /*
 class Plugboard: public Reflector {
 }*/
@@ -28,6 +29,7 @@ class Rotor {
         Rotor(int wires);
         Rotor(string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
         Rotor(string, string);
+        //constexpr Rotor(const string, const string);
         Rotor(Rotor const& copy);
         Rotor& operator=(Rotor rhs);
         void swap(Rotor& s) noexcept;
@@ -53,6 +55,8 @@ class Reflector: public Rotor{
     public:
         Reflector();
         Reflector(int wires);
+        Reflector(string);
+        Reflector(string, string);
         void randomize();
         bool is_valid();
 };
@@ -69,6 +73,7 @@ class Cartridge {
     public:
         Cartridge(); //XXX stupitt
         Cartridge(int rotor_count, int wires); //CONSTRUCTOR, random rotors
+        Cartridge(std::initializer_list<Rotor> rotors, Reflector reflector);
         Cartridge(Cartridge const& copy);
         Cartridge& operator=(Cartridge rhs);
         void swap(Cartridge& s) noexcept;
@@ -156,6 +161,7 @@ class Enigma {
 
     public:
         Enigma(int rotors_number, int wires);
+        Enigma(std::initializer_list<Rotor> rotors, Reflector reflector);
         ~Enigma();
         void set_coder();
         void set_verbose(int);
@@ -191,6 +197,13 @@ class Enigma {
             //cout<<"return enigma\n";
             return *enigma;
         }
+
+
+
+
+
+
+
 };
 
 #endif

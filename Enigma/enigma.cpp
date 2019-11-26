@@ -35,6 +35,23 @@ Rotor::Rotor(string in, string notch): Rotor(in) {
         m_notch[i]=(int) notch[i]-(int) 'A';
     }
 }
+/*constexpr Rotor::Rotor(const string in, const string notch): Rotor(in) {
+    m_notches=   notch.length();
+    m_notch=     new int[m_notches];
+    m_wires=     in.length();
+    //allocate to wiring array
+    m_wiring_in= new int[m_wires];
+    m_wiring_out=new int[m_wires];
+    int wire;
+    for(int i=0; i<m_wires; i++)  {
+        wire=(int) in[i]-(int) 'A';
+        m_wiring_in[i] =wire;
+        m_wiring_out[wire]=i;
+    }
+    for(int i=0; i<m_notches; i++)  {
+        m_notch[i]=(int) notch[i]-(int) 'A';
+    }
+}*/
 Rotor::~Rotor() {
     delete [] m_wiring_in;
     delete [] m_wiring_out;
@@ -131,9 +148,15 @@ void Rotor::make_inverse(int* in, int* out, int n) {
 }
 void Rotor::print() {
     for (int wire=0; wire<m_wires; wire++) {
+        printf("%2d ", m_wiring_in[wire]);
+    }
+    cout<<"\n";
+    /*vertical
+    for (int wire=0; wire<m_wires; wire++) {
         printf("%2d: %2d\n", wire, m_wiring_in[wire]);
         }
-    return;
+    */
+    //return;
 }
 bool Rotor::is_valid() {
     //is out the inverse? is the mapping surjective?(covered by w spanning all wires)
@@ -151,6 +174,8 @@ Reflector::Reflector(int wires): Rotor(wires) {
             m_wiring_in[j]=j+1-2*(j%2);
         }
     }
+Reflector::Reflector(string wiring): Rotor(wiring) { }
+Reflector::Reflector(string wiring, string notches): Rotor(wiring, notches) { }
 void Reflector::randomize() {
     int w1, w2, v1, v2;
     for(int k=0; k<m_wires*m_wires; k++) {
@@ -199,6 +224,20 @@ Cartridge::Cartridge(int rotor_count, int wires): m_rotor_count{rotor_count}, m_
     //make a reflector
     m_reflector=new Reflector(wires);
     m_reflector->randomize();
+}
+Cartridge::Cartridge(std::initializer_list<Rotor> rotors, Reflector reflector) {
+    m_wires=((Rotor*)       rotors.begin())->get_wires();
+    m_rotor_count= rotors.size();
+    m_positions=   new int[m_rotor_count];
+    m_ring_setting=new int[m_rotor_count];
+    //init positions
+    reset_positions();
+    reset_ring_setting();
+    //set to rotors
+    m_rotors   =new Rotor*[m_rotor_count];
+    int count=0;
+    for (auto r : rotors) { m_rotors[count++]=new Rotor(r); }
+    m_reflector=new Reflector(reflector);
 }
 Cartridge::Cartridge(Cartridge const& copy) {
     //src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
@@ -410,10 +449,13 @@ void   Cartridge::randomize() {
 Enigma::Enigma(int rotors_number, int wires): m_rotors_number{rotors_number}, m_wires{wires} {
     m_cartridge=new Cartridge(rotors_number, wires);
 }
+Enigma::Enigma(std::initializer_list<Rotor> rotors, Reflector reflector) {
+    m_cartridge=    new Cartridge(rotors, reflector);
+    m_wires=        ((Rotor*) rotors.begin())->get_wires();
+    m_rotors_number=rotors.size();
+}
 Enigma::~Enigma() {
-    //cout<<"--->cleaning enigma\n";
     delete m_cartridge;
-    //cout<<"--->enigma cleaned up\n";
 }
 void Enigma::randomize() {
     m_cartridge->randomize();
@@ -525,4 +567,47 @@ vector<int> Enigma::get_encryption() {
         input.push_back(encrypt_without_turning(i)); //XXX or front?
     }
     return input;
+}
+
+int main() {
+    static Rotor IC=                Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
+    static Rotor IIC=               Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
+    static Rotor IIIC=              Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
+    static Rotor IR=                Rotor("JGDQOXUSCAMIFRVTPNEWKBLZYH");
+    static Rotor IIR=               Rotor("NTZPSFBOKMWRCJDIVLAEYUXHGQ");
+    static Rotor IIIR=              Rotor("JVIUBHTCDYAKEQZPOSGXNRMWFL");
+    static Reflector UKWR=      Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
+    static Rotor ETWR=              Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
+    static Rotor IK=                Rotor("PEZUOHXSCVFMTBGLRINQJWAYDK");
+    static Rotor IIK=               Rotor("ZOUESYDKFWPCIQXHMVBLGNJRAT");
+    static Rotor IIIK=              Rotor("EHRVXGAOBQUSIMZFLYNWKTPDJC");
+    static Reflector UKWK=      Reflector("IMETCGFRAYSQBZXWLHKDVUPOJN"); //ref
+    static Rotor ETWK=              Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
+    static Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
+    static Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
+    static Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
+    static Rotor IV=                Rotor("ESOVPZJAYQUIRHXLNFTGKDCMWB", "J");
+    static Rotor V=                 Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z");
+    static Rotor VI=                Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
+    static Rotor VII=               Rotor("NZJHGRCXMYSWBOUFAIVLPEKQDT", "ZM");
+    static Rotor VIII=              Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
+    static Rotor Beta=              Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
+    static Rotor Gamma=             Rotor("FSOKANUERHMBTIYCWLQPZXVGJD");
+    static Rotor ReflectorA=        Rotor("EJMZALYXVBWFCRQUONTSPIKHGD");
+    static Rotor ReflectorB=        Rotor("YRUHQSLDPXNGOKMIEBFZCWVJAT");
+    static Rotor ReflectorC=        Rotor("FVPJIAOYEDRZXWGCTKUQSBNMHL");
+    static Reflector ThinReflectorB=Reflector("ENKQAUYWJICOPBLMDXZVFTHRGS");
+    static Reflector ThinReflectorC=Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
+    static Rotor ETW=               Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    //I.print();
+    Enigma enigma({I, II, III}, UKWR);
+    //cout<<"encrypting\n";
+    //enigma.print();
+    vector<int> encryption=enigma.get_encryption();
+    for (auto i : encryption) { cout<<i<<" "; }
+    /*cout<<"\n";
+    cout<<enigma.encrypt_without_turning(0);
+    cout<<"\n";
+    for (auto i : {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) { cout<<enigma.encrypt(i)<<" "; }
+    cout<<"\n";*/
 }

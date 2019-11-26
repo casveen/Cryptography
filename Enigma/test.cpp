@@ -1,36 +1,5 @@
 #include "enigma.h"
 using namespace std;
-/*
-static Rotor IC=  Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
-static Rotor IIC= Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
-static Rotor IIIC=Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
-static Rotor IR=  Rotor("JGDQOXUSCAMIFRVTPNEWKBLZYH");
-static Rotor IIR= Rotor("NTZPSFBOKMWRCJDIVLAEYUXHGQ");
-static Rotor IIIR=Rotor("JVIUBHTCDYAKEQZPOSGXNRMWFL");
-static Rotor UKWR=Rotor("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
-static Rotor ETWR=Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
-static Rotor IK=  Rotor("PEZUOHXSCVFMTBGLRINQJWAYDK");
-static Rotor IIK= Rotor("ZOUESYDKFWPCIQXHMVBLGNJRAT");
-static Rotor IIIK=Rotor("EHRVXGAOBQUSIMZFLYNWKTPDJC");
-static Rotor UKWK=Rotor("IMETCGFRAYSQBZXWLHKDVUPOJN"); //ref
-static Rotor ETWK=Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
-static Rotor I=   Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
-static Rotor II=  Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
-static Rotor III= Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
-static Rotor IV=  Rotor("ESOVPZJAYQUIRHXLNFTGKDCMWB", "J");
-static Rotor V=   Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z");
-static Rotor VI=  Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
-static Rotor VII= Rotor("NZJHGRCXMYSWBOUFAIVLPEKQDT", "ZM");
-static Rotor VIII=Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
-static Rotor Beta=          Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
-static Rotor Gamma=         Rotor("FSOKANUERHMBTIYCWLQPZXVGJD");
-static Rotor ReflectorA=    Rotor("EJMZALYXVBWFCRQUONTSPIKHGD");
-static Rotor ReflectorB=    Rotor("YRUHQSLDPXNGOKMIEBFZCWVJAT");
-static Rotor ReflectorC=    Rotor("FVPJIAOYEDRZXWGCTKUQSBNMHL");
-static Rotor ThinReflectorB=Rotor("ENKQAUYWJICOPBLMDXZVFTHRGS");
-static Rotor ThinReflectorC=Rotor("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
-static Rotor ETW=           Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-*/
 
 const int MAX_TESTS=1;
 const int MESSAGE_SIZE=26*10;
