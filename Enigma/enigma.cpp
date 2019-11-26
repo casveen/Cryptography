@@ -15,7 +15,7 @@ Rotor::Rotor(int wires): m_wires{wires} {
             m_wiring_out[j]=j;
         }
     }
-Rotor::Rotor(string in) {
+Rotor::Rotor(const string in) {
     m_notches=1;
     m_notch=new int[m_notches]; m_notch[0]=0; //corresponds to notch at A
     m_wires=in.length();
@@ -29,7 +29,7 @@ Rotor::Rotor(string in) {
         m_wiring_out[wire]=i;
     }
 }
-Rotor::Rotor(string in, string notch): Rotor(in) {
+Rotor::Rotor(const string in, const string notch): Rotor(in) {
     m_notches=notch.length();
     for(int i=0; i<m_notches; i++)  {
         m_notch[i]=(int) notch[i]-(int) 'A';
@@ -88,15 +88,25 @@ void Rotor::swap(Rotor& s) noexcept {
     swap(this->m_wires ,    s.m_wires);
     swap(this->m_notch ,    s.m_notch);
 }
-int  Rotor::get_wires()           { return m_wires; }
-int* Rotor::get_wiring_in()       { return m_wiring_in; }
-int  Rotor::get_wiring_in(int i)  { return m_wiring_in[i]; }
-int* Rotor::get_wiring_out()      { return m_wiring_out; }
-int  Rotor::get_wiring_out(int i) { return m_wiring_out[i]; }
-int* Rotor::get_notch()           { return m_notch; }
-int  Rotor::get_notch(int n)      { return m_notch[n]; }
-int  Rotor::get_notches()         { return m_notches; }
-int  Rotor::encrypt_in(int i, int offset) {
+//getters
+int  Rotor::get_wires()           const { return m_wires; }
+const int* Rotor::get_wiring_in()       const { return m_wiring_in; }
+int  Rotor::get_wiring_in(int i)  const { return m_wiring_in[i]; }
+const int* Rotor::get_wiring_out()      const { return m_wiring_out; }
+int  Rotor::get_wiring_out(int i) const { return m_wiring_out[i]; }
+const int* Rotor::get_notch()           const { return m_notch; }
+int  Rotor::get_notch(int n)      const { return m_notch[n]; }
+int  Rotor::get_notches()         const { return m_notches; }
+//setters
+void Rotor::set_wiring_in(int pos, int set) {
+    m_wiring_in[pos]=set;
+}
+void Rotor::set_wiring_out(int pos, int set) {
+    m_wiring_out[pos]=set;
+}
+void Rotor::set_verbose(bool set)  { m_verbose=set; }
+//other
+int  Rotor::encrypt_in(int i, int offset) const {
     int out=(m_wiring_in[(i+offset)%m_wires]+m_wires-offset)%m_wires;
     if (m_verbose==true) {
         for (int j=0; j<m_wires; j++) {
@@ -107,7 +117,7 @@ int  Rotor::encrypt_in(int i, int offset) {
     }
     return out;
 }
-int  Rotor::encrypt_out(int i, int offset) {
+int  Rotor::encrypt_out(int i, int offset) const {
     int out=(m_wiring_out[(i+offset)%m_wires]+m_wires-offset)%m_wires;
     if (m_verbose) {
         for (int j=0; j<m_wires; j++) {
@@ -118,7 +128,7 @@ int  Rotor::encrypt_out(int i, int offset) {
     }
     return out;
 }
-void Rotor::set_verbose(int set)  { m_verbose=set; }
+
 void Rotor::randomize() {
     //cout<<"randomizing rotor\n";
     int p1, p2, t;

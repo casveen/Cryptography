@@ -21,30 +21,34 @@ class Rotor {
     protected:
         int *m_wiring_in, *m_wiring_out, *m_notch; //index i goes to value at index i
         int m_wires, m_notches;
-        int _num;
         bool m_verbose=false;
 
     public:
         Rotor();
-        Rotor(int wires);
-        Rotor(string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
-        Rotor(string, string);
+        Rotor(const int wires);
+        Rotor(const string); //construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ etc
+        Rotor(const string, const string);
         //constexpr Rotor(const string, const string);
         Rotor(Rotor const& copy);
         Rotor& operator=(Rotor rhs);
         void swap(Rotor& s) noexcept;
         ~Rotor();
-        int  get_wires();
-        int* get_wiring_in();
-        int* get_wiring_out();
-        int  get_wiring_in(int i);
-        int  get_wiring_out(int i);
-        int* get_notch();
-        int  get_notch(int);
-        int  get_notches();
-        int  encrypt_in(int, int);
-        int  encrypt_out(int, int);
-        void set_verbose(int);
+        //getters
+        int  get_wires() const;
+        const int* get_wiring_in() const ;
+        const int* get_wiring_out() const;
+        int  get_wiring_in(int i) const;
+        int  get_wiring_out(int i) const;
+        const int* get_notch() const;
+        int  get_notch(int) const;
+        int  get_notches() const;
+        //setters
+        void set_wiring_in(int, int);
+        void set_wiring_out(int, int);
+        void set_verbose(bool);
+        //other
+        int  encrypt_in(int, int) const;
+        int  encrypt_out(int, int) const;
         void randomize();
         void print();
         void make_inverse(int* in, int* out, int n);
@@ -135,14 +139,14 @@ class Cartridge {
                     for(int i=0; i<wires; i++)  {
                         //cout<<"("<<line[i]<<")---   "<<i<<"->"<<(int) line[i]-(int) 'A'<<"   ---\n";
                         wire=(int) line[i]-(int) 'A';
-                        rotors[k]->get_wiring_in()[i] =wire;
-                        rotors[k]->get_wiring_out()[wire]=i;
+                        rotors[k]->set_wiring_in(i, wire);
+                        rotors[k]->set_wiring_out(wire,i);
                     }
                     //rotors[k]->print();
                 }
                 else { //a reflector
                     for (int i=0; i<len; i++) {
-                        reflector->get_wiring_in()[i]=(int) line[i]-(int) 'A';
+                        reflector->set_wiring_in(i, (int) line[i]-(int) 'A');
                     }
                 }
                 k++;
