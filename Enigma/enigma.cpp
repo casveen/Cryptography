@@ -441,6 +441,8 @@ void Cartridge::randomize() {
 
 
 
+
+
 //ENIGMA ENGINE
 Enigma::Enigma(int rotors_number, int wires): m_rotors_number{rotors_number}, m_wires{wires} {
     m_cartridge=new Cartridge(rotors_number, wires);
@@ -505,6 +507,43 @@ vector<int> Enigma::get_encryption() const {
         }
     }
     return input;
+}
+vector<pair<int, int>> Enigma::get_encryption_onesided() const {
+    //return encryption at current step
+    //encrypt all letters
+    //this one is hardcoded to circumvent verbose branches, and avoid
+    //double work due to symmetry
+    //init
+    vector<int> flags(m_wires, false);
+    vector<pair<int, int>> wires;
+    //get stuff from the cartridge
+    const Rotor**    rotors   =m_cartridge->get_rotors();
+    const Reflector* reflector=m_cartridge->get_reflector();
+    const int*       positions=m_cartridge->get_positions();
+    //for each letter, encrypt, unless already encrypted
+    int m;
+    for(int i=0; i<m_wires; i++) {
+        if (!flags.at(i)) {
+            //cout<<i<<"\n";
+            //encrypt i
+            m=i;
+            //forward
+            for (int j=0; j<m_rotors_number; j++) {
+                m=rotors[j]->encrypt_in(m, positions[j]);
+            }
+            //reflect
+            m=reflector->encrypt_in(m, m_cartridge->get_reflector_position());
+            //backward
+            for (int j=m_rotors_number-1; j>=0; j--) {
+                m=rotors[j]->encrypt_out(m, positions[j]);
+            }
+            //set
+            wires.push_back(make_pair(i, m));
+            flags.at(i)=true;
+            flags.at(m)=true;
+        }
+    }
+    return wires;
 }
 //setter
 void Enigma::set_coder() {

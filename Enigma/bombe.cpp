@@ -1,6 +1,5 @@
 //#include "enigma.h";
 #include "bombe.h" //wire, diagonal board
-#include "enigma.h"
 
 void         Wire::flow() {
     m_live=-1;
@@ -51,36 +50,47 @@ DiagonalBoard::DiagonalBoard(int t_bundles) {
         }
     }
 }
+Wire* DiagonalBoard::get_wire(int t_bundle, int t_wire) const{
+        return m_bundles.at(t_bundle).at(t_wire);
+}
 void DiagonalBoard::activate(int t_bundle, int t_wire) {
-    m_bundles.at(t_bundle).at(t_wire)->flow();
+    get_wire(t_bundle, t_wire)->flow();
 }
 void DiagonalBoard::wipe() {
     for(int bundle=0; bundle<m_bundles.size(); ++bundle) {
         for(int wire=0; wire<=bundle; ++wire) {
-            m_bundles.at(bundle).at(wire)->kill();
+            get_wire(bundle, wire)->kill();
         }
     }
 }
 void DiagonalBoard::reset() {
     for(int bundle=0; bundle<m_bundles.size(); ++bundle) {
         for(int wire=0; wire<=bundle; ++wire) {
-            m_bundles.at(bundle).at(wire)->reset();
+            get_wire(bundle, wire)->reset();
         }
     }
 }
 void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2, int t_wire_2) {
-    m_bundles.at(t_bundle_1).at(t_wire_1)->connect(m_bundles.at(t_bundle_2).at(t_wire_2));
-    m_bundles.at(t_bundle_2).at(t_wire_2)->connect(m_bundles.at(t_bundle_1).at(t_wire_1));
+    get_wire(t_bundle_1, t_wire_1)->connect(get_wire(t_bundle_2, t_wire_2));
+    get_wire(t_bundle_2, t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
-
-void DiagonalBoard::connect_enigma(vector<int> encryption, int t_from, int t_to) {
-    for (int i=0; i<m_bundles.size(); i++) {
-        //cout<<i<<"/"<<t_enigma->get_wires()<<": "<<encryption[i]<<"\n";
-        connect(t_from, i, t_to, encryption.at(i));
+void DiagonalBoard::connect_enigma(vector<pair<int,int>> encryption, int t_from, int t_to) {
+    //cout<<"diag board wiring in an enigma\n";
+    for (int i=0; i<encryption.size(); i++) {
+        //cout<<"connecting...";
+        //cout<<t_from<<":"<<encryption[i].first<<" <-> "<<t_to<<":"<<encryption[i].second<<"\n";
+        connect(t_from, encryption.at(i).first, t_to, encryption.at(i).second);
     }
     //cout<<"finished connecting\n";
 }
-void DiagonalBoard::print() {
+int DiagonalBoard::bundle_sum(int bundle) const{
+    int sum=0;
+    for (int i=0; i<m_bundles.size(); ++i) {
+        sum+=get_wire(bundle,i)->get_live();
+    }
+    return sum;
+}
+void DiagonalBoard::print() const{
     int bundle_size=m_bundles.size();
     //cout<<"bundle size "<<bundle_size<<"\n";
     for(int b=0; b<bundle_size; b++) {
@@ -101,6 +111,24 @@ void DiagonalBoard::print() {
         cout<<"\n";
     }
 }
+void DiagonalBoard::print_live() const{
+    int bundle_size=m_bundles.size();
+    for(int b=0; b<bundle_size; b++) {
+        cout<<" | ";
+    }
+    cout<<"\n";
+    for(int b=0; b<bundle_size; b++) {
+        cout<<" "<<(char)(b+(int)'A')<<" ";
+    }
+    cout<<"\n";
+    //cout<<"bundle size "<<bundle_size<<"\n";
+    for(int b=0; b<bundle_size; b++) {
+        //cout<<"wires size "<<m_bundles.at(b).size()<<"\n";
+        printf("%2d ", bundle_sum(b));
+    }
+    cout<<"\n";
+    cout<<"\n";
+}
 /*int Diagonal::bundle_sum(int bundle) {
     int sum=0;
     for (int i=0; i<m_letters; ++i) {
@@ -108,18 +136,21 @@ void DiagonalBoard::print() {
     }
     return sum;
 }*/
-bool DiagonalBoard::bundle_contradiction(int bundle) {
+bool DiagonalBoard::bundle_contradiction(int bundle) const{
     int sum=0;
     for (int i=0; i<m_bundles.size(); ++i) {
-        sum+=m_bundles.at(bundle).at(i)->get_live();
+        sum+=get_wire(bundle,i)->get_live();
         if (sum>1) return false;
     }
     return true;
 }
 
-Bombe::Bombe() {
-    m_diagonal_board=new DiagonalBoard(26);
-    m_enigma=        new Enigma(3, 26);
+
+Bombe::Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector) {
+    m_letters=         ((Rotor*) rotors.begin())->get_wires();
+    m_rotor_count=   rotors.size();
+    m_diagonal_board=new DiagonalBoard(m_letters);
+    m_enigma=        new Enigma(m_rotor_count, m_letters);
 }
 vector<int> Bombe::probable_search(string ciphertext, string crib) {
     vector<int> candidates;
@@ -144,19 +175,21 @@ vector<int> Bombe::probable_search(string ciphertext, string crib) {
     return candidates;
 }
 void Bombe::init_enigma_encryptions(int encryptions) {
-    cout<<"intitialising encryptions\n";
+    //cout<<"intitialising encryptions\n";
     m_enigma_encryptions.clear();
     for(int i=0; i<encryptions; ++i) {
-        cout<<i<<"\n";
-        m_enigma_encryptions.push_back(m_enigma->get_encryption());
+        //cout<<i<<"\n";
+        m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided());
         m_enigma->turn();
     }
-    cout<<"encryptions done\n";
+    //cout<<"encryptions done\n";
 }
 void Bombe::setup_diagonal_board(string ciphertext, string crib) {
     //cout<<"setting up DB\n";
     for(int j=0; j<crib.length(); j++) {
-        vector<int> encryption=m_enigma_encryptions.at(j);
+        //cout<<"getting an encryption\n";
+        vector<pair<int,int>> encryption=m_enigma_encryptions.at(j);
+        //cout<<"connecting an enigma\n";
         m_diagonal_board->connect_enigma(encryption, (int)crib[j]-(int)'A', (int)ciphertext[j]-(int)'A');
     }
 }
@@ -167,6 +200,7 @@ void Bombe::analyze(string ciphertext, string crib) {
         total_permutations*=m_enigma->get_wires();
     }
     cout<<"analyzing\n";
+    int dummy;
     //find candidates
     vector<int> candidates=probable_search(ciphertext, crib);
     //analyze each candidate
@@ -175,22 +209,29 @@ void Bombe::analyze(string ciphertext, string crib) {
         cout<<"candidate "<<i<<"\n";
         //setup crib.length() enigma encryptions
         init_enigma_encryptions(crib.length());
+        //print_encryptions();
         //m_diagonal_board->print();
         //cout<<"HELL\n";
         for(int j=0; j<total_permutations; j++) {
             //cout<<"\n";
-            printf("\r%5d/%5d", j, total_permutations);
+            printf("%5d/%5d\n", j, total_permutations);
             //reset board
             m_diagonal_board->reset();
             //setup connections in board
+            //cout<<"setup\n";
             setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
+            //cout<<"checking\n";
             if (check_wiring()) {
                 cout<<"VALID CONFIGURATION FOUND\n";
             }
-            //take out oldest, put in new encryption after enigma turns
+            //cout<<"checked\n";
+            //take out oldest, put in
+            //new encryption after enigma turns
+            //print_encryptions();
+            cin.get();
             m_enigma->turn();
             m_enigma_encryptions.erase(m_enigma_encryptions.begin());; //erase first/oldest
-            m_enigma_encryptions.push_back(m_enigma->get_encryption()); //add new
+            m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided()); //add new
         }
         cout<<"UUU\n";
     }
@@ -205,14 +246,33 @@ bool Bombe::check_wiring() {
 
     //for each bundle, activate each wire, test each bundle for a contradiciton
     //(more than one live)
+    int sum, wire;
     for(int bundle=0; bundle<m_letters; ++bundle) {
-        for(int wire=0; wire<m_letters; ++wire) {
-            m_diagonal_board->activate(bundle, wire);
-            if (bundle_contradiction(bundle)) return false;
-            m_diagonal_board->wipe();
-        }
+        //for(int wire=0; wire<m_letters; ++wire) {
+            //if (wire!=bundle) {
+                wire=0;
+                cout<<"BUNDLE: "<<(char)(bundle+(int)'A');
+                cout<<"  WIRE: "<<(char)(wire+(int)'A');
+                cout<<"\n";
+                m_diagonal_board->activate(bundle, wire);
+                m_diagonal_board->print_live();
+                //m_diagonal_board->print();
+                sum=m_diagonal_board->bundle_sum(bundle);
+                if (!(sum==1 || sum==m_letters-1)) return false;
+                m_diagonal_board->wipe(); //wipe current in wires
+
+        //}
     }
     return true;
+}
+
+void Bombe::print_encryptions() const {
+    for(int wire=0; wire<m_letters/2; ++wire) {
+        for(int e=0; e<m_enigma_encryptions.size(); ++e) {
+            printf("<%2d,%2d>   ",(m_enigma_encryptions[e])[wire].first,(m_enigma_encryptions[e])[wire].second);
+        }
+        cout<<"\n";
+    }
 }
 
 
@@ -220,9 +280,14 @@ bool Bombe::check_wiring() {
 
 
 
-
 int main() {
-    Bombe* bombe=new Bombe();
-    bombe->analyze("EEEEEEEEEEEEEEEEEEEDBGEAHDBDDDDDDDDDDDDD", "BEACHHEAD");
+    static Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
+    static Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
+    static Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
+    static Reflector UKWR=      Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
+
+    Bombe* bombe=new Bombe({I, II, III}, UKWR);
+
+    bombe->analyze("QFZWRWIVTYRESXBFOGKUHQBAISEZ", "WETTERVORHERSAGEBISKAYA");
     delete bombe;
 }

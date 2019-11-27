@@ -24,31 +24,35 @@ class DiagonalBoard {
     vector<vector<Wire*>> m_bundles;
     public:
     DiagonalBoard(int);
+    Wire* get_wire(int bundle, int wire) const;
     void activate(int, int);
     void connect(int, int, int, int);
-    void print();
-    void connect_enigma(vector<int> , int, int);
+    void print() const;
+    void print_live() const;
+    void connect_enigma(vector<pair<int,int>> , int, int);
     void wipe();
     void reset();
-    bool bundle_contradiction(int);
+    bool bundle_contradiction(int) const;
+    int  bundle_sum(int) const;
 };
 
 class Bombe {
     private:
-        int                 m_letters=26;
+        int                 m_letters=26, m_rotor_count=3;
         DiagonalBoard*      m_diagonal_board;
         Enigma*             m_enigma;
-        vector<vector<int>> m_enigma_encryptions; //keep track of encryptions
+        vector<vector<pair<int,int>>> m_enigma_encryptions; //keep track of encryptions
         //could be vector vector but im trying to familiarize myelf with these
         //Enigma*        enigma;
     public:
-        Bombe();
+        Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector);
         vector<int> probable_search(string, string);
         void init_enigma_encryptions(int);
         void analyze(string, string);
         void setup_diagonal_board(string, string);
         bool check_wiring();
         bool bundle_contradiction(int);
+        void print_encryptions() const;
 };
 
 #endif

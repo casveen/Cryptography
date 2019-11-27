@@ -11,11 +11,10 @@ using namespace std;
 #include <memory>
 #include <vector>
 #include <initializer_list>
+#include <utility>
 /*
 class Plugboard: public Reflector {
 }*/
-
-
 
 class Rotor {
     protected:
@@ -177,6 +176,7 @@ class Enigma {
         const int* get_ring_setting() const;
         string get_ring_setting_as_string() const;
         vector<int> get_encryption() const;
+        vector<pair<int,int>> get_encryption_onesided() const;
         //setters
         void set_coder();
         void set_verbose(bool);
@@ -206,13 +206,6 @@ class Enigma {
             //cout<<"return enigma\n";
             return *enigma;
         }
-
-
-
-
-
-
-
 };
 
 #endif
