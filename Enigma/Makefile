@@ -17,7 +17,7 @@ enigma.exe: enigma.cpp
 test.exe : test.cpp enigma.cpp
 	$(CC) $< -o $@ $(FLAGS) $(TESTDEP)
 
-bombe.exe : bombe.cpp
+bombe.exe : bombe.cpp enigma.cpp
 	$(CC) $< -o $@ $(FLAGS) enigma.cpp
 
 

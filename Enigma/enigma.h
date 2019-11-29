@@ -15,6 +15,7 @@ using namespace std;
 //#include "boost"
 #include <algorithm>
 #include <sstream>
+#include "include/catch.hpp"
 //#include <iterator>
 //#include <sstream>
 /*

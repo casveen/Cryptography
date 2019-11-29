@@ -1,3 +1,6 @@
+#define CONFIG_CATCH_MAIN
+
+#include "catch.hpp" 
 #include "enigma.h"
 using namespace std;
 
