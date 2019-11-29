@@ -4,7 +4,7 @@ using namespace std;
 const int MAX_TESTS=1;
 const int MESSAGE_SIZE=26*10;
 const int WIRES =26;
-const int WHEELS=3;
+const int WHEELS=4;
 
 //test if wires cross correctly
 bool test_wiring() {
@@ -63,11 +63,22 @@ bool test_decryption() {
     return true;
 }
 
+bool test_wikipedia_example() {
+    //test if the enigma can encrypt/decrypt a portion of the Karl donitz message
+    static Rotor V=                 Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z");
+    static Rotor VI=                Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
+    static Rotor VIII=              Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
+    static Rotor Beta=              Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
+    static Reflector ThinReflectorC=Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
+    Enigma enigma({VIII, VI, V, Beta}, ThinReflectorC);
+    enigma.set_plugboard("AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW");
+    enigma.set_rotor_position("ZPOY");
+    enigma.set_ring_setting("KTDC");
+    return (enigma.encrypt("RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJ")=="FOLGENDESISTSOFORTBEKANNTZUGEBEN");
+}
 
 int main() {
     //Cartridge::from_file("rotors.txt");
-
-
     srand(time(NULL));
 
     //TEST WIRES
@@ -109,13 +120,20 @@ int main() {
             break;
         }
     }
-    if (success)
+    if (success) {
         printf("\rDECRYPTION WORKS                      \n");
+    }
 
+
+    //TEST EXAMPLE
+    if (test_wikipedia_example()) {
+        printf("\rENIGMA WORKS ON DONITZ SAMPLE         \n");
+    }
 
         //print a known rotor
         //IC.print();
 
+    /*
     static Rotor IC=                Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
     static Rotor IIC=               Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
     static Rotor IIIC=              Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
@@ -137,7 +155,7 @@ int main() {
     static Rotor VI=                Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
     static Rotor VII=               Rotor("NZJHGRCXMYSWBOUFAIVLPEKQDT", "ZM");
     static Rotor VIII=              Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
-    static Rotor Beta=              Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
+    static Rotor Beta=              Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS"); //XXXwhitespace for none?
     static Rotor Gamma=             Rotor("FSOKANUERHMBTIYCWLQPZXVGJD");
     static Rotor ReflectorA=        Rotor("EJMZALYXVBWFCRQUONTSPIKHGD");
     static Rotor ReflectorB=        Rotor("YRUHQSLDPXNGOKMIEBFZCWVJAT");
@@ -145,15 +163,49 @@ int main() {
     static Reflector ThinReflectorB=Reflector("ENKQAUYWJICOPBLMDXZVFTHRGS");
     static Reflector ThinReflectorC=Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
     static Rotor ETW=               Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    */
     //I.print();
-    Enigma enigma({I, II, III}, UKWR);
+    //Enigma enigma({I, II, III}, UKWR);
     //cout<<"encrypting\n";
     //enigma.print();
-    vector<int> encryption=enigma.get_encryption();
-    for (auto i : encryption) { cout<<i<<" "; }
-    cout<<"\n";
-    cout<<enigma.encrypt_without_turning(0);
-    cout<<"\n";
-    for (auto i : {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) { cout<<enigma.encrypt(i)<<" "; }
-    cout<<"\n";
+    //vector<int> encryption=enigma.get_encryption();
+    //for (auto i : encryption) { cout<<i<<" "; }
+    //cout<<"\n";
+    //cout<<enigma.encrypt_without_turning(0);
+    //cout<<"\n";
+    //A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z
+    //0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+    //for (auto i : {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) { cout<<enigma.encrypt(i)<<" "; }
+    //cout<<"\n";
+    //Plugboard plugboard("AB. CD. EF. WQ", 26);     26-13=13
+    //Enigma enigma({VIII, VI, V, Beta}, ThinReflectorC);
+    //enigma.set_verbose(true);
+    //enigma.set_plugboard("AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW");
+    //enigma.set_rotor_position("ZPOY");
+    //cout<<"ring set\n";
+    //enigma.set_ring_setting("KTDC");
+    //cout<<"rotor set\n";
+    //enigma.print();
+    //string str=enigma.encrypt("RBBFPMHPHGCZXTDYGAHGUFXGEWK");
+    //cout<<str;
+    //cout<<"begining indicator procedure\n";
+    //cout<<enigma.indicator_procedure_WW2("DUHF", "TETO")<<"\n";
+    //enigma.print_positions();KLMN
+
+
+    /*
+    //OK!
+    enigma.set_rotor_position("ZPOY"); // 26 16 15 25
+    enigma.set_ring_setting("KTDC");
+    cout<<enigma.encrypt("RBBFPMHPHGCZXTDYGAHGUFXGE");
+    //OK!
+    enigma.set_rotor_position("CQOY"); // correst for wiki example
+    enigma.set_ring_setting("NUDC");
+    cout<<enigma.encrypt("GE");
+
+    //RING POSITION NEEDS TO BE TAKEN INTO ACCOUNT FOR CORRECT STEPPING!
+    //yes
+    //read positions(the numbers in wiki example) directly
+    //then insert ringsthellung for correct notching
+    */
 }

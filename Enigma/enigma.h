@@ -12,6 +12,11 @@ using namespace std;
 #include <vector>
 #include <initializer_list>
 #include <utility>
+//#include "boost"
+#include <algorithm>
+#include <sstream>
+//#include <iterator>
+//#include <sstream>
 /*
 class Plugboard: public Reflector {
 }*/
@@ -64,6 +69,23 @@ class Reflector: public Rotor{
         bool is_valid() const;
 };
 
+class Plugboard{
+    private:
+        int m_wires;
+        vector<int> m_wiring;
+    public:
+        //Plugboard();
+        Plugboard(int);
+        Plugboard(const string, int);
+        ~Plugboard();
+        Plugboard& operator=(Plugboard);
+        void swap(Plugboard&) noexcept;
+        //Plugboard(const char, int);
+        int encrypt(int) const;
+        //int* encrypt(const int*) const;
+        void set_wiring(const string);
+};
+
 class Cartridge {
     private:
         Rotor    **m_rotors;
@@ -72,6 +94,7 @@ class Cartridge {
         int       *m_positions, *m_ring_setting; //ringscthellung, moves the notches in the wheels
         bool       m_verbose=false;
         int       *m_notch_position;
+        Plugboard *m_plugboard;
 
     public:
         Cartridge(); //XXX stupitt
@@ -91,6 +114,7 @@ class Cartridge {
         const string get_positions_as_string() const;
         const string get_ring_setting_as_string() const;
         //setters
+        void set_plugboard(const string);
         void set_rotor(int, const Rotor*);
         void set_reflector(const Reflector*);
         void set_positions(const int* p);
@@ -103,6 +127,7 @@ class Cartridge {
         void reset_ring_setting();
         void turn(); //overloaded, single turn
         int  encrypt_without_turning(int i) const; //pass integer through wires without turning
+        int  plugboard_encrypt(int i) const;
         void print() const; //PRINT cartridge
         void print_positions() const; //print positions of the rotors
         void randomize();
@@ -180,19 +205,24 @@ class Enigma {
         //setters
         void set_coder();
         void set_verbose(bool);
+        void set_cartridge_verbose(bool);
         void set_rotor_position(const string);
         void set_rotor_position(const int*);
         void set_ring_setting(const string);
         void set_ring_setting(const int*);
+        void set_plugboard(const string);
         //other
-        //void indicator_procedure_early(string, string);
-        //void indicator_procedure_WW2(string, string); //wehrmacht luftwaffe
+        string indicator_procedure_early(string);
+        string indicator_procedure_WW2(string, string); //wehrmacht, luftwaffe
+        string indicator_procedure_kenngruppenbuch(string, string); //naval
+
         //void indicator_procedure_kriegsmarine(string, string);
         void turn();
         void reset();
         void randomize();
         int encrypt(int m);
         int encrypt_without_turning(int m) const;
+        string encrypt(string);
         int* encrypt(const int* m, int n);
         void print_positions() const;
         void print() const;
