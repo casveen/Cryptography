@@ -1,10 +1,10 @@
 //#include "enigma.h";
 #include "bombe.h" //wire, diagonal board
 
-void         Wire::flow() {
+void           Wire::flow() {
     m_live=-1;
     //activate connected dead wires
-    for(int w=0; w<m_connections.size(); ++w) {
+    for(unsigned int w=0; w<m_connections.size(); ++w) {
         Wire *wire=m_connections.at(w);
         if (wire->get_live()==0) {
             wire->flow();
@@ -12,23 +12,23 @@ void         Wire::flow() {
     }
     m_live=1;
 }
-int          Wire::get_live() {
+int            Wire::get_live() const {
     return m_live;
 }
-void         Wire::kill() {
+void           Wire::kill() {
     m_live=0;
 }
-void         Wire::set_live(int t_set) {
+void           Wire::set_live(int t_set) {
     m_live=t_set;
 }
-void         Wire::reset() {
+void           Wire::reset() {
     kill();
     m_connections.clear();
 }
-vector<Wire*> Wire::get_connections() {
-    return m_connections;
+vector<Wire*>* Wire::get_connections() {
+    return &m_connections;
 }
-void         Wire::connect(Wire* w) {
+void           Wire::connect(Wire* w) {
     m_connections.push_back(w);
 }
 
@@ -57,15 +57,15 @@ void DiagonalBoard::activate(int t_bundle, int t_wire) {
     get_wire(t_bundle, t_wire)->flow();
 }
 void DiagonalBoard::wipe() {
-    for(int bundle=0; bundle<m_bundles.size(); ++bundle) {
-        for(int wire=0; wire<=bundle; ++wire) {
+    for(unsigned int bundle=0; bundle<m_bundles.size(); ++bundle) {
+        for(unsigned int wire=0; wire<=bundle; ++wire) {
             get_wire(bundle, wire)->kill();
         }
     }
 }
 void DiagonalBoard::reset() {
-    for(int bundle=0; bundle<m_bundles.size(); ++bundle) {
-        for(int wire=0; wire<=bundle; ++wire) {
+    for(unsigned int bundle=0; bundle<m_bundles.size(); ++bundle) {
+        for(unsigned int wire=0; wire<=bundle; ++wire) {
             get_wire(bundle, wire)->reset();
         }
     }
@@ -74,39 +74,40 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2, int t_
     get_wire(t_bundle_1, t_wire_1)->connect(get_wire(t_bundle_2, t_wire_2));
     get_wire(t_bundle_2, t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
-void DiagonalBoard::connect_enigma(vector<pair<int,int>> encryption, int t_from, int t_to) {
+void DiagonalBoard::connect_enigma(vector<pair<int,int>>* encryption, int t_from, int t_to) {
     //cout<<"diag board wiring in an enigma\n";
-    for (int i=0; i<encryption.size(); i++) {
+    for (unsigned int i=0; i<encryption->size(); i++) {
         //cout<<"connecting...";
-        //cout<<t_from<<":"<<encryption[i].first<<" <-> "<<t_to<<":"<<encryption[i].second<<"\n";
-        connect(t_from, encryption.at(i).first, t_to, encryption.at(i).second);
+        cout<<t_from<<":"<<encryption->at(i).first<<" <-> "<<t_to<<":"<<encryption->at(i).second<<"\n";
+        connect(t_from, encryption->at(i).first, t_to, encryption->at(i).second);
+        connect(t_from, encryption->at(i).second, t_to, encryption->at(i).first);
     }
     //cout<<"finished connecting\n";
 }
 int DiagonalBoard::bundle_sum(int bundle) const{
     int sum=0;
-    for (int i=0; i<m_bundles.size(); ++i) {
+    for (unsigned int i=0; i<m_bundles.size(); ++i) {
         sum+=get_wire(bundle,i)->get_live();
     }
     return sum;
 }
 void DiagonalBoard::print() const{
-    int bundle_size=m_bundles.size();
+    unsigned int bundle_size= m_bundles.size();
     //cout<<"bundle size "<<bundle_size<<"\n";
-    for(int b=0; b<bundle_size; b++) {
+    for(unsigned int b=0; b<bundle_size; b++) {
         //cout<<"wires size "<<m_bundles.at(b).size()<<"\n";
-        for(int w=0; w<m_bundles.at(b).size(); w++) {
+        for(unsigned int w=0; w<m_bundles.at(b).size(); w++) {
             Wire* wire=m_bundles.at(b).at(w);
             cout<<wire->get_live()<<" ";
         }
         cout<<"\n";
     }
     cout<<"sizes\n";
-    for(int b=0; b<bundle_size; b++) {
+    for(unsigned int b=0; b<bundle_size; b++) {
         //cout<<"wires size "<<m_bundles.at(b).size()<<"\n";
-        for(int w=0; w<m_bundles.at(b).size(); w++) {
+        for(unsigned int w=0; w<m_bundles.at(b).size(); w++) {
             Wire* wire=m_bundles.at(b).at(w);
-            cout<<wire->get_connections().size()<<" ";
+            cout<<wire->get_connections()->size()<<" ";
         }
         cout<<"\n";
     }
@@ -138,7 +139,7 @@ void DiagonalBoard::print_live() const{
 }*/
 bool DiagonalBoard::bundle_contradiction(int bundle) const{
     int sum=0;
-    for (int i=0; i<m_bundles.size(); ++i) {
+    for (unsigned int i=0; i<m_bundles.size(); ++i) {
         sum+=get_wire(bundle,i)->get_live();
         if (sum>1) return false;
     }
@@ -150,9 +151,9 @@ Bombe::Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflecto
     m_letters=         ((Rotor*) rotors.begin())->get_wires();
     m_rotor_count=   rotors.size();
     m_diagonal_board=new DiagonalBoard(m_letters);
-    m_enigma=        new Enigma(m_rotor_count, m_letters);
+    m_enigma=        new Enigma(rotors, reflector);
 }
-vector<int> Bombe::probable_search(string ciphertext, string crib) {
+vector<int> Bombe::probable_search(const string ciphertext, const string crib) {
     vector<int> candidates;
     //find suitable pattern
     int ciphertext_length=ciphertext.length(), crib_length=crib.length();
@@ -174,38 +175,58 @@ vector<int> Bombe::probable_search(string ciphertext, string crib) {
     }
     return candidates;
 }
+int  Bombe::find_most_wired_letter(const string ciphertext, const string crib) {
+    //make histogram, find most frequent element
+    int* histogram=new int[m_letters];
+    for (int i=0; i<m_letters; ++i) { histogram[i]=0; }
+    for (unsigned int i=0; i<min(ciphertext.length(), crib.length()); ++i) {
+        histogram[(int) ciphertext[i]-(int) 'A']++;
+        histogram[(int) crib[i]- (int) 'A']++;
+    }
+    int max_value=0, max_index=-1;
+    for (int i=0; i<m_letters; ++i) {
+        if (histogram[i]>max_value) {
+            max_value=histogram[i];
+            max_index=i;
+        }
+    }
+    delete [] histogram;
+    return max_index;
+}
 void Bombe::init_enigma_encryptions(int encryptions) {
     //cout<<"intitialising encryptions\n";
     m_enigma_encryptions.clear();
     for(int i=0; i<encryptions; ++i) {
+        cout<<m_enigma->get_encryption_as_string()<<"\n";
         //cout<<i<<"\n";
         m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided());
         m_enigma->turn();
     }
     //cout<<"encryptions done\n";
 }
-void Bombe::setup_diagonal_board(string ciphertext, string crib) {
+void Bombe::setup_diagonal_board(const string ciphertext, const string crib) {
     //cout<<"setting up DB\n";
-    for(int j=0; j<crib.length(); j++) {
+    for(unsigned int j=0; j<crib.length(); j++) {
         //cout<<"getting an encryption\n";
         vector<pair<int,int>> encryption=m_enigma_encryptions.at(j);
         //cout<<"connecting an enigma\n";
-        m_diagonal_board->connect_enigma(encryption, (int)crib[j]-(int)'A', (int)ciphertext[j]-(int)'A');
+        m_diagonal_board->connect_enigma(&encryption, (int)crib[j]-(int)'A', (int)ciphertext[j]-(int)'A');
     }
 }
-void Bombe::analyze(string ciphertext, string crib) {
+void Bombe::analyze(const string ciphertext, const string crib) {
     //find total amount of rotor positions
-    int total_permutations=1;
+    int total_permutations=1, most_wired_letter;
     for(int j=0; j<m_enigma->get_rotors(); j++) {
         total_permutations*=m_enigma->get_wires();
     }
     cout<<"analyzing\n";
-    int dummy;
     //find candidates
     vector<int> candidates=probable_search(ciphertext, crib);
     //analyze each candidate
-    for(int i=0; i<candidates.size(); i++) {
-        //setup the wiring for the candidate
+    for(unsigned int i=0; i<candidates.size(); i++) {
+        //find most commonly connected letter
+        most_wired_letter=find_most_wired_letter(ciphertext.substr(candidates[i], crib.length()), crib);
+        //setup the wiring for the can didate
         cout<<"candidate "<<i<<"\n";
         //setup crib.length() enigma encryptions
         init_enigma_encryptions(crib.length());
@@ -250,12 +271,13 @@ bool Bombe::check_wiring() {
     for(int bundle=0; bundle<m_letters; ++bundle) {
         //for(int wire=0; wire<m_letters; ++wire) {
             //if (wire!=bundle) {
-                wire=0;
+                wire=1;
                 cout<<"BUNDLE: "<<(char)(bundle+(int)'A');
                 cout<<"  WIRE: "<<(char)(wire+(int)'A');
                 cout<<"\n";
                 m_diagonal_board->activate(bundle, wire);
                 m_diagonal_board->print_live();
+                cin.get();
                 //m_diagonal_board->print();
                 sum=m_diagonal_board->bundle_sum(bundle);
                 if (!(sum==1 || sum==m_letters-1)) return false;
@@ -265,10 +287,9 @@ bool Bombe::check_wiring() {
     }
     return true;
 }
-
 void Bombe::print_encryptions() const {
     for(int wire=0; wire<m_letters/2; ++wire) {
-        for(int e=0; e<m_enigma_encryptions.size(); ++e) {
+        for(unsigned int e=0; e<m_enigma_encryptions.size(); ++e) {
             printf("<%2d,%2d>   ",(m_enigma_encryptions[e])[wire].first,(m_enigma_encryptions[e])[wire].second);
         }
         cout<<"\n";
@@ -281,13 +302,14 @@ void Bombe::print_encryptions() const {
 
 
 int main() {
-    static Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
-    static Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
-    static Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
-    static Reflector UKWR=      Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
-
+    const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "");
+    const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "");
+    const Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "");
+    const Reflector UKWR=      Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
     Bombe* bombe=new Bombe({I, II, III}, UKWR);
-
-    bombe->analyze("QFZWRWIVTYRESXBFOGKUHQBAISEZ", "WETTERVORHERSAGEBISKAYA");
+    bombe->analyze("LCUCNXJXJCXZVWJBKULEERCLXZJZBSNNBFVRNBJDEBUUJGMRTZ", "THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGM");
+    //bombe->analyze("GLKTSUAMKNQQYISUSNAEZLLBUN", "BCDEFGHIJKLM");
+    //bombe->analyze("RTPTBZWSONHXBGYRSLVXZKKAUM", "DEFGH");
+    //bombe->analyze("QFZWRWIVTYRESXBFOGKUHQBAISEZ", "WETTERVORHERSAGEBISKAYA");
     delete bombe;
 }

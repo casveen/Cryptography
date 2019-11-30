@@ -209,7 +209,8 @@ bool Reflector::is_valid() const {
     //is out the inverse? is the mapping surjective?(covered by w spanning all wires)
     //same as is valid for WHeel, but uses wiring_in both times
     for (int w=0; w<m_wires; w++) {
-        if (get_wiring_in(get_wiring_in(w))!=w) {
+        int m = get_wiring_in(w);
+        if (get_wiring_in(m)!=w && w!=m) {
             return false;
         }
     }
@@ -609,6 +610,14 @@ vector<int> Enigma::get_encryption() const {
     }
     return input;
 }
+string Enigma::get_encryption_as_string() const{
+    vector<int> encryption=get_encryption();
+    string out="";
+    for (int enc : encryption) {
+        out+=(char)(enc+(int)'A');
+    }
+    return out;
+}
 vector<pair<int, int>> Enigma::get_encryption_onesided() const {
     //return encryption at current step
     //encrypt all letters
@@ -785,3 +794,16 @@ string Enigma::indicator_procedure_WW2(string start_pos, string message_key) {
     //set_rotor_position(str);
     return start_pos+encrypted_message_key;
 }
+
+/*
+int main() {
+    const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "");
+    const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "");
+    const Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "");
+    const Reflector UKWR=          Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
+    Enigma enigma({I, II, III}, UKWR);
+    enigma.set_verbose(true);
+    //enigma.set_plugboard("AB.CD.EF.GH.IJ.KL.MN.OP.QR.ST");
+    cout<<enigma.encrypt("THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGMA");
+}
+*/

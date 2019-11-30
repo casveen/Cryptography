@@ -15,7 +15,6 @@ using namespace std;
 //#include "boost"
 #include <algorithm>
 #include <sstream>
-#include "include/catch.hpp"
 //#include <iterator>
 //#include <sstream>
 /*
@@ -202,6 +201,7 @@ class Enigma {
         const int* get_ring_setting() const;
         string get_ring_setting_as_string() const;
         vector<int> get_encryption() const;
+        string get_encryption_as_string() const;
         vector<pair<int,int>> get_encryption_onesided() const;
         //setters
         void set_coder();
@@ -216,7 +216,7 @@ class Enigma {
         string indicator_procedure_early(string);
         string indicator_procedure_WW2(string, string); //wehrmacht, luftwaffe
         string indicator_procedure_kenngruppenbuch(string, string); //naval
-
+        string indicator_procedure_verfahrenkenngruppe(string, string);
         //void indicator_procedure_kriegsmarine(string, string);
         void turn();
         void reset();

@@ -11,12 +11,12 @@ class Wire {
     int m_live=0;   //0: dead, 1: live, -1: just activated
     public:
     void flow();    //make wire live, and also wires connected to it
-    int get_live(); //0 dead, -1 just set to live, 1 live
+    int get_live() const; //0 dead, -1 just set to live, 1 live
     void set_live(int);
     void kill(); //set to 0
     void reset();
     void connect(Wire* w);
-    vector<Wire*> get_connections();
+    vector<Wire*>* get_connections();
 };
 
 class DiagonalBoard {
@@ -29,7 +29,7 @@ class DiagonalBoard {
     void connect(int, int, int, int);
     void print() const;
     void print_live() const;
-    void connect_enigma(vector<pair<int,int>> , int, int);
+    void connect_enigma(vector<pair<int,int>>* , int, int);
     void wipe();
     void reset();
     bool bundle_contradiction(int) const;
@@ -46,10 +46,11 @@ class Bombe {
         //Enigma*        enigma;
     public:
         Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector);
-        vector<int> probable_search(string, string);
+        vector<int> probable_search(const string, const string);
+        int  find_most_wired_letter(const string, const string);
         void init_enigma_encryptions(int);
-        void analyze(string, string);
-        void setup_diagonal_board(string, string);
+        void analyze(const string, const string);
+        void setup_diagonal_board(const string, const string);
         bool check_wiring();
         bool bundle_contradiction(int);
         void print_encryptions() const;
