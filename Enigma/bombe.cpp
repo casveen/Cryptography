@@ -138,12 +138,13 @@ void DiagonalBoard::print_live() const{
     return sum;
 }*/
 bool DiagonalBoard::bundle_contradiction(int bundle) const{
-    int sum=0;
+    int ones=0, zeros=0;
+    //we have a contradiction if there is not exactly 1 or exactly 25 live wires
     for (unsigned int i=0; i<m_bundles.size(); ++i) {
-        sum+=get_wire(bundle,i)->get_live();
-        if (sum>1) return false;
+        get_wire(bundle,i)->get_live()==0?++zeros:++ones;
+        if (ones>=2 && zeros>=2) return true;
     }
-    return true;
+    return false;
 }
 
 
@@ -242,7 +243,7 @@ void Bombe::analyze(const string ciphertext, const string crib) {
             //cout<<"setup\n";
             setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
             //cout<<"checking\n";
-            if (check_wiring()) {
+            if (check_wiring(most_wired_letter)) {
                 cout<<"VALID CONFIGURATION FOUND\n";
             }
             //cout<<"checked\n";
@@ -261,29 +262,25 @@ void Bombe::analyze(const string ciphertext, const string crib) {
 bool Bombe::bundle_contradiction(int bundle) {
        return m_diagonal_board->bundle_contradiction(bundle);
 }
-bool Bombe::check_wiring() {
+bool Bombe::check_wiring(int most_wired_letter) {
     //the diagonal board is properly wired, the rotors are in position
     //check if no contradictions
 
     //for each bundle, activate each wire, test each bundle for a contradiciton
     //(more than one live)
-    int sum, wire;
-    for(int bundle=0; bundle<m_letters; ++bundle) {
+    for(int wire=0; wire<m_letters; ++wire) {
         //for(int wire=0; wire<m_letters; ++wire) {
             //if (wire!=bundle) {
-                wire=1;
-                cout<<"BUNDLE: "<<(char)(bundle+(int)'A');
+                cout<<"BUNDLE: "<<(char)(most_wired_letter+(int)'A');
                 cout<<"  WIRE: "<<(char)(wire+(int)'A');
                 cout<<"\n";
-                m_diagonal_board->activate(bundle, wire);
+                m_diagonal_board->activate(most_wired_letter, wire);
                 m_diagonal_board->print_live();
                 cin.get();
                 //m_diagonal_board->print();
-                sum=m_diagonal_board->bundle_sum(bundle);
-                if (!(sum==1 || sum==m_letters-1)) return false;
+                //sum=m_diagonal_board->bundle_sum();
+                if (bundle_contradiction(most_wired_letter)) return false;
                 m_diagonal_board->wipe(); //wipe current in wires
-
-        //}
     }
     return true;
 }

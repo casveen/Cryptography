@@ -51,7 +51,7 @@ class Bombe {
         void init_enigma_encryptions(int);
         void analyze(const string, const string);
         void setup_diagonal_board(const string, const string);
-        bool check_wiring();
+        bool check_wiring(int);
         bool bundle_contradiction(int);
         void print_encryptions() const;
 };
