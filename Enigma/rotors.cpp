@@ -1,35 +1,63 @@
-#ifndef ENIGMA_H // include guard
-#define ENIGMA_H
-#include "enigma.cpp"
+#ifndef ROTORS_H // include guard
+#define ROTORS_H
+#include "enigma.h" //is guarded, so is probably not inserted here
 
-
-static Rotor IC=  Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
-static Rotor IIC= Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
-static Rotor IIIC=Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
-static Rotor IR=  Rotor("JGDQOXUSCAMIFRVTPNEWKBLZYH");
-static Rotor IIR= Rotor("NTZPSFBOKMWRCJDIVLAEYUXHGQ");
-static Rotor IIIR=Rotor("JVIUBHTCDYAKEQZPOSGXNRMWFL");
-static Rotor UKWR=Rotor("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
-static Rotor ETWR=Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
-static Rotor IK=  Rotor("PEZUOHXSCVFMTBGLRINQJWAYDK");
-static Rotor IIK= Rotor("ZOUESYDKFWPCIQXHMVBLGNJRAT");
-static Rotor IIIK=Rotor("EHRVXGAOBQUSIMZFLYNWKTPDJC");
-static Rotor UKWK=Rotor("IMETCGFRAYSQBZXWLHKDVUPOJN"); //ref
-static Rotor ETWK=Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
-static Rotor I=   Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
-static Rotor II=  Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
-static Rotor III= Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
-static Rotor IV=  Rotor("ESOVPZJAYQUIRHXLNFTGKDCMWB", "J");
-static Rotor V=   Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z");
-static Rotor VI=  Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
-static Rotor VII= Rotor("NZJHGRCXMYSWBOUFAIVLPEKQDT", "ZM");
-static Rotor VIII=Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
-static Rotor Beta=          Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
-static Rotor Gamma=         Rotor("FSOKANUERHMBTIYCWLQPZXVGJD");
-static Rotor ReflectorA=    Rotor("EJMZALYXVBWFCRQUONTSPIKHGD");
-static Rotor ReflectorB=    Rotor("YRUHQSLDPXNGOKMIEBFZCWVJAT");
-static Rotor ReflectorC=    Rotor("FVPJIAOYEDRZXWGCTKUQSBNMHL");
-static Rotor ThinReflectorB=Rotor("ENKQAUYWJICOPBLMDXZVFTHRGS");
-static Rotor ThinReflectorC=Rotor("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
-static Rotor ETW=           Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+const Rotor IC=  Rotor("DMTWSILRUYQNKFEJCAZBPGXOHV");
+const Rotor IIC= Rotor("HQZGPJTMOBLNCIFDYAWVEUSRKX");
+const Rotor IIIC=Rotor("UQNTLSZFMREHDPXKIBVYGJCWOA");
+const Rotor IR=  Rotor("JGDQOXUSCAMIFRVTPNEWKBLZYH");
+const Rotor IIR= Rotor("NTZPSFBOKMWRCJDIVLAEYUXHGQ");
+const Rotor IIIR=Rotor("JVIUBHTCDYAKEQZPOSGXNRMWFL");
+const Rotor UKWR=Rotor("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
+const Rotor ETWR=Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
+const Rotor IK=  Rotor("PEZUOHXSCVFMTBGLRINQJWAYDK");
+const Rotor IIK= Rotor("ZOUESYDKFWPCIQXHMVBLGNJRAT");
+const Rotor IIIK=Rotor("EHRVXGAOBQUSIMZFLYNWKTPDJC");
+const Rotor UKWK=Rotor("IMETCGFRAYSQBZXWLHKDVUPOJN"); //ref
+const Rotor ETWK=Rotor("QWERTZUIOASDFGHJKPYXCVBNML");
+const Rotor I=   Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
+const Rotor II=  Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
+const Rotor III= Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
+const Rotor IV=  Rotor("ESOVPZJAYQUIRHXLNFTGKDCMWB", "J");
+const Rotor V=   Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z");
+const Rotor VI=  Rotor("JPGVOUMFYQBENHZRDKASXLICTW", "ZM");
+const Rotor VII= Rotor("NZJHGRCXMYSWBOUFAIVLPEKQDT", "ZM");
+const Rotor VIII=Rotor("FKQHTLXOCBJSPDZRAMEWNIUYGV", "ZM");
+const Rotor Beta=          Rotor("LEYJVCNIXWPBQMDRTAKZGFUHOS");
+const Rotor Gamma=         Rotor("FSOKANUERHMBTIYCWLQPZXVGJD");
+const Rotor ReflectorA=    Rotor("EJMZALYXVBWFCRQUONTSPIKHGD");
+const Rotor ReflectorB=    Rotor("YRUHQSLDPXNGOKMIEBFZCWVJAT");
+const Rotor ReflectorC=    Rotor("FVPJIAOYEDRZXWGCTKUQSBNMHL");
+const Rotor ThinReflectorB=Rotor("ENKQAUYWJICOPBLMDXZVFTHRGS");
+const Rotor ThinReflectorC=Rotor("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
+const Rotor ETW=           Rotor("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+const vector<Rotor> allRotors = {IC,
+                                 IIC,
+                                 IIIC,
+                                 IR,
+                                 IIR,
+                                 IIIR,
+                                 UKWR,
+                                 ETWR,
+                                 IK,
+                                 IIK,
+                                 IIIK,
+                                 UKWK,
+                                 ETWK,
+                                 I,
+                                 II,
+                                 III,
+                                 IV,
+                                 V,
+                                 VI,
+                                 VII,
+                                 VIII,
+                                 Beta,
+                                 Gamma,
+                                 ReflectorA,
+                                 ReflectorB,
+                                 ReflectorC,
+                                 ThinReflectorB,
+                                 ThinReflectorC,
+                                 ETW};
 #endif

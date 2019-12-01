@@ -359,6 +359,17 @@ Cartridge::~Cartridge() {
     delete m_plugboard;
 }
 //getters
+struct EnigmaSetting Cartridge::get_setting() const {
+    struct EnigmaSetting out;
+    for (int w=0; w<m_rotor_count; ++w) {
+        out.rotors.push_back(m_rotors[w]);
+    }
+    out.reflector=m_reflector;
+    out.plugboard=m_plugboard;
+    out.ring_setting=get_ring_setting_as_string();
+    out.rotor_position=get_positions_as_string();
+    return out;
+}
 const Rotor**    Cartridge::get_rotors() const {
     return (const Rotor**) m_rotors;
 }
@@ -395,6 +406,22 @@ const string     Cartridge::get_positions_as_string() const {
 }
 int              Cartridge::get_reflector_position() const { return m_reflector_position; }
 //setters
+void Cartridge::set_setting(struct EnigmaSetting setting) {
+    m_rotor_count=(signed int) setting.rotors.size(); //TODO check if not 0
+    m_wires=setting.rotors[0]->get_wires(); //begin?
+    //rotors
+    //realloc rotors and set
+    delete [] m_rotors;  //XXX might delete to much...
+    m_rotors   =new Rotor*[m_rotor_count];
+    for (int r=0; r<m_rotor_count; ++r) { m_rotors[r]=setting.rotors[r]; }
+    //reflector
+    m_reflector=setting.reflector;
+    //plugboard
+    m_plugboard=setting.plugboard;
+    //settings
+    set_positions(setting.rotor_position);
+    set_ring_setting(setting.ring_setting);
+}
 void Cartridge::set_plugboard(const string str) {
     m_plugboard->set_wiring(str);
 }
@@ -554,6 +581,9 @@ Enigma::~Enigma() {
     delete m_cartridge;
 }
 //getter
+struct EnigmaSetting Enigma::get_setting() {
+    return m_cartridge->get_setting();
+}
 int Enigma::get_wires() const {
     return m_wires;
 }
@@ -659,6 +689,11 @@ vector<pair<int, int>> Enigma::get_encryption_onesided() const {
     return wires;
 }
 //setter
+void Enigma::set_setting(struct EnigmaSetting setting) {
+    m_rotors_number=(signed int) setting.rotors.size(); //TODO check if not 0
+    m_wires=setting.rotors[0]->get_wires();
+    m_cartridge->set_setting(setting);
+}
 void Enigma::set_coder() {
     //set code for language
 }
@@ -797,13 +832,13 @@ string Enigma::indicator_procedure_WW2(string start_pos, string message_key) {
 
 /*
 int main() {
-    const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "");
-    const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "");
-    const Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "");
+    const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
+    const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
+    const Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
     const Reflector UKWR=          Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
     Enigma enigma({I, II, III}, UKWR);
     enigma.set_verbose(true);
     //enigma.set_plugboard("AB.CD.EF.GH.IJ.KL.MN.OP.QR.ST");
-    cout<<enigma.encrypt("THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGMA");
+    cout<<enigma.encrypt("THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGMAANDITISVERYVERYLONG");
 }
 */

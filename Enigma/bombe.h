@@ -2,6 +2,7 @@
 #define BOMBE_H
 
 using namespace std;
+#include <chrono>
 #include "enigma.h"
 
 //wiring
@@ -55,5 +56,4 @@ class Bombe {
         bool bundle_contradiction(int);
         void print_encryptions() const;
 };
-
 #endif

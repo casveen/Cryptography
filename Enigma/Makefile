@@ -1,7 +1,7 @@
 CC        := g++
 #MPI       := mpicc
 FLAGS      = -Wall
-TESTDEP    = enigma.cpp
+TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp
 DEP        = enigma.cpp bombe.cpp
 HEADER     = enigma.h   bombe.h
 PROGRAMS = $(patsubst %.cpp, %.exe, $(wildcard *.cpp))
@@ -14,12 +14,14 @@ all:
 enigma.exe: enigma.cpp
 	$(CC) $< -o $@ $(FLAGS)
 
-test.exe : test.cpp enigma.cpp
+test.exe : test.cpp enigma.cpp rotors.cpp test_enigma.cpp
 	$(CC) $< -o $@ $(FLAGS) $(TESTDEP)
 
 bombe.exe : bombe.cpp enigma.cpp
 	$(CC) $< -o $@ $(FLAGS) enigma.cpp
 
+test:
+	./test.exe
 
 clean :
 	rm -f $(PROGRAMS)

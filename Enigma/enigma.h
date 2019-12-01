@@ -93,7 +93,7 @@ class Cartridge {
         int        m_rotor_count, m_wires, m_reflector_position; //wires?
         int       *m_positions, *m_ring_setting; //ringscthellung, moves the notches in the wheels
         bool       m_verbose=false;
-        int       *m_notch_position;
+        //int       *m_notch_position;
         Plugboard *m_plugboard;
 
     public:
@@ -105,15 +105,18 @@ class Cartridge {
         void swap(Cartridge& s) noexcept;
         ~Cartridge();
         //getters
+        struct EnigmaSetting get_setting() const;
         const Rotor** get_rotors() const;
         const Reflector*  get_reflector() const;
         const int* get_positions() const;
+        const Plugboard* get_plugboard() const;
         int        get_positions_as_int() const;
         int        get_reflector_position() const;
         const int* get_ring_setting() const;
         const string get_positions_as_string() const;
         const string get_ring_setting_as_string() const;
         //setters
+        void set_setting(struct EnigmaSetting);
         void set_plugboard(const string);
         void set_rotor(int, const Rotor*);
         void set_reflector(const Reflector*);
@@ -182,18 +185,28 @@ class Cartridge {
         }
 };
 
+struct EnigmaSetting {
+    vector<Rotor*> rotors;
+    Reflector* reflector;
+    Plugboard* plugboard;
+    string ring_setting;
+    string rotor_position;
+};
+
 class Enigma {
     private:
         Cartridge* m_cartridge;
         int m_rotors_number, m_wires;
         bool m_verbose=false;
-        int  *m_rotor_position, m_ring_setting;
+        //int  *m_rotor_position, m_ring_setting;
 
     public:
         Enigma(int rotors_number, int wires);
         Enigma(const std::initializer_list<Rotor> rotors, const Reflector reflector);
+        Enigma(struct EnigmaSetting setting);
         ~Enigma();
         //getters
+        struct EnigmaSetting get_setting();
         int get_wires() const;
         int get_rotors() const;
         const int* get_rotor_position() const;
@@ -204,6 +217,7 @@ class Enigma {
         string get_encryption_as_string() const;
         vector<pair<int,int>> get_encryption_onesided() const;
         //setters
+        void set_setting(struct EnigmaSetting);
         void set_coder();
         void set_verbose(bool);
         void set_cartridge_verbose(bool);

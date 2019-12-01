@@ -78,7 +78,7 @@ void DiagonalBoard::connect_enigma(vector<pair<int,int>>* encryption, int t_from
     //cout<<"diag board wiring in an enigma\n";
     for (unsigned int i=0; i<encryption->size(); i++) {
         //cout<<"connecting...";
-        cout<<t_from<<":"<<encryption->at(i).first<<" <-> "<<t_to<<":"<<encryption->at(i).second<<"\n";
+        //cout<<t_from<<":"<<encryption->at(i).first<<" <-> "<<t_to<<":"<<encryption->at(i).second<<"\n";
         connect(t_from, encryption->at(i).first, t_to, encryption->at(i).second);
         connect(t_from, encryption->at(i).second, t_to, encryption->at(i).first);
     }
@@ -142,8 +142,13 @@ bool DiagonalBoard::bundle_contradiction(int bundle) const{
     //we have a contradiction if there is not exactly 1 or exactly 25 live wires
     for (unsigned int i=0; i<m_bundles.size(); ++i) {
         get_wire(bundle,i)->get_live()==0?++zeros:++ones;
+        // ones==1 && zeros=25 || ones=25 zeros=1
+        //  1 impossible, 25 impossible
         if (ones>=2 && zeros>=2) return true;
     }
+    //if only ones or only zeros, we have a contradiciton
+    if (ones==0 || zeros==0) return true;
+    //otherwise, the bundle wiring is valid
     return false;
 }
 
@@ -170,7 +175,7 @@ vector<int> Bombe::probable_search(const string ciphertext, const string crib) {
         }
         if (suitable) {
             cout<<"suitable substring at "<<i<<"\n";
-            cout<<ciphertext.substr(i, crib_length)<<"\n"<<crib<<"\n\n";
+            cout<<ciphertext.substr(i, crib_length)<<"\n"<<crib<<"\n";
             candidates.push_back(i);
         }
     }
@@ -198,7 +203,7 @@ void Bombe::init_enigma_encryptions(int encryptions) {
     //cout<<"intitialising encryptions\n";
     m_enigma_encryptions.clear();
     for(int i=0; i<encryptions; ++i) {
-        cout<<m_enigma->get_encryption_as_string()<<"\n";
+        //cout<<m_enigma->get_encryption_as_string()<<"\n";
         //cout<<i<<"\n";
         m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided());
         m_enigma->turn();
@@ -234,9 +239,9 @@ void Bombe::analyze(const string ciphertext, const string crib) {
         //print_encryptions();
         //m_diagonal_board->print();
         //cout<<"HELL\n";
-        for(int j=0; j<total_permutations; j++) {
+        for(int j=0; j<total_permutations-1; j++) {
             //cout<<"\n";
-            printf("%5d/%5d\n", j, total_permutations);
+            //printf("\r%5d/%5d", j, total_permutations);
             //reset board
             m_diagonal_board->reset();
             //setup connections in board
@@ -244,18 +249,20 @@ void Bombe::analyze(const string ciphertext, const string crib) {
             setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
             //cout<<"checking\n";
             if (check_wiring(most_wired_letter)) {
-                cout<<"VALID CONFIGURATION FOUND\n";
+                //m_diagonal_board->print_live();
+                cout<<"VALID CONFIGURATION FOUND AT "<<i<<"\n";
+                //cin.get();
             }
             //cout<<"checked\n";
             //take out oldest, put in
             //new encryption after enigma turns
             //print_encryptions();
-            cin.get();
+            //cin.get();
             m_enigma->turn();
             m_enigma_encryptions.erase(m_enigma_encryptions.begin());; //erase first/oldest
             m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided()); //add new
         }
-        cout<<"UUU\n";
+        //cout<<"UUU\n";
     }
 
 }
@@ -271,12 +278,12 @@ bool Bombe::check_wiring(int most_wired_letter) {
     for(int wire=0; wire<m_letters; ++wire) {
         //for(int wire=0; wire<m_letters; ++wire) {
             //if (wire!=bundle) {
-                cout<<"BUNDLE: "<<(char)(most_wired_letter+(int)'A');
-                cout<<"  WIRE: "<<(char)(wire+(int)'A');
-                cout<<"\n";
+                //cout<<"BUNDLE: "<<(char)(most_wired_letter+(int)'A');
+                //cout<<"  WIRE: "<<(char)(wire+(int)'A');
+                //cout<<"\n";
                 m_diagonal_board->activate(most_wired_letter, wire);
-                m_diagonal_board->print_live();
-                cin.get();
+                //m_diagonal_board->print_live();
+                //cin.get();
                 //m_diagonal_board->print();
                 //sum=m_diagonal_board->bundle_sum();
                 if (bundle_contradiction(most_wired_letter)) return false;
@@ -297,16 +304,36 @@ void Bombe::print_encryptions() const {
 
 
 
-
+/*
 int main() {
-    const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "");
-    const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "");
-    const Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "");
+    const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
+    const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
+    const Rotor III=               Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V");
     const Reflector UKWR=      Reflector("QYHOGNECVPUZTFDJAXWMKISRBL"); //ref
     Bombe* bombe=new Bombe({I, II, III}, UKWR);
-    bombe->analyze("LCUCNXJXJCXZVWJBKULEERCLXZJZBSNNBFVRNBJDEBUUJGMRTZ", "THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGM");
+    //bombe->analyze("LCUCNXJXJCXZVWJBKULEERCLXZJZBSNNBFVRNBJDEBUUJGMRTZ", "THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGM"); OK?
+    //bombe->analyze("LCUCNXJXJCXZVWJBAZVFKUXIJDYLRNUUIGVDZDSQJQIUUJDWIXIPAMZJJMZWXLGFCPLAF", "THISISAPLAINTEXTMESSAGETOBEENCIPHERED");
+    //                THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGMAANDITISVERYVERYLONG
+    /*ok benchmark!
+    auto start = std::chrono::high_resolution_clock::now();
+    bombe->analyze("LCUCNXJXJCXZVWJBAZVFKUXIJDYLRNUUIGVDZD", "THISISAPLAINTEXTMESSAGETOBEENCIPHERED");
+    auto stop  = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    cout<<"Elapsed time "<< duration.count();
+    
+
+
+
+    //ok benchmark!
+    auto start = std::chrono::high_resolution_clock::now();
+    bombe->analyze("LCUCNXJXJCXZVWJBAZVFKUXIJDYLRNUUIGVDZDSQJQIUUJDWIXIPAMZJJMZWXLGFCPLAF", "TOBEENCIPHEREDWITHTHEENIGMAANDITISVERYVERY");
+    auto stop  = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    cout<<"Elapsed time "<< duration.count();
+
+
     //bombe->analyze("GLKTSUAMKNQQYISUSNAEZLLBUN", "BCDEFGHIJKLM");
     //bombe->analyze("RTPTBZWSONHXBGYRSLVXZKKAUM", "DEFGH");
     //bombe->analyze("QFZWRWIVTYRESXBFOGKUHQBAISEZ", "WETTERVORHERSAGEBISKAYA");
     delete bombe;
-}
+}*/
