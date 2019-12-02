@@ -275,7 +275,12 @@ void Plugboard::set_wiring(const string in) {
     }
     //XXX check validity
 }
-
+vector<int> Plugboard::get_wiring() const {
+    return m_wiring;
+}
+int Plugboard::get_wiring(int i) const {
+    return m_wiring[i];
+}
 
 
 //CARTRIDGE
@@ -476,6 +481,32 @@ void Cartridge::reset_positions() {
 void Cartridge::reset_ring_setting() {
     for (int p=0; p<m_rotor_count; p++) {
         m_ring_setting[p]=0;
+    }
+}
+void Cartridge::turn(int turns) {
+    //single turn
+    if (turns>0) {
+        for (int t=0; t<turns; ++t) {
+            turn();
+        }
+    }
+    else {
+        for (int t=0; t<-turns; ++t) {
+            int next, carry=-1;
+            for (int p=0; p<m_rotor_count && abs(carry)>0; p++) {
+                next=(m_positions[p]+carry+m_wires)%m_wires;
+                //check m_notch
+                carry=0;
+                //cout<<"p="<<p<<"\n";
+                for (int n=0; n<m_rotors[p]->get_notches(); n++) { //add one carry per notch passed
+                    if (m_rotors[p]->get_notch(n)==(next+m_ring_setting[p]+m_wires+1)%m_wires) { //carry only if on notch and moving
+                        carry=-1;
+                    }
+                }
+                m_positions[p]=next;
+                //carry=(int) next/m_wires; //only carry if exceeded a notch - ring setting[p]
+            }
+        }
     }
 }
 void Cartridge::turn() {
@@ -725,6 +756,9 @@ void Enigma::randomize() {
 }
 void Enigma::reset() {
     m_cartridge->reset_positions();
+}
+void Enigma::turn(int turns) {
+    m_cartridge->turn(turns);
 }
 void Enigma::turn() {
     m_cartridge->turn();

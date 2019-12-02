@@ -84,6 +84,9 @@ class Plugboard{
         int encrypt(int) const;
         //int* encrypt(const int*) const;
         void set_wiring(const string);
+        //getters
+        vector<int> get_wiring() const;
+        int get_wiring(int) const;
 };
 
 class Cartridge {
@@ -128,6 +131,7 @@ class Cartridge {
         //other
         void reset_positions();
         void reset_ring_setting();
+        void turn(int);
         void turn(); //overloaded, single turn
         int  encrypt_without_turning(int i) const; //pass integer through wires without turning
         int  plugboard_encrypt(int i) const;
@@ -232,6 +236,7 @@ class Enigma {
         string indicator_procedure_kenngruppenbuch(string, string); //naval
         string indicator_procedure_verfahrenkenngruppe(string, string);
         //void indicator_procedure_kriegsmarine(string, string);
+        void turn(int);
         void turn();
         void reset();
         void randomize();

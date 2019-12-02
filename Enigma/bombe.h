@@ -37,23 +37,38 @@ class DiagonalBoard {
     int  bundle_sum(int) const;
 };
 
+struct BombeSetting {
+    bool stop_on_first_valid=false; //if true, stops as soon as a valid config is found
+};
+
 class Bombe {
     private:
         int                 m_letters=26, m_rotor_count=3;
         DiagonalBoard*      m_diagonal_board;
         Enigma*             m_enigma;
         vector<vector<pair<int,int>>> m_enigma_encryptions; //keep track of encryptions
+        struct BombeSetting setting;
         //could be vector vector but im trying to familiarize myelf with these
         //Enigma*        enigma;
     public:
         Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector);
+
+
+
+        //setters
+        void set_ring_setting(const string);
+        void set_rotor_position(const string);
+        //getters
+        struct BombeSetting& get_setting();
+        //other
         vector<int> probable_search(const string, const string);
         int  find_most_wired_letter(const string, const string);
         void init_enigma_encryptions(int);
-        void analyze(const string, const string);
+        vector<struct EnigmaSetting> analyze(const string, const string);
         void setup_diagonal_board(const string, const string);
-        bool check_wiring(int);
+        bool check_one_wire(int);
         bool bundle_contradiction(int);
         void print_encryptions() const;
+
 };
 #endif

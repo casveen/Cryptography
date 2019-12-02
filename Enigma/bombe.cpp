@@ -71,6 +71,9 @@ void DiagonalBoard::reset() {
     }
 }
 void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2, int t_wire_2) {
+    /*if (t_bundle_1==t_bundle_2 && t_bundle_2==t_wire_1 && t_wire_1==t_wire_2) {
+        return;
+    }*/
     get_wire(t_bundle_1, t_wire_1)->connect(get_wire(t_bundle_2, t_wire_2));
     get_wire(t_bundle_2, t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
@@ -94,8 +97,14 @@ int DiagonalBoard::bundle_sum(int bundle) const{
 void DiagonalBoard::print() const{
     unsigned int bundle_size= m_bundles.size();
     //cout<<"bundle size "<<bundle_size<<"\n";
+    cout<<"  ";
+    for(unsigned int b=0; b<bundle_size; b++) {
+        cout<<(char)(b+(int)'a')<<" ";
+    }
+    cout<<"\n";
     for(unsigned int b=0; b<bundle_size; b++) {
         //cout<<"wires size "<<m_bundles.at(b).size()<<"\n";
+        cout<<(char)(b+(int)'A')<<" ";
         for(unsigned int w=0; w<m_bundles.at(b).size(); w++) {
             Wire* wire=m_bundles.at(b).at(w);
             cout<<wire->get_live()<<" ";
@@ -103,11 +112,17 @@ void DiagonalBoard::print() const{
         cout<<"\n";
     }
     cout<<"sizes\n";
+    cout<<"   ";
+    for(unsigned int b=0; b<bundle_size; b++) {
+        cout<<(char)(b+(int)'a')<<"  ";
+    }
+    cout<<"\n";
     for(unsigned int b=0; b<bundle_size; b++) {
         //cout<<"wires size "<<m_bundles.at(b).size()<<"\n";
+        cout<<(char)(b+(int)'A')<<" ";
         for(unsigned int w=0; w<m_bundles.at(b).size(); w++) {
             Wire* wire=m_bundles.at(b).at(w);
-            cout<<wire->get_connections()->size()<<" ";
+            printf("%2d ", wire->get_connections()->size());
         }
         cout<<"\n";
     }
@@ -159,12 +174,25 @@ Bombe::Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflecto
     m_diagonal_board=new DiagonalBoard(m_letters);
     m_enigma=        new Enigma(rotors, reflector);
 }
+//setters
+void Bombe::set_ring_setting(const string setting){
+    m_enigma->set_ring_setting(setting);
+}
+void Bombe::set_rotor_position(const string setting){
+    m_enigma->set_rotor_position(setting);
+}
+//getters
+struct BombeSetting& Bombe::get_setting() {
+    return setting;
+}
+
+//other
 vector<int> Bombe::probable_search(const string ciphertext, const string crib) {
     vector<int> candidates;
     //find suitable pattern
     int ciphertext_length=ciphertext.length(), crib_length=crib.length();
     bool suitable;
-    for(int i=0; i<ciphertext_length-crib_length; i++) {
+    for(int i=0; i<=ciphertext_length-crib_length; i++) {
         //compare, if same letter on same pos we have a contradiction
         suitable=true;
         for(int j=0; j<crib_length; j++) {
@@ -219,21 +247,25 @@ void Bombe::setup_diagonal_board(const string ciphertext, const string crib) {
         m_diagonal_board->connect_enigma(&encryption, (int)crib[j]-(int)'A', (int)ciphertext[j]-(int)'A');
     }
 }
-void Bombe::analyze(const string ciphertext, const string crib) {
+vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext, const string crib) {
     //find total amount of rotor positions
+    vector<struct EnigmaSetting> solutions;
     int total_permutations=1, most_wired_letter;
     for(int j=0; j<m_enigma->get_rotors(); j++) {
         total_permutations*=m_enigma->get_wires();
     }
-    cout<<"analyzing\n";
+    //cout<<"analyzing\n";
     //find candidates
     vector<int> candidates=probable_search(ciphertext, crib);
     //analyze each candidate
     for(unsigned int i=0; i<candidates.size(); i++) {
+
+        //TODO for all settings
+
         //find most commonly connected letter
         most_wired_letter=find_most_wired_letter(ciphertext.substr(candidates[i], crib.length()), crib);
         //setup the wiring for the can didate
-        cout<<"candidate "<<i<<"\n";
+        cout<<"candidate "<<i<<" most wired "<<most_wired_letter<<"\n";
         //setup crib.length() enigma encryptions
         init_enigma_encryptions(crib.length());
         //print_encryptions();
@@ -247,48 +279,60 @@ void Bombe::analyze(const string ciphertext, const string crib) {
             //setup connections in board
             //cout<<"setup\n";
             setup_diagonal_board(ciphertext.substr(candidates[i], crib.length()), crib);
+            //print_encryptions();
             //cout<<"checking\n";
-            if (check_wiring(most_wired_letter)) {
+            if (check_one_wire(most_wired_letter)) {
                 //m_diagonal_board->print_live();
-                cout<<"VALID CONFIGURATION FOUND AT "<<i<<"\n";
+                cout<<"VALID CONFIGURATION FOUND AT "<<j<<"\n";
+                cout<<m_enigma->get_rotor_position_as_string()<<"\n";
+                m_enigma->turn(-crib.length());
+                cout<<m_enigma->get_rotor_position_as_string()<<"\n";
+                solutions.push_back(m_enigma->get_setting());
+                m_enigma->turn(crib.length());
+                cout<<m_enigma->get_rotor_position_as_string()<<"\n";
+
+                //TODO read plugboard
+
+                if (setting.stop_on_first_valid==true) {
+                    return solutions;
+                }
+                //TODO get plugboard setting
                 //cin.get();
-            }
+            }// BDF= 5*26*26+4*26+2=
+            //m_diagonal_board->wipe(); //wipe current in wires
             //cout<<"checked\n";
             //take out oldest, put in
             //new encryption after enigma turns
             //print_encryptions();
+
+
+            //cout<<j<<"\n";
+            //cout<<m_enigma->get_rotor_position_as_string()<<" --- ";
+            //m_enigma->turn(-crib.length());
+            //cout<<m_enigma->get_rotor_position_as_string()<<" --- ";
+            //m_enigma->turn(crib.length());
+            //cout<<m_enigma->get_rotor_position_as_string()<<"\n";
+            //cout<<m_enigma->get_encryption_as_string()<<"\n";
+            //m_diagonal_board->print_live();
+            //m_diagonal_board->print();
             //cin.get();
-            m_enigma->turn();
+
+
+
             m_enigma_encryptions.erase(m_enigma_encryptions.begin());; //erase first/oldest
             m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided()); //add new
+            m_enigma->turn();
         }
         //cout<<"UUU\n";
     }
-
+    return solutions;
 }
 bool Bombe::bundle_contradiction(int bundle) {
        return m_diagonal_board->bundle_contradiction(bundle);
 }
-bool Bombe::check_wiring(int most_wired_letter) {
-    //the diagonal board is properly wired, the rotors are in position
-    //check if no contradictions
-
-    //for each bundle, activate each wire, test each bundle for a contradiciton
-    //(more than one live)
-    for(int wire=0; wire<m_letters; ++wire) {
-        //for(int wire=0; wire<m_letters; ++wire) {
-            //if (wire!=bundle) {
-                //cout<<"BUNDLE: "<<(char)(most_wired_letter+(int)'A');
-                //cout<<"  WIRE: "<<(char)(wire+(int)'A');
-                //cout<<"\n";
-                m_diagonal_board->activate(most_wired_letter, wire);
-                //m_diagonal_board->print_live();
-                //cin.get();
-                //m_diagonal_board->print();
-                //sum=m_diagonal_board->bundle_sum();
-                if (bundle_contradiction(most_wired_letter)) return false;
-                m_diagonal_board->wipe(); //wipe current in wires
-    }
+bool Bombe::check_one_wire(int most_wired_letter) {
+    m_diagonal_board->activate(most_wired_letter, 4);
+    if (bundle_contradiction(most_wired_letter)) return false;
     return true;
 }
 void Bombe::print_encryptions() const {
@@ -300,6 +344,15 @@ void Bombe::print_encryptions() const {
     }
 }
 
+/*Plugboard Bombe::doublecheck() {
+    //we have a valid configuration od the enigma, no we have to double check
+    //that there are no other contradictions
+    for (int bundle; bundle<m_letters; ++bundle) {
+        for (int wire; wire<m_letters; ++wire) {
+
+        }
+    }
+}*/
 
 
 
@@ -314,13 +367,13 @@ int main() {
     //bombe->analyze("LCUCNXJXJCXZVWJBKULEERCLXZJZBSNNBFVRNBJDEBUUJGMRTZ", "THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGM"); OK?
     //bombe->analyze("LCUCNXJXJCXZVWJBAZVFKUXIJDYLRNUUIGVDZDSQJQIUUJDWIXIPAMZJJMZWXLGFCPLAF", "THISISAPLAINTEXTMESSAGETOBEENCIPHERED");
     //                THISISAPLAINTEXTMESSAGETOBEENCIPHEREDWITHTHEENIGMAANDITISVERYVERYLONG
-    /*ok benchmark!
+    ok benchmark!
     auto start = std::chrono::high_resolution_clock::now();
     bombe->analyze("LCUCNXJXJCXZVWJBAZVFKUXIJDYLRNUUIGVDZD", "THISISAPLAINTEXTMESSAGETOBEENCIPHERED");
     auto stop  = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     cout<<"Elapsed time "<< duration.count();
-    
+
 
 
 
