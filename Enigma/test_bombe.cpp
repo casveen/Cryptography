@@ -2,28 +2,28 @@
 #include "bombe.h"
 #include "enigma.h"
 #include "include/catch.hpp"
-#include "rotors.cpp" //all rotors,
+#include "rotors.cpp"   //all rotors,
 
 SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
     GIVEN("A bombe using wheels I, II, III and reflector UKW") {
         Bombe bombe({I, II, III}, UKWR);
-        bombe.get_setting().stop_on_first_valid = true;
+        bombe.get_setting().stop_on_first_valid= true;
         Enigma enigma({I, II, III}, UKWR);
         // enigma.set_verbose(true);
-        string plaintext =
+        string plaintext=
             "THISISAPLAINTEXTTOBEENCRYPTEDWITHTHEENIGMAANDISVERYVERYLONG";
         WHEN("Given a long ciphertext encrypted with ring-setting AAA, "
              "ring-position AAA and no steckering") {
             enigma.set_rotor_position("AAA");
             cout << enigma.get_rotor_position_as_string() << "\n";
-            string ciphertext = enigma.encrypt(plaintext);
+            string ciphertext= enigma.encrypt(plaintext);
             enigma.reset();
             enigma.set_rotor_position("AAA");
             // enigma.reset();
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 REQUIRE(enigma.encrypt(ciphertext) == plaintext);
-                vector<struct EnigmaSetting> solutions =
+                vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
                 REQUIRE(solutions[0].rotor_position == "AAA");
             }
@@ -34,11 +34,11 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
             enigma.set_rotor_position("CAA");
-            string ciphertext = enigma.encrypt(plaintext);
+            string ciphertext= enigma.encrypt(plaintext);
             enigma.reset();
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
-                vector<struct EnigmaSetting> solutions =
+                vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
                 REQUIRE(solutions[0].rotor_position == "CAA");
             }
@@ -49,11 +49,11 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
             enigma.set_rotor_position("FGH");
-            string ciphertext = enigma.encrypt(plaintext);
+            string ciphertext= enigma.encrypt(plaintext);
             enigma.reset();
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
-                vector<struct EnigmaSetting> solutions =
+                vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
                 REQUIRE(solutions[0].rotor_position == "FGH");
             }
@@ -67,19 +67,19 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             enigma.set_rotor_position("RFW");
             enigma.set_ring_setting("BCD");
             enigma.set_plugboard("AC. BD. EG. IR. JT. QZ");
-            string ciphertext = enigma.encrypt(plaintext);
+            string ciphertext= enigma.encrypt(plaintext);
             enigma.reset();
             bombe.set_rotor_position("RFW");
             bombe.set_ring_setting("BCD");
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
-                vector<struct EnigmaSetting> solutions =
+                vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
                 REQUIRE(solutions[0].rotor_position == "RFW");
                 REQUIRE(solutions[0].ring_setting == "BCD");
                 // compare plugboards
                 Plugboard correct_plugboard("AC. BD. EG. IR. JT. QZ", 26);
-                for (int i = 0; i < 26; ++i) {
+                for (int i= 0; i < 26; ++i) {
                     REQUIRE(solutions[0].plugboard->get_wiring(i) ==
                             correct_plugboard.get_wiring(i));
                 }
