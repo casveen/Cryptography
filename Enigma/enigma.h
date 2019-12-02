@@ -85,8 +85,10 @@ class Plugboard {
     void       swap(Plugboard &) noexcept;
     // Plugboard(const char, int);
     int encrypt(int) const;
+    void reset(); //make identity
     // int* encrypt(const int*) const;
     void set_wiring(const string);
+    void set_wiring(int, int);
     // getters
     vector<int> get_wiring() const;
     int         get_wiring(int) const;
@@ -116,7 +118,7 @@ class Cartridge {
     const Rotor **       get_rotors() const;
     const Reflector *    get_reflector() const;
     const int *          get_positions() const;
-    const Plugboard *    get_plugboard() const;
+    Plugboard *    get_plugboard() const; //hard to handle if const...
     int                  get_positions_as_int() const;
     int                  get_reflector_position() const;
     const int *          get_ring_setting() const;
@@ -228,6 +230,7 @@ class Enigma {
     vector<int>            get_encryption() const;
     string                 get_encryption_as_string() const;
     vector<pair<int, int>> get_encryption_onesided() const;
+    Cartridge*             get_cartridge() const;
     // setters
     void set_setting(struct EnigmaSetting);
     void set_coder();

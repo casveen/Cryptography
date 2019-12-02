@@ -237,13 +237,11 @@ void Plugboard::swap(Plugboard &s) noexcept {
     swap(this->m_wiring, s.m_wiring);
     swap(this->m_wires, s.m_wires);
 }
-int Plugboard::encrypt(int in) const { return m_wiring[in]; }
-/*int* encrypt(const int*) const {
-
-    for (int i=0; i<n; ++i) {
-
-    }
-}*/
+int  Plugboard::encrypt(int in) const { return m_wiring[in]; }
+void Plugboard::reset() {
+    // identity
+    for (int i= 0; i < m_wires; i++) { m_wiring[i]= i; }
+}
 void Plugboard::set_wiring(const string in) {
     // set wiring
     string str= string(in);
@@ -262,6 +260,7 @@ void Plugboard::set_wiring(const string in) {
     }
     // XXX check validity
 }
+void        Plugboard::set_wiring(int pos, int set) { m_wiring[pos]= set; }
 vector<int> Plugboard::get_wiring() const { return m_wiring; }
 int         Plugboard::get_wiring(int i) const { return m_wiring[i]; }
 
@@ -388,6 +387,9 @@ const string Cartridge::get_positions_as_string() const {
     return out;
 }
 int Cartridge::get_reflector_position() const { return m_reflector_position; }
+Plugboard* Cartridge::get_plugboard() const {
+    return m_plugboard;
+}
 // setters
 void Cartridge::set_setting(struct EnigmaSetting setting) {
     m_rotor_count= (signed int)setting.rotors.size();   // TODO check if not 0
@@ -692,6 +694,7 @@ vector<pair<int, int>> Enigma::get_encryption_onesided() const {
     }
     return wires;
 }
+Cartridge *Enigma::get_cartridge() const { return m_cartridge; }
 // setter
 void Enigma::set_setting(struct EnigmaSetting setting) {
     m_rotors_number= (signed int)setting.rotors.size();   // TODO check if not 0

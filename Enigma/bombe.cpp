@@ -279,17 +279,19 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             if (check_one_wire(most_wired_letter)) {
                 // m_diagonal_board->print_live();
                 cout << "VALID CONFIGURATION FOUND AT " << j << "\n";
-                cout << m_enigma->get_rotor_position_as_string() << "\n";
-                m_enigma->turn(-crib.length());
-                cout << m_enigma->get_rotor_position_as_string() << "\n";
-                solutions.push_back(m_enigma->get_setting());
-                m_enigma->turn(crib.length());
-                cout << m_enigma->get_rotor_position_as_string() << "\n";
-
-                // TODO read plugboard
-
-                if (setting.stop_on_first_valid == true) { return solutions; }
-                // TODO get plugboard setting
+                cout << "DOUBLE-CHECKING...\n";
+                if (doublecheck_and_get_plugboard()) {
+                    cout << "ALL GOOD\n";
+                    // cout << m_enigma->get_rotor_position_as_string() << "\n";
+                    m_enigma->turn(-crib.length());
+                    // cout << m_enigma->get_rotor_position_as_string() << "\n";
+                    solutions.push_back(m_enigma->get_setting());
+                    m_enigma->turn(crib.length());
+                    // cout << m_enigma->get_rotor_position_as_string() << "\n";
+                    if (setting.stop_on_first_valid == true) {
+                        return solutions;
+                    }
+                }
                 // cin.get();
             }   // BDF= 5*26*26+4*26+2=
             // m_diagonal_board->wipe(); //wipe current in wires
@@ -337,15 +339,39 @@ void Bombe::print_encryptions() const {
     }
 }
 
-/*Plugboard Bombe::doublecheck() {
-    //we have a valid configuration od the enigma, no we have to double check
-    //that there are no other contradictions
-    for (int bundle; bundle<m_letters; ++bundle) {
-        for (int wire; wire<m_letters; ++wire) {
-
+bool Bombe::doublecheck_and_get_plugboard() {
+    bool false_stop= false;
+    // we have a valid configuration od the enigma, no we have to double check
+    // that there are no other contradictions
+    // there are a lot of double-checks here, but valid configurations are rare
+    // and this double-check is insignificant compared to the analysis.
+    Plugboard *plugboard= m_enigma->get_cartridge()->get_plugboard();
+    for (int bundle= 0; bundle < m_letters; ++bundle) {
+        for (int wire= 0; wire < m_letters; ++wire) {
+            m_diagonal_board->wipe();
+            m_diagonal_board->activate(bundle, wire);
+            //cout << "sum at bundle=" << bundle << ":"
+            //     << m_diagonal_board->bundle_sum(bundle) << "\n";
+            if (m_diagonal_board->bundle_sum(bundle) == 1) {   // exact hit
+                //cout << "EXACT HIT\n";
+                // also if exact hit, there is only one live wire per bundle
+                for (int bundle_2= 0; bundle_2 < m_letters; ++bundle_2) {
+                    //cout << "sum at bunde_2=" << bundle_2 << ":"
+                    //     << m_diagonal_board->bundle_sum(bundle_2) << "\n";
+                    if (m_diagonal_board->bundle_sum(bundle_2) > 1) {
+                        //cout<<"FCUK\n";
+                        plugboard->reset();
+                        return false;   // a contradiciton; this was a false
+                                        // stop
+                    }
+                }
+                //cout << bundle << " is steckered to " << wire << "\n";
+                plugboard->set_wiring(bundle, wire);   // other way by symmetry
+            }
         }
     }
-}*/
+    return true;
+}
 
 /*
 int main() {

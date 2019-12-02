@@ -70,5 +70,6 @@ class Bombe {
     bool check_one_wire(int);
     bool bundle_contradiction(int);
     void print_encryptions() const;
+    bool doublecheck_and_get_plugboard();
 };
 #endif
