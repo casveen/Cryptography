@@ -243,6 +243,7 @@ void Plugboard::reset() {
     for (int i= 0; i < m_wires; i++) { m_wiring[i]= i; }
 }
 void Plugboard::set_wiring(const string in) {
+    reset();
     // set wiring
     string str= string(in);
     // remove whitespace of copy
@@ -387,9 +388,7 @@ const string Cartridge::get_positions_as_string() const {
     return out;
 }
 int Cartridge::get_reflector_position() const { return m_reflector_position; }
-Plugboard* Cartridge::get_plugboard() const {
-    return m_plugboard;
-}
+Plugboard *Cartridge::get_plugboard() const { return m_plugboard; }
 // setters
 void Cartridge::set_setting(struct EnigmaSetting setting) {
     m_rotor_count= (signed int)setting.rotors.size();   // TODO check if not 0
@@ -554,6 +553,14 @@ int Cartridge::encrypt_without_turning(int i) const {
     // plug back
     i= m_plugboard->encrypt(i);
     return i;
+}
+void Cartridge::next_ring_setting() {
+    int carry= 1, next;
+    for (int p= 0; p < m_rotor_count && carry > 0; p++) {
+        next             = (m_ring_setting[p] + carry) % m_wires;
+        next == 0 ? carry= 1 : carry= 0;
+        m_ring_setting[p]           = next;
+    }
 }
 void Cartridge::print() const {
     printf("  ");
@@ -809,6 +816,7 @@ string Enigma::encrypt(string str) {
     // delete m;
     return out;
 }
+void   Enigma::next_ring_setting() { m_cartridge->next_ring_setting(); }
 void   Enigma::print_positions() const { m_cartridge->print_positions(); }
 void   Enigma::print() const { m_cartridge->print(); }
 string Enigma::indicator_procedure_early(string str) {

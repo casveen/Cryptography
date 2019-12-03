@@ -98,10 +98,11 @@ void DiagonalBoard::print() const {
         cout << (char)(b + (int)'A') << " ";
         for (unsigned int w= 0; w < m_bundles.at(b).size(); w++) {
             Wire *wire= m_bundles.at(b).at(w);
-            cout << wire->get_live() << " ";
+            cout <<((wire->get_live())?'1':' ')<<" ";
         }
         cout << "\n";
     }
+    /*
     cout << "sizes\n";
     cout << "   ";
     for (unsigned int b= 0; b < bundle_size; b++) {
@@ -113,11 +114,13 @@ void DiagonalBoard::print() const {
         cout << (char)(b + (int)'A') << " ";
         for (unsigned int w= 0; w < m_bundles.at(b).size(); w++) {
             Wire *wire= m_bundles.at(b).at(w);
-            printf("%2d ", wire->get_connections()->size());
+            printf("%2ld ", wire->get_connections()->size());
         }
         cout << "\n";
     }
+    */
 }
+
 void DiagonalBoard::print_live() const {
     int bundle_size= m_bundles.size();
     for (int b= 0; b < bundle_size; b++) { cout << " | "; }
@@ -173,7 +176,7 @@ void Bombe::set_rotor_position(const string setting) {
 }
 // getters
 struct BombeSetting &Bombe::get_setting() {
-    return setting;
+    return m_setting;
 }
 
 // other
@@ -192,8 +195,8 @@ vector<int> Bombe::probable_search(const string ciphertext, const string crib) {
             }
         }
         if (suitable) {
-            cout << "suitable substring at " << i << "\n";
-            cout << ciphertext.substr(i, crib_length) << "\n" << crib << "\n";
+            //cout << "suitable substring at " << i << "\n";
+            //cout << ciphertext.substr(i, crib_length) << "\n" << crib << "\n";
             candidates.push_back(i);
         }
     }
@@ -242,82 +245,81 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                                             const string crib) {
     // find total amount of rotor positions
     vector<struct EnigmaSetting> solutions;
-    int                          total_permutations= 1, most_wired_letter;
+    int                          total_permutations= 1;
+    int                          most_wired_letter;
+    int                          ring_settings= 1;
     for (int j= 0; j < m_enigma->get_rotors(); j++) {
         total_permutations*= m_enigma->get_wires();
     }
+    ring_settings= total_permutations / m_enigma->get_wires();
+    ring_settings= min(ring_settings, m_setting.max_ring_settings);
     // cout<<"analyzing\n";
     // find candidates
     vector<int> candidates= probable_search(ciphertext, crib);
     // analyze each candidate
+
     for (unsigned int i= 0; i < candidates.size(); i++) {
-
-        // TODO for all settings
-
+        m_enigma->set_ring_setting(m_setting.starting_ring_setting);
+        m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
         // find most commonly connected letter
         most_wired_letter= find_most_wired_letter(
             ciphertext.substr(candidates[i], crib.length()), crib);
-        // setup the wiring for the can didate
-        cout << "candidate " << i << " most wired " << most_wired_letter
-             << "\n";
-        // setup crib.length() enigma encryptions
-        init_enigma_encryptions(crib.length());
-        // print_encryptions();
-        // m_diagonal_board->print();
-        // cout<<"HELL\n";
-        for (int j= 0; j < total_permutations - 1; j++) {
-            // cout<<"\n";
-            // printf("\r%5d/%5d", j, total_permutations);
-            // reset board
-            m_diagonal_board->reset();
-            // setup connections in board
-            // cout<<"setup\n";
-            setup_diagonal_board(
-                ciphertext.substr(candidates[i], crib.length()), crib);
-            // print_encryptions();
-            // cout<<"checking\n";
-            if (check_one_wire(most_wired_letter)) {
-                // m_diagonal_board->print_live();
-                cout << "VALID CONFIGURATION FOUND AT " << j << "\n";
-                cout << "DOUBLE-CHECKING...\n";
-                if (doublecheck_and_get_plugboard()) {
-                    cout << "ALL GOOD\n";
-                    // cout << m_enigma->get_rotor_position_as_string() << "\n";
-                    m_enigma->turn(-crib.length());
-                    // cout << m_enigma->get_rotor_position_as_string() << "\n";
-                    solutions.push_back(m_enigma->get_setting());
-                    m_enigma->turn(crib.length());
-                    // cout << m_enigma->get_rotor_position_as_string() << "\n";
-                    if (setting.stop_on_first_valid == true) {
-                        return solutions;
+        // for each ring setting
+        for (int rs= 0; rs < ring_settings; ++rs) {
+            //cout<<"\n\rcandidate "<<i<<": ring setting "<<m_enigma->get_ring_setting_as_string();
+            //printf("\n\rcandidate %d, ring setting %s", i, m_enigma->get_ring_setting_as_string());
+            // setup the wiring for the can didate
+            init_enigma_encryptions(crib.length());
+            // for each rotor position
+            for (int j= 0; j < total_permutations - 1; j++) {
+                m_diagonal_board->reset();
+                setup_diagonal_board(
+                    ciphertext.substr(candidates[i], crib.length()), crib);
+
+                if (check_one_wire(most_wired_letter)) {
+                    //cout<<"ONE ";
+                    // m_diagonal_board->print_live();
+                    //cout << "VALID CONFIGURATION FOUND AT " << j << "\n";
+                    //cout << "DOUBLE-CHECKING...\n";
+                    if (doublecheck_and_get_plugboard()) {
+                        //cout<<"TWO ";
+                        //cout << "ALL GOOD\n";
+                        // cout << m_enigma->get_rotor_position_as_string() <<
+                        // "\n";
+
+                        //tripple chack:
+                        m_enigma->turn(-crib.length());
+                        string recrypt=m_enigma->encrypt(ciphertext.substr(candidates[i], crib.length()));
+                        //cout<<"("<<recrypt<<") ";
+                        //m_enigma->get_cartridge()->print();
+                        if (m_setting.interactive_wiring_mode) {
+                            interactive_wirechecking();
+                        }
+                        if ( recrypt == crib ) {
+                            // cout << m_enigma->get_rotor_position_as_string() <<
+                            // "\n";
+                            //cout<<"THREE \n";
+
+                            m_enigma->turn(-crib.length()-candidates[i]);
+                            solutions.push_back(m_enigma->get_setting());
+                            m_enigma->turn(crib.length()+candidates[i]);
+                            // cout << m_enigma->get_rotor_position_as_string() <<
+                            // "\n";
+                            if (m_setting.stop_on_first_valid == true) {
+                                return solutions;
+                            }
+                        }
+                    m_enigma->set_plugboard(""); //reset plugboard
                     }
                 }
-                // cin.get();
-            }   // BDF= 5*26*26+4*26+2=
-            // m_diagonal_board->wipe(); //wipe current in wires
-            // cout<<"checked\n";
-            // take out oldest, put in
-            // new encryption after enigma turns
-            // print_encryptions();
-
-            // cout<<j<<"\n";
-            // cout<<m_enigma->get_rotor_position_as_string()<<" --- ";
-            // m_enigma->turn(-crib.length());
-            // cout<<m_enigma->get_rotor_position_as_string()<<" --- ";
-            // m_enigma->turn(crib.length());
-            // cout<<m_enigma->get_rotor_position_as_string()<<"\n";
-            // cout<<m_enigma->get_encryption_as_string()<<"\n";
-            // m_diagonal_board->print_live();
-            // m_diagonal_board->print();
-            // cin.get();
-
-            m_enigma_encryptions.erase(m_enigma_encryptions.begin());
-            ;   // erase first/oldest
-            m_enigma_encryptions.push_back(
-                m_enigma->get_encryption_onesided());   // add new
-            m_enigma->turn();
+                // push new encryption, del oldest
+                m_enigma_encryptions.erase(m_enigma_encryptions.begin());
+                m_enigma_encryptions.push_back(
+                    m_enigma->get_encryption_onesided());
+                m_enigma->turn();
+            }
+            m_enigma->next_ring_setting();
         }
-        // cout<<"UUU\n";
     }
     return solutions;
 }
@@ -339,8 +341,13 @@ void Bombe::print_encryptions() const {
     }
 }
 
+
+
+
+
+/*
 bool Bombe::doublecheck_and_get_plugboard() {
-    bool false_stop= false;
+    //bool false_stop= false;
     // we have a valid configuration od the enigma, no we have to double check
     // that there are no other contradictions
     // there are a lot of double-checks here, but valid configurations are rare
@@ -350,27 +357,101 @@ bool Bombe::doublecheck_and_get_plugboard() {
         for (int wire= 0; wire < m_letters; ++wire) {
             m_diagonal_board->wipe();
             m_diagonal_board->activate(bundle, wire);
-            //cout << "sum at bundle=" << bundle << ":"
+            // cout << "sum at bundle=" << bundle << ":"
             //     << m_diagonal_board->bundle_sum(bundle) << "\n";
             if (m_diagonal_board->bundle_sum(bundle) == 1) {   // exact hit
-                //cout << "EXACT HIT\n";
+                // cout << "EXACT HIT\n";
                 // also if exact hit, there is only one live wire per bundle
                 for (int bundle_2= 0; bundle_2 < m_letters; ++bundle_2) {
-                    //cout << "sum at bunde_2=" << bundle_2 << ":"
-                    //     << m_diagonal_board->bundle_sum(bundle_2) << "\n";
+                     //cout << "sum at bunde_2=" << (char) (bundle_2+(int)'A') << ":"
+                    //      << m_diagonal_board->bundle_sum(bundle_2) << "\n";
                     if (m_diagonal_board->bundle_sum(bundle_2) > 1) {
-                        //cout<<"FCUK\n";
+                        // cout<<"FCUK\n";
                         plugboard->reset();
                         return false;   // a contradiciton; this was a false
                                         // stop
                     }
                 }
-                //cout << bundle << " is steckered to " << wire << "\n";
+
+                cout << (char) (bundle +(int)'A') << " is steckered to " <<  (char) (wire +(int)'A') << "\n";
                 plugboard->set_wiring(bundle, wire);   // other way by symmetry
             }
         }
     }
     return true;
+}
+*/
+
+bool Bombe::doublecheck_and_get_plugboard() {
+    //bool false_stop= false;
+    // we have a valid configuration od the enigma, the most occurring letter is
+    //activated in some wire.
+    //for all bundles, the sum is either
+    //1 : the steckered letter is live
+    //25: all but the steckered letter is live
+    //other: unable to find, probably self-steckered
+    Plugboard *plugboard= m_enigma->get_cartridge()->get_plugboard();
+    for (int bundle= 0; bundle < m_letters; ++bundle) {
+        int sum=m_diagonal_board->bundle_sum(bundle);
+        if ( sum == 1) { //steckered is live
+            //all other bundles should have 1 or less live wires
+            for (int bundle_2= 0; bundle_2 < m_letters; ++bundle_2) {
+                if (m_diagonal_board->bundle_sum(bundle)>1) {
+                    plugboard->reset();
+                    return false;
+                }
+            }
+            //find live wire
+            for (int wire= 0; wire < m_letters; ++wire) {
+                if (m_diagonal_board->get_wire(bundle, wire)->get_live()) {
+                    //cout << (char) (bundle +(int)'A') << " is steckered to " <<  (char) (wire +(int)'A') << "\n";
+                    plugboard->set_wiring(bundle, wire);
+                    plugboard->set_wiring(wire, bundle);
+                    break;
+                }
+            }
+        }
+        else if ( sum ==m_letters-1 ) {
+            for (int wire= 0; wire < m_letters; ++wire) {
+                if (!m_diagonal_board->get_wire(bundle, wire)->get_live()) {
+                    //cout << (char) (bundle +(int)'A') << " is steckered to " <<  (char) (wire +(int)'A') << "\n";
+                    plugboard->set_wiring(bundle, wire);
+                    plugboard->set_wiring(wire, bundle);
+                    break;
+                }
+            }
+        }
+        else { //undeterminable
+        }
+    }
+    return true;
+}
+
+
+
+
+void Bombe::interactive_wirechecking() {
+    cout<<"--------------------INTERACTIVE WIRING MODE------------------\n";
+    string input;
+    int bundle, wire;
+    while( true ) {
+        cout<<"    INPUT A WIRE TO ACTIVATE(q to EXIT): ";
+        cin>>input;
+        if (input=="q") {
+            break;
+        }
+        bundle=(int) input[0]-(int)'A';
+        wire=(int) input[1]-(int)'a';
+        if (bundle>m_letters || bundle<0 || wire>m_letters || wire<0) {
+            cout<<"WRONG INPUT FORMAT. USAGE: Aa, Ab, Zk\n";
+            continue;
+        }
+        cout<<"activating "<<(char)(bundle+(int)'A')<<(char)(wire+(int)'a')<<"\n";
+        m_diagonal_board->wipe();
+        m_diagonal_board->activate(bundle, wire);
+        m_diagonal_board->print();
+    }
+
 }
 
 /*

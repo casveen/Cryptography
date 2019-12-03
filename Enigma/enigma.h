@@ -84,8 +84,8 @@ class Plugboard {
     Plugboard &operator=(Plugboard);
     void       swap(Plugboard &) noexcept;
     // Plugboard(const char, int);
-    int encrypt(int) const;
-    void reset(); //make identity
+    int  encrypt(int) const;
+    void reset();   // make identity
     // int* encrypt(const int*) const;
     void set_wiring(const string);
     void set_wiring(int, int);
@@ -118,7 +118,7 @@ class Cartridge {
     const Rotor **       get_rotors() const;
     const Reflector *    get_reflector() const;
     const int *          get_positions() const;
-    Plugboard *    get_plugboard() const; //hard to handle if const...
+    Plugboard *          get_plugboard() const;   // hard to handle if const...
     int                  get_positions_as_int() const;
     int                  get_reflector_position() const;
     const int *          get_ring_setting() const;
@@ -142,6 +142,7 @@ class Cartridge {
     int  encrypt_without_turning(
          int i) const;   // pass integer through wires without turning
     int  plugboard_encrypt(int i) const;
+    void next_ring_setting();
     void print() const;             // PRINT cartridge
     void print_positions() const;   // print positions of the rotors
     void randomize();
@@ -230,7 +231,7 @@ class Enigma {
     vector<int>            get_encryption() const;
     string                 get_encryption_as_string() const;
     vector<pair<int, int>> get_encryption_onesided() const;
-    Cartridge*             get_cartridge() const;
+    Cartridge *            get_cartridge() const;
     // setters
     void set_setting(struct EnigmaSetting);
     void set_coder();
@@ -255,6 +256,7 @@ class Enigma {
     int    encrypt_without_turning(int m) const;
     string encrypt(string);
     int *  encrypt(const int *m, int n);
+    void   next_ring_setting();
     void   print_positions() const;
     void   print() const;
     // FACTORY

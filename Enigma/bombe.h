@@ -39,20 +39,22 @@ class DiagonalBoard {
 };
 
 struct BombeSetting {
-    bool stop_on_first_valid=
-        false;   // if true, stops as soon as a valid config is found
+    // if true, stops as soon as a valid config is found
+    bool   stop_on_first_valid  = false;
+    int    max_ring_settings    = 26 * 26;
+    string starting_ring_setting= "AAA";   // TODO should adapt to more rotors
+    string starting_rotor_positions= "AAA";
+    bool   interactive_wiring_mode = false;
 };
 
 class Bombe {
   private:
-    int            m_letters= 26, m_rotor_count= 3;
-    DiagonalBoard *m_diagonal_board;
-    Enigma *       m_enigma;
-    vector<vector<pair<int, int>>>
-                        m_enigma_encryptions;   // keep track of encryptions
-    struct BombeSetting setting;
-    // could be vector vector but im trying to familiarize myelf with these
-    // Enigma*        enigma;
+    int                            m_letters= 26, m_rotor_count= 3;
+    DiagonalBoard *                m_diagonal_board;
+    Enigma *                       m_enigma;
+    vector<vector<pair<int, int>>> m_enigma_encryptions;   // track encryptions
+    struct BombeSetting            m_setting;
+
   public:
     Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector);
 
@@ -71,5 +73,6 @@ class Bombe {
     bool bundle_contradiction(int);
     void print_encryptions() const;
     bool doublecheck_and_get_plugboard();
+    void interactive_wirechecking();
 };
 #endif

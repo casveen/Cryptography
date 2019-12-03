@@ -5,182 +5,197 @@
 #include "rotors.cpp"   //all rotors,
 
 SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
-    GIVEN("A bombe using wheels I, II, III and reflector UKW") {
+
+    GIVEN("Enigma with rotors I, II, III, reflector UKW and a long plaintext") {
         Bombe bombe({I, II, III}, UKWR);
         bombe.get_setting().stop_on_first_valid= true;
         Enigma enigma({I, II, III}, UKWR);
         // enigma.set_verbose(true);
         string plaintext=
             "THISISAPLAINTEXTTOBEENCRYPTEDWITHTHEENIGMAANDISVERYVERYLONG";
-        WHEN("Given a long ciphertext encrypted with ring-setting AAA, "
+
+        WHEN("Given ciphertext encrypted with ring-setting AAA, "
              "ring-position AAA and no steckering") {
             enigma.set_rotor_position("AAA");
-            cout << enigma.get_rotor_position_as_string() << "\n";
+            enigma.set_ring_setting("AAA");
+            enigma.set_plugboard("");
             string ciphertext= enigma.encrypt(plaintext);
-            enigma.reset();
-            enigma.set_rotor_position("AAA");
-            // enigma.reset();
+            bombe.get_setting().starting_rotor_positions= "AAA";
+            bombe.get_setting().starting_ring_setting   = "AAA";
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
-                REQUIRE(enigma.encrypt(ciphertext) == plaintext);
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
-                REQUIRE(solutions[0].rotor_position == "AAA");
+
+                enigma.set_setting(solutions[0]);
+                CHECK(enigma.encrypt(ciphertext) == plaintext);
+                CHECK(solutions[0].rotor_position == "AAA");
             }
         }
 
-        WHEN("Given a long ciphertext encrypted with ring-setting CAA, "
-             "ring-position CDE and no steckering") {
+        WHEN("Given ciphertext encrypted with ring-position CAA and no "
+             "steckering") {
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
             enigma.set_rotor_position("CAA");
+            enigma.set_ring_setting("AAA");
+            enigma.set_plugboard("");
             string ciphertext= enigma.encrypt(plaintext);
-            enigma.reset();
+            bombe.get_setting().starting_rotor_positions= "AAA";
+            bombe.get_setting().starting_ring_setting   = "AAA";
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
-                REQUIRE(solutions[0].rotor_position == "CAA");
+                // enigma.set_setting(solutions[0]);
+                // enigma.reset();
+                enigma.set_setting(solutions[0]);
+                CHECK(enigma.encrypt(ciphertext) == plaintext);
+                CHECK(solutions[0].rotor_position == "CAA");
             }
         }
 
-        WHEN("Given a long ciphertext encrypted with ring-setting FGH, "
-             "ring-position CDE and no steckering") {
-            // there was a bug with the enigma doing two turns for the first
-            // check this test would not pass with this bug
-            enigma.set_rotor_position("FGH");
+        WHEN("Given ciphertext encrypted with ring-setting FGH, ring-position "
+             "CDE, no steckering and bombe at same ring set") {
+            enigma.set_rotor_position("CDE");
+            enigma.set_ring_setting("FGH");
             string ciphertext= enigma.encrypt(plaintext);
-            enigma.reset();
+            bombe.get_setting().starting_rotor_positions= "AAA";
+            bombe.get_setting().starting_ring_setting   = "FGH";
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
-                REQUIRE(solutions[0].rotor_position == "FGH");
+                // enigma.reset();
+                // enigma.set_setting(solutions[0]);
+                // cout<<"\n\nTEST: "<<enigma.encrypt(ciphertext)<<"\n";
+                REQUIRE(solutions[0].rotor_position == "CDE");
+                REQUIRE(solutions[0].ring_setting == "FGH");
             }
         }
 
-        WHEN(
-            "Given a long ciphertext encrypted with ring-setting RFW, "
-            "ring-position BCD, bombe starting in same config and steckering") {
+        WHEN("Given ciphertext encrypted with ring-setting RFW, ring-position "
+             "BCD, bombe in same config and steckering") {
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
-            enigma.set_rotor_position("RFW");
-            enigma.set_ring_setting("BCD");
+            enigma.set_rotor_position("MCW");
+            enigma.set_ring_setting("BBA");
             enigma.set_plugboard("AC. BD. EG. IR. JT. QZ");
             string ciphertext= enigma.encrypt(plaintext);
-            enigma.reset();
-            bombe.set_rotor_position("RFW");
-            bombe.set_ring_setting("BCD");
+            // bombe.set_rotor_position("RFW");
+            bombe.get_setting().starting_rotor_positions= "AAA";
+            bombe.get_setting().starting_ring_setting   = "BBA";
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
-                REQUIRE(solutions[0].rotor_position == "RFW");
-                REQUIRE(solutions[0].ring_setting == "BCD");
+                // enigma.reset();
+                // enigma.set_setting(solutions[0]);
+                // cout << "\n\nTEST: " << enigma.encrypt(ciphertext) << "\n";
+                enigma.set_setting(solutions[0]);
+                CHECK(enigma.encrypt(ciphertext) == plaintext);
+                CHECK(solutions[0].rotor_position == "MCW");
+                CHECK(solutions[0].ring_setting == "BBA");
                 // compare plugboards
                 Plugboard correct_plugboard("AC. BD. EG. IR. JT. QZ", 26);
+                for (int i= 0; i < 26; ++i) {
+                    CHECK(solutions[0].plugboard->get_wiring(i) ==
+                          correct_plugboard.get_wiring(i));
+                }
+            }
+        }
+
+        WHEN("Given ciphertext encrypted with ring-setting GDA, rotor-position "
+             "PAH, steckering and bombe starting from ring-setting AAA") {
+            enigma.set_rotor_position("PAH");
+            enigma.set_ring_setting("GDA");
+            enigma.set_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX");
+            string ciphertext= enigma.encrypt(plaintext);
+            enigma.reset();
+            // bombe.set_rotor_position("RFW");
+            bombe.set_ring_setting("AAA");
+            THEN("Running bombe with a complete crib should return the above "
+                 "setting") {
+                vector<struct EnigmaSetting> solutions=
+                    bombe.analyze(ciphertext, plaintext);
+                enigma.set_setting(solutions[0]);
+                CHECK(enigma.encrypt(ciphertext) == plaintext);
+                CHECK(solutions[0].rotor_position == "PAH");
+                CHECK(solutions[0].ring_setting == "GDA");
+                // compare plugboards
+                Plugboard correct_plugboard(
+                    "AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
+                for (int i= 0; i < 26; ++i) {
+                    CHECK(solutions[0].plugboard->get_wiring(i) ==
+                          correct_plugboard.get_wiring(i));
+                }
+            }
+        }
+    }
+
+    GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {
+        Bombe bombe({IV, V, VI}, UKWR);
+        bombe.get_setting().stop_on_first_valid= true;
+        bombe.get_setting().max_ring_settings  = 30;
+        // bombe.get_setting().interactive_wiring_mode= true;
+        Enigma enigma({IV, V, VI}, UKWR);
+        // enigma.set_verbose(true);
+        string plaintext=
+            "THISISAPLAINTEXTTOBEENCRYPTEDWITHTHEENIGMAANDISVERYVERYLONG";
+        string crib= "PLAINTEXTTOBEENCRYPTED";
+        WHEN("Encrypting with RS:BBA, RP:JYL and steckering") {
+            enigma.set_rotor_position("JYL");
+            enigma.set_ring_setting("BBA");
+            enigma.set_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX");
+            string ciphertext= enigma.encrypt(plaintext);
+            bombe.set_ring_setting("AAA");
+            THEN("Bombe should find the correct setting") {
+                vector<struct EnigmaSetting> solutions=
+                    bombe.analyze(ciphertext, crib);
+                // enigma.set_setting(solutions[0]);
+                enigma.set_setting(solutions[0]);
+                CHECK(enigma.encrypt(ciphertext) == plaintext);
+                CHECK(solutions[0].rotor_position == "JYL");
+                CHECK(solutions[0].ring_setting == "BBA");
+                Plugboard correct_plugboard(
+                    "AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
+                for (int i= 0; i < 26; ++i) {
+                    CHECK(solutions[0].plugboard->get_wiring(i) ==
+                          correct_plugboard.get_wiring(i));
+                }
+            }   // THEN
+        }       // WHEN
+    }           // GIVEN
+    /*
+    GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {
+        Bombe bombe({VII, V, III}, UKWR);
+        bombe.get_setting().stop_on_first_valid= true;
+        // bombe.get_setting().max_ring_settings      = 30;
+        Enigma enigma({IV, V, VI}, UKWR);
+        string plaintext=
+            "THISISAPLAINTEXTTOBEENCRYPTEDWITHTHEENIGMAANDISVERYVERYLONG";
+        string crib= "PLAINTEXT";
+        WHEN("Encrypting with RS:AAA, RP:GHQ and steckering") {
+            enigma.set_rotor_position("KOR");
+            enigma.set_ring_setting("BCA");
+            enigma.set_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX");
+            string ciphertext= enigma.encrypt(plaintext);
+            bombe.set_ring_setting("AAA");
+            THEN("Bombe should find the correct setting") {
+                vector<struct EnigmaSetting> solutions=
+                    bombe.analyze(ciphertext, crib);
+                enigma.set_setting(solutions[0]);
+                cout << "\n\nTEST: " << enigma.encrypt(ciphertext) << "\n";
+                CHECK(solutions[0].rotor_position == "KOR");
+                CHECK(solutions[0].ring_setting == "BCA");
+                Plugboard correct_plugboard(
+                    "AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
                 for (int i= 0; i < 26; ++i) {
                     REQUIRE(solutions[0].plugboard->get_wiring(i) ==
                             correct_plugboard.get_wiring(i));
                 }
-            }
-        }
-        /*
-      WHEN("Given a long ciphertext encrypted with ring-setting RFW, "
-           "ring-position BCD and steckering") {
-        // there was a bug with the enigma doing two turns for the first check
-        // this test would not pass with this bug
-        enigma.set_rotor_position("QFV");
-        enigma.set_ring_setting("BCD");
-        string ciphertext = enigma.encrypt(plaintext);
-        enigma.reset();
-        bombe.set_rotor_position("AAA");
-        bombe.set_ring_setting("AAA");
-        THEN("Running bombe with a complete crib should return the above "
-             "setting") {
-          vector<struct EnigmaSetting> solutions =
-              bombe.analyze(ciphertext, plaintext);
-          REQUIRE(solutions[0].rotor_position == "QFW");
-        }
+            }   // THEN
+        }       // WHEN
     }*/
-    }
-}
 
-// TEST_CASE("Testing if bombe can find setting when")
-
-/*
-TEST_CASE("Testing wiring of all known commonly used rotors") {
-  for (Rotor rotor : allRotors) {
-    REQUIRE(rotor.is_valid());
-  }
-}
-
-TEST_CASE("Testing wiring of single random rotors") {
-  // test some randomly made rotors
-  for (int t = 0; t < MAX_TESTS; ++t) {
-    Rotor rotor = Rotor(WIRES);
-    rotor.randomize();
-    REQUIRE(rotor.is_valid());
-  }
-}
-
-TEST_CASE("Testing wiring of an ensemble of rotors together with a reflector")
-{
-  // an ensemble of rotors and a reflector should give a self-reciprocal,
-  // surjective ecryption with no letter encrypting to itself
-  for (int t = 0; t < MAX_TESTS; ++t) {
-    Enigma enigma = Enigma(WHEELS, WIRES);
-    enigma.randomize();
-    int c, r;
-    for (int w = 0; w < WIRES; w++) {
-      c = enigma.encrypt(w);
-      enigma.reset();
-      r = enigma.encrypt(c);
-      enigma.reset();
-      REQUIRE(r == w);
-      REQUIRE(c != w);
-    }
-  }
-}
-
-TEST_CASE("Testing encryption and encryption of text") {
-  // twise encrypting a plaintext should return the plaintext
-  int *m = new int[MESSAGE_SIZE];
-  int *c, *r; // ciphertext
-  for (int t = 0; t < MAX_TESTS; ++t) {
-    // allocate c, r
-    c = new int[MESSAGE_SIZE];
-    r = new int[MESSAGE_SIZE];
-    // make a random enigma
-    Enigma enigma = Enigma(WHEELS, WIRES);
-    enigma.randomize();
-    // make random message
-    for (int i = 0; i < MESSAGE_SIZE; i++) {
-      m[i] = rand() % WIRES;
-    }
-    // encrypt twice
-    c = enigma.encrypt(m, MESSAGE_SIZE); // allocates new
-    enigma.reset();
-    r = enigma.encrypt(c, MESSAGE_SIZE); // allocates new
-    // compare messages
-    for (int i = 0; i < MESSAGE_SIZE; i++) {
-      REQUIRE(m[i] == r[i]);
-    }
-    delete[] c;
-    delete[] r;
-  }
-  delete[] m;
-}
-
-TEST_CASE("Testing a concrete example; encryption of a sample of the Donitz "
-          "message") {
-  // test if the enigma can encrypt/decrypt a portion of the Karl donitz
-  // message
-  Reflector ThinReflectorC = Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
-  Enigma enigma({VIII, VI, V, Beta}, ThinReflectorC);
-  enigma.set_plugboard("AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW");
-  enigma.set_rotor_position("ZPOY");
-  enigma.set_ring_setting("KTDC");
-  string encryption = enigma.encrypt("RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJ");
-  REQUIRE(encryption == "FOLGENDESISTSOFORTBEKANNTZUGEBEN");
-}*/
+}   // SCENARIO
