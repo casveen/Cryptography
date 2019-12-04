@@ -1,6 +1,6 @@
 CC        := g++
 #MPI       := mpicc
-FLAGS      = -Wall 
+FLAGS      = -Wall -g
 TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
 DEP        = enigma.cpp bombe.cpp
 HEADER     = enigma.h   bombe.h

@@ -42,6 +42,8 @@ Rotor::Rotor(const string in) {
 }
 Rotor::Rotor(const string in, const string notch) : Rotor(in) {
     m_notches= notch.length();
+    delete[] m_notch;   // XXX Not ood solution
+    m_notch= new int[m_notches];
     for (int i= 0; i < m_notches; i++) { m_notch[i]= (int)notch[i] - (int)'A'; }
 }
 /*constexpr Rotor::Rotor(const string in, const string notch): Rotor(in) {
@@ -641,7 +643,7 @@ int        Enigma::get_rotors() const { return m_rotors_number; }
 const int *Enigma::get_rotor_position() const {
     return m_cartridge->get_positions();
 }
-string Enigma::get_rotor_position_as_string() const {
+const string Enigma::get_rotor_position_as_string() const {
     return m_cartridge->get_positions_as_string();
 }
 const int *Enigma::get_ring_setting() const {
@@ -840,8 +842,8 @@ string Enigma::encrypt(string str) {
     for (unsigned int i= 0; i < str.length(); ++i) {
         out+= (char)(e[i] + (int)'A');
     }
-    delete e;
-    delete m;
+    delete[] e;
+    delete[] m;
     return out;
 }
 void   Enigma::next_ring_setting() { m_cartridge->next_ring_setting(); }

@@ -46,8 +46,6 @@ TEST_CASE("Testing encryption and encryption of text") {
     int *c, *r;   // ciphertext
     for (int t= 0; t < MAX_TESTS; ++t) {
         // allocate c, r
-        c= new int[MESSAGE_SIZE];
-        r= new int[MESSAGE_SIZE];
         // make a random enigma
         Enigma enigma= Enigma(WHEELS, WIRES);
         enigma.randomize();

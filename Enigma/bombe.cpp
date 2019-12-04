@@ -2,9 +2,10 @@
 #include "bombe.h"   //wire, diagonal board
 
 Wire::~Wire() {
-    // m_connections.clear();
-    // m_connections.shrink_to_fit();
+    m_connections.clear();
+    m_connections.shrink_to_fit();
     // do not deallocate aythng, handled by diag board
+    cout << "----DEAD WIRE-------------------------------------------------\n";
 }
 void Wire::flow() {
     m_live= -1;
@@ -44,17 +45,17 @@ DiagonalBoard::DiagonalBoard(int t_bundles) {
     cout << "--made DB\n";
 }
 DiagonalBoard::~DiagonalBoard() {
-    /*for (int b= 0; b < m_bundles.size(); ++b) {
-        for (int w= 0; w <= m_bundles.at(b).size(); ++w) {
-            delete m_bundles.at(b).at(w);
-        }
+    for (int b= 0; b < m_bundles.size(); ++b) {
+        for (int w= 0; w <= b; ++w) { delete m_bundles.at(b).at(w); }
     }
+    cout << "OOPS\n";
+
     for (auto bundle : m_bundles) {
         bundle.clear();
         bundle.shrink_to_fit();
     }
     m_bundles.clear();
-    m_bundles.shrink_to_fit();*/
+    m_bundles.shrink_to_fit();
 }
 Wire *DiagonalBoard::get_wire(int t_bundle, int t_wire) const {
     return m_bundles.at(t_bundle).at(t_wire);

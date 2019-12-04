@@ -226,7 +226,7 @@ class Enigma {
     int                    get_wires() const;
     int                    get_rotors() const;
     const int *            get_rotor_position() const;
-    string                 get_rotor_position_as_string() const;
+    const string           get_rotor_position_as_string() const;
     const int *            get_ring_setting() const;
     string                 get_ring_setting_as_string() const;
     vector<int>            get_encryption() const;
