@@ -7,8 +7,12 @@
 SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 
     GIVEN("Enigma with rotors I, II, III, reflector UKW and a long plaintext") {
+        cout << "--------------------------making bombe---------------------\n";
+        I.print();
         Bombe bombe({I, II, III}, UKWR);
+        cout << "settings\n";
         bombe.get_setting().stop_on_first_valid= true;
+        cout << "making enigma\n";
         Enigma enigma({I, II, III}, UKWR);
         // enigma.set_verbose(true);
         string plaintext=
@@ -16,25 +20,32 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 
         WHEN("Given ciphertext encrypted with ring-setting AAA, "
              "ring-position AAA and no steckering") {
+            cout << "when, test 1\n";
             enigma.set_rotor_position("AAA");
             enigma.set_ring_setting("AAA");
             enigma.set_plugboard("");
+            cout << "test 1, encrypting\n";
             string ciphertext= enigma.encrypt(plaintext);
+            cout << "test 1, encrypted\n";
             bombe.get_setting().starting_rotor_positions= "AAA";
             bombe.get_setting().starting_ring_setting   = "AAA";
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
+                cout << "test 1, analyzing\n";
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
-
+                cout << "test 1, analyzed\n";
                 enigma.set_setting(solutions[0]);
+                cout << "test 1, checking\n";
                 CHECK(enigma.encrypt(ciphertext) == plaintext);
                 CHECK(solutions[0].rotor_position == "AAA");
+                cout << "test 1, checked\n";
             }
         }
 
         WHEN("Given ciphertext encrypted with ring-position CAA and no "
              "steckering") {
+            cout << "test 2, when\n";
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
             enigma.set_rotor_position("CAA");
@@ -74,6 +85,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             }
         }
 
+        /*
         WHEN("Given ciphertext encrypted with ring-setting RFW, ring-position "
              "BCD, bombe in same config and steckering") {
             // there was a bug with the enigma doing two turns for the first
@@ -131,8 +143,9 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                 }
             }
         }
+        */
     }
-
+    /*
     GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {
         Bombe bombe({IV, V, VI}, UKWR);
         bombe.get_setting().stop_on_first_valid= true;

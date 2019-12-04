@@ -80,6 +80,7 @@ class Plugboard {
     // Plugboard();
     Plugboard(int);
     Plugboard(const string, int);
+    Plugboard(Plugboard const &copy);
     ~Plugboard();
     Plugboard &operator=(Plugboard);
     void       swap(Plugboard &) noexcept;

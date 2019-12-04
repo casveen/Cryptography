@@ -67,6 +67,7 @@ Rotor::~Rotor() {
     delete[] m_notch;
 }
 Rotor::Rotor(Rotor const &copy) {
+    cout << "COPYING ROTOR\n";
     // Copy constructor, very important, assures there is no shallow copy
     // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     m_wires     = copy.m_wires;
@@ -83,6 +84,7 @@ Rotor::Rotor(Rotor const &copy) {
 }
 Rotor &Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
+    cout << "ASSIGN\n";
     rhs.swap(*this);   // Now swap data with the copy.
                        // The rhs parameter will delete the array when it
                        // goes out of scope at the end of the function
@@ -225,6 +227,11 @@ Plugboard::~Plugboard() {
     m_wiring.clear();
     m_wiring.shrink_to_fit();
 }
+Plugboard::Plugboard(Plugboard const &copy) {
+    cout << "COPYING PLUGBOARD\n";
+    m_wires = copy.m_wires;
+    m_wiring= vector<int>(copy.m_wiring);
+}
 Plugboard &Plugboard::operator=(Plugboard rhs) {
     // Pass by value (thus generating a copy)
     rhs.swap(*this);   // Now swap data with the copy.
@@ -288,19 +295,30 @@ Cartridge::Cartridge(int rotor_count, int wires) :
 }
 Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
                      Reflector                          reflector) {
+    cout << "------making cartridge\n";
     m_wires       = ((Rotor *)rotors.begin())->get_wires();
     m_rotor_count = rotors.size();
     m_positions   = new int[m_rotor_count];
     m_ring_setting= new int[m_rotor_count];
     // init positions
+    cout << m_rotor_count << "\n";
     reset_positions();
     reset_ring_setting();
     // set to rotors
+    cout << "------constr new rotors\n";
+    cout << m_rotor_count << "\n";
     m_rotors = new Rotor *[m_rotor_count];
     int count= 0;
-    for (auto r : rotors) { m_rotors[count++]= new Rotor(r); }
+    cout << "------set new rotors\n";
+    for (auto r : rotors) {
+        cout << count << "\n";
+        m_rotors[count++]= new Rotor(r);
+    }
+    cout << "------plug\n";
     m_plugboard= new Plugboard(m_wires);
+    cout << "------refl\n";
     m_reflector= new Reflector(reflector);
+    cout << "------made cartridge\n";
 }
 Cartridge::Cartridge(Cartridge const &copy) {
     // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
@@ -349,6 +367,7 @@ Cartridge::~Cartridge() {
 }
 // getters
 struct EnigmaSetting Cartridge::get_setting() const {
+    // these are pointers, should be COPIED if used by other cartridge
     struct EnigmaSetting out;
     for (int w= 0; w < m_rotor_count; ++w) {
         out.rotors.push_back(m_rotors[w]);
@@ -393,17 +412,21 @@ Plugboard *Cartridge::get_plugboard() const { return m_plugboard; }
 void Cartridge::set_setting(struct EnigmaSetting setting) {
     m_rotor_count= (signed int)setting.rotors.size();   // TODO check if not 0
     m_wires      = setting.rotors[0]->get_wires();      // begin?
-    // rotors
-    // realloc rotors and set
-    delete[] m_rotors;   // XXX might delete to much...
+    // dealloc everything
+    for (int w= 0; w < m_rotor_count; w++) { delete m_rotors[w]; }
+    delete[] m_rotors;
+    delete m_reflector;
+    delete[] m_positions;
+    delete[] m_ring_setting;
+    delete m_plugboard;
+    // alloc and set everything.
     m_rotors= new Rotor *[m_rotor_count];
-    for (int r= 0; r < m_rotor_count; ++r) { m_rotors[r]= setting.rotors[r]; }
-    // reflector
-    m_reflector= setting.reflector;
-    // plugboard
-    m_plugboard= setting.plugboard;
-    // settings
-    set_positions(setting.rotor_position);
+    for (int r= 0; r < m_rotor_count; ++r) {
+        m_rotors[r]= new Rotor(*setting.rotors[r]);
+    }
+    m_reflector= new Reflector(*setting.reflector);
+    m_plugboard= new Plugboard(*setting.plugboard);
+    set_positions(setting.rotor_position);   // XXX copies?
     set_ring_setting(setting.ring_setting);
 }
 void Cartridge::set_plugboard(const string str) {
@@ -590,15 +613,24 @@ void Cartridge::randomize() {
 // ENIGMA ENGINE
 Enigma::Enigma(int rotors_number, int wires) :
     m_rotors_number{rotors_number}, m_wires{wires} {
+    cout << "enigma constr\n";
     m_cartridge= new Cartridge(rotors_number, wires);
 }
 Enigma::Enigma(const std::initializer_list<Rotor> rotors,
                const Reflector                    reflector) {
-    m_cartridge    = new Cartridge(rotors, reflector);
-    m_wires        = ((Rotor *)rotors.begin())->get_wires();
+    cout << "---making enigma\n";
+    m_cartridge= new Cartridge(rotors, reflector);
+    cout << "---get wires\n";
+    m_wires= (rotors.begin())->get_wires();
+    cout << "---got wires\n";
     m_rotors_number= rotors.size();
+    cout << "---made enigma\n";
 }
-Enigma::~Enigma() { delete m_cartridge; }
+Enigma::~Enigma() {
+    cout << "---kill enigma\n";
+    delete m_cartridge;
+    cout << "---killed enigma\n";
+}
 // getter
 struct EnigmaSetting Enigma::get_setting() {
     return m_cartridge->get_setting();
@@ -617,7 +649,7 @@ const int *Enigma::get_ring_setting() const {
 string Enigma::get_ring_setting_as_string() const {
     return m_cartridge->get_ring_setting_as_string();
 }
-vector<int> Enigma::get_encryption() const {
+vector<int> Enigma::get_encryption() const {   // TODO pass by reference
     // return encryption at current step
     // encrypt all letters
     // this one is hardcoded to circumvent verbose branches, and avoid
@@ -661,7 +693,7 @@ string Enigma::get_encryption_as_string() const {
     for (int enc : encryption) { out+= (char)(enc + (int)'A'); }
     return out;
 }
-vector<pair<int, int>> Enigma::get_encryption_onesided() const {
+vector<pair<int, int>> Enigma::get_encryption_onesided() const {   // TODO &
     // return encryption at current step
     // encrypt all letters
     // this one is hardcoded to circumvent verbose branches, and avoid
@@ -775,6 +807,8 @@ int Enigma::encrypt_without_turning(int m) const {
     return m_cartridge->encrypt_without_turning(m);
 }
 int *Enigma::encrypt(const int *m, int n) {
+    // encrypt an array of ints
+    // return value must be freed!
     if (m_verbose) {
         cout << "\n              ";
         for (int i= 0; i < m_wires; i++) {
@@ -784,20 +818,13 @@ int *Enigma::encrypt(const int *m, int n) {
         cout << "\n              ";
         for (int i= 0; i < m_wires; i++) { cout << "| "; }
         cout << "     |||     |||  ";
-        // cout<<"???\n";
         cout << "\n";
     }
-    // cout<<n<<"\n";
-    // cout<<"am here";
-    // cout<<n<<"\n";
-    int *e= new int[n];
-    // cout<<n<<"\n";
-    // cout<<"the error might be  right before this";
+    int *e= new int[n];   // must be freed outside
     for (int i= 0; i < n; i++) {
         if (m_verbose) { printf("m[%3d] = ", i); }
         e[i]= encrypt(m[i]);
     }
-    // cout<<n<<"\n";
     return e;
 }
 string Enigma::encrypt(string str) {
@@ -806,14 +833,14 @@ string Enigma::encrypt(string str) {
     for (unsigned int i= 0; i < str.length(); ++i) {
         m[i]= (int)str[i] - (int)'A';
     }
-    int *e= encrypt(m, str.length());
+    int *e= encrypt(m, str.length());   // handled here
     // int to string
     string out= "";
     for (unsigned int i= 0; i < str.length(); ++i) {
         out+= (char)(e[i] + (int)'A');
     }
-    // delete e;
-    // delete m;
+    delete e;
+    delete m;
     return out;
 }
 void   Enigma::next_ring_setting() { m_cartridge->next_ring_setting(); }

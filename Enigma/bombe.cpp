@@ -1,6 +1,10 @@
 //#include "enigma.h";
 #include "bombe.h"   //wire, diagonal board
 
+Wire::~Wire() {
+    m_connections.clear();
+    m_connections.shrink_to_fit();
+}
 void Wire::flow() {
     m_live= -1;
     // activate connected dead wires
@@ -21,6 +25,7 @@ vector<Wire *> *Wire::get_connections() { return &m_connections; }
 void            Wire::connect(Wire *w) { m_connections.push_back(w); }
 
 DiagonalBoard::DiagonalBoard(int t_bundles) {
+    cout << "--make DB\n";
     // initialize, in triangle
     for (int b= 0; b < t_bundles; b++) {
         // make wires for bundle
@@ -35,6 +40,15 @@ DiagonalBoard::DiagonalBoard(int t_bundles) {
             m_bundles.at(b).push_back(m_bundles.at(w).at(b));
         }
     }
+    cout << "--made DB\n";
+}
+DiagonalBoard::~DiagonalBoard() {
+    for (auto bundle : m_bundles) {
+        bundle.clear();
+        bundle.shrink_to_fit();
+    }
+    m_bundles.clear();
+    m_bundles.shrink_to_fit();
 }
 Wire *DiagonalBoard::get_wire(int t_bundle, int t_wire) const {
     return m_bundles.at(t_bundle).at(t_wire);
@@ -98,7 +112,7 @@ void DiagonalBoard::print() const {
         cout << (char)(b + (int)'A') << " ";
         for (unsigned int w= 0; w < m_bundles.at(b).size(); w++) {
             Wire *wire= m_bundles.at(b).at(w);
-            cout <<((wire->get_live())?'1':' ')<<" ";
+            cout << ((wire->get_live()) ? '1' : ' ') << " ";
         }
         cout << "\n";
     }
@@ -120,7 +134,6 @@ void DiagonalBoard::print() const {
     }
     */
 }
-
 void DiagonalBoard::print_live() const {
     int bundle_size= m_bundles.size();
     for (int b= 0; b < bundle_size; b++) { cout << " | "; }
@@ -137,35 +150,44 @@ void DiagonalBoard::print_live() const {
     cout << "\n";
     cout << "\n";
 }
-/*int Diagonal::bundle_sum(int bundle) {
-    int sum=0;
-    for (int i=0; i<m_letters; ++i) {
-        sum+=m_bundles.at(bundle).at(i)->get_live();
-    }
-    return sum;
-}*/
 bool DiagonalBoard::bundle_contradiction(int bundle) const {
     int ones= 0, zeros= 0;
     // we have a contradiction if there is not exactly 1 or exactly 25 live
     // wires
     for (unsigned int i= 0; i < m_bundles.size(); ++i) {
         get_wire(bundle, i)->get_live() == 0 ? ++zeros : ++ones;
-        // ones==1 && zeros=25 || ones=25 zeros=1
         //  1 impossible, 25 impossible
         if (ones >= 2 && zeros >= 2) return true;
     }
     // if only ones or only zeros, we have a contradiciton
     if (ones == 0 || zeros == 0) return true;
-    // otherwise, the bundle wiring is valid
+    // otherwise, the bundle wiring is valid(no contradiction)
     return false;
 }
 
 Bombe::Bombe(const std::initializer_list<Rotor> rotors,
              const Reflector                    reflector) {
-    m_letters       = ((Rotor *)rotors.begin())->get_wires();
+    cout << "bombe constr\n";
+    m_letters       = (rotors.begin())->get_wires();
     m_rotor_count   = rotors.size();
     m_diagonal_board= new DiagonalBoard(m_letters);
     m_enigma        = new Enigma(rotors, reflector);
+}
+Bombe::~Bombe() {
+    cout << "kill bombe\n";
+    cout << "kill DB\n";
+    delete m_diagonal_board;
+    cout << "kill enigma\n";
+    delete m_enigma;
+    for (auto encryption : m_enigma_encryptions) {
+        cout << "kill encryption\n";
+        encryption.clear();
+        encryption.shrink_to_fit();
+    }
+    cout << "kill encryptions\n";
+    m_enigma_encryptions.clear();
+    m_enigma_encryptions.shrink_to_fit();
+    cout << "--------->bombe is dead<-------------\n";
 }
 // setters
 void Bombe::set_ring_setting(const string setting) {
@@ -195,8 +217,9 @@ vector<int> Bombe::probable_search(const string ciphertext, const string crib) {
             }
         }
         if (suitable) {
-            //cout << "suitable substring at " << i << "\n";
-            //cout << ciphertext.substr(i, crib_length) << "\n" << crib << "\n";
+            // cout << "suitable substring at " << i << "\n";
+            // cout << ciphertext.substr(i, crib_length) << "\n" << crib <<
+            // "\n";
             candidates.push_back(i);
         }
     }
@@ -220,23 +243,16 @@ int Bombe::find_most_wired_letter(const string ciphertext, const string crib) {
     delete[] histogram;
     return max_index;
 }
-void Bombe::init_enigma_encryptions(int encryptions) {
-    // cout<<"intitialising encryptions\n";
+void Bombe::init_enigma_encryptions(int encryptions) {   // TODO get by ref
     m_enigma_encryptions.clear();
     for (int i= 0; i < encryptions; ++i) {
-        // cout<<m_enigma->get_encryption_as_string()<<"\n";
-        // cout<<i<<"\n";
         m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided());
         m_enigma->turn();
     }
-    // cout<<"encryptions done\n";
 }
 void Bombe::setup_diagonal_board(const string ciphertext, const string crib) {
-    // cout<<"setting up DB\n";
     for (unsigned int j= 0; j < crib.length(); j++) {
-        // cout<<"getting an encryption\n";
         vector<pair<int, int>> encryption= m_enigma_encryptions.at(j);
-        // cout<<"connecting an enigma\n";
         m_diagonal_board->connect_enigma(&encryption, (int)crib[j] - (int)'A',
                                          (int)ciphertext[j] - (int)'A');
     }
@@ -253,11 +269,11 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
     }
     ring_settings= total_permutations / m_enigma->get_wires();
     ring_settings= min(ring_settings, m_setting.max_ring_settings);
-    // cout<<"analyzing\n";
+
     // find candidates
     vector<int> candidates= probable_search(ciphertext, crib);
-    // analyze each candidate
 
+    // analyze each candidate
     for (unsigned int i= 0; i < candidates.size(); i++) {
         m_enigma->set_ring_setting(m_setting.starting_ring_setting);
         m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
@@ -266,8 +282,6 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             ciphertext.substr(candidates[i], crib.length()), crib);
         // for each ring setting
         for (int rs= 0; rs < ring_settings; ++rs) {
-            //cout<<"\n\rcandidate "<<i<<": ring setting "<<m_enigma->get_ring_setting_as_string();
-            //printf("\n\rcandidate %d, ring setting %s", i, m_enigma->get_ring_setting_as_string());
             // setup the wiring for the can didate
             init_enigma_encryptions(crib.length());
             // for each rotor position
@@ -277,39 +291,23 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                     ciphertext.substr(candidates[i], crib.length()), crib);
 
                 if (check_one_wire(most_wired_letter)) {
-                    //cout<<"ONE ";
-                    // m_diagonal_board->print_live();
-                    //cout << "VALID CONFIGURATION FOUND AT " << j << "\n";
-                    //cout << "DOUBLE-CHECKING...\n";
                     if (doublecheck_and_get_plugboard()) {
-                        //cout<<"TWO ";
-                        //cout << "ALL GOOD\n";
-                        // cout << m_enigma->get_rotor_position_as_string() <<
-                        // "\n";
-
-                        //tripple chack:
+                        // tripple chack:
                         m_enigma->turn(-crib.length());
-                        string recrypt=m_enigma->encrypt(ciphertext.substr(candidates[i], crib.length()));
-                        //cout<<"("<<recrypt<<") ";
-                        //m_enigma->get_cartridge()->print();
+                        string recrypt= m_enigma->encrypt(
+                            ciphertext.substr(candidates[i], crib.length()));
                         if (m_setting.interactive_wiring_mode) {
                             interactive_wirechecking();
                         }
-                        if ( recrypt == crib ) {
-                            // cout << m_enigma->get_rotor_position_as_string() <<
-                            // "\n";
-                            //cout<<"THREE \n";
-
-                            m_enigma->turn(-crib.length()-candidates[i]);
+                        if (recrypt == crib) {
+                            m_enigma->turn(-crib.length() - candidates[i]);
                             solutions.push_back(m_enigma->get_setting());
-                            m_enigma->turn(crib.length()+candidates[i]);
-                            // cout << m_enigma->get_rotor_position_as_string() <<
-                            // "\n";
+                            m_enigma->turn(crib.length() + candidates[i]);
                             if (m_setting.stop_on_first_valid == true) {
                                 return solutions;
                             }
                         }
-                    m_enigma->set_plugboard(""); //reset plugboard
+                        m_enigma->set_plugboard("");   // reset plugboard
                     }
                 }
                 // push new encryption, del oldest
@@ -341,10 +339,6 @@ void Bombe::print_encryptions() const {
     }
 }
 
-
-
-
-
 /*
 bool Bombe::doublecheck_and_get_plugboard() {
     //bool false_stop= false;
@@ -363,7 +357,8 @@ bool Bombe::doublecheck_and_get_plugboard() {
                 // cout << "EXACT HIT\n";
                 // also if exact hit, there is only one live wire per bundle
                 for (int bundle_2= 0; bundle_2 < m_letters; ++bundle_2) {
-                     //cout << "sum at bunde_2=" << (char) (bundle_2+(int)'A') << ":"
+                     //cout << "sum at bunde_2=" << (char) (bundle_2+(int)'A')
+<< ":"
                     //      << m_diagonal_board->bundle_sum(bundle_2) << "\n";
                     if (m_diagonal_board->bundle_sum(bundle_2) > 1) {
                         // cout<<"FCUK\n";
@@ -373,8 +368,9 @@ bool Bombe::doublecheck_and_get_plugboard() {
                     }
                 }
 
-                cout << (char) (bundle +(int)'A') << " is steckered to " <<  (char) (wire +(int)'A') << "\n";
-                plugboard->set_wiring(bundle, wire);   // other way by symmetry
+                cout << (char) (bundle +(int)'A') << " is steckered to " <<
+(char) (wire +(int)'A') << "\n"; plugboard->set_wiring(bundle, wire);   // other
+way by symmetry
             }
         }
     }
@@ -383,75 +379,69 @@ bool Bombe::doublecheck_and_get_plugboard() {
 */
 
 bool Bombe::doublecheck_and_get_plugboard() {
-    //bool false_stop= false;
+    // bool false_stop= false;
     // we have a valid configuration od the enigma, the most occurring letter is
-    //activated in some wire.
-    //for all bundles, the sum is either
-    //1 : the steckered letter is live
-    //25: all but the steckered letter is live
-    //other: unable to find, probably self-steckered
+    // activated in some wire.
+    // for all bundles, the sum is either
+    // 1 : the steckered letter is live
+    // 25: all but the steckered letter is live
+    // other: unable to find, probably self-steckered
     Plugboard *plugboard= m_enigma->get_cartridge()->get_plugboard();
     for (int bundle= 0; bundle < m_letters; ++bundle) {
-        int sum=m_diagonal_board->bundle_sum(bundle);
-        if ( sum == 1) { //steckered is live
-            //all other bundles should have 1 or less live wires
+        int sum= m_diagonal_board->bundle_sum(bundle);
+        if (sum == 1) {   // steckered is live
+            // all other bundles should have 1 or less live wires
             for (int bundle_2= 0; bundle_2 < m_letters; ++bundle_2) {
-                if (m_diagonal_board->bundle_sum(bundle)>1) {
+                if (m_diagonal_board->bundle_sum(bundle) > 1) {
                     plugboard->reset();
                     return false;
                 }
             }
-            //find live wire
+            // find live wire
             for (int wire= 0; wire < m_letters; ++wire) {
                 if (m_diagonal_board->get_wire(bundle, wire)->get_live()) {
-                    //cout << (char) (bundle +(int)'A') << " is steckered to " <<  (char) (wire +(int)'A') << "\n";
+                    // cout << (char) (bundle +(int)'A') << " is steckered to "
+                    // <<  (char) (wire +(int)'A') << "\n";
                     plugboard->set_wiring(bundle, wire);
                     plugboard->set_wiring(wire, bundle);
                     break;
                 }
             }
-        }
-        else if ( sum ==m_letters-1 ) {
+        } else if (sum == m_letters - 1) {   // steckered is dead
+            // find dead wire
             for (int wire= 0; wire < m_letters; ++wire) {
                 if (!m_diagonal_board->get_wire(bundle, wire)->get_live()) {
-                    //cout << (char) (bundle +(int)'A') << " is steckered to " <<  (char) (wire +(int)'A') << "\n";
                     plugboard->set_wiring(bundle, wire);
                     plugboard->set_wiring(wire, bundle);
                     break;
                 }
             }
-        }
-        else { //undeterminable
+        } else {   // undeterminable
         }
     }
     return true;
 }
 
-
-
-
 void Bombe::interactive_wirechecking() {
-    cout<<"--------------------INTERACTIVE WIRING MODE------------------\n";
+    cout << "--------------------INTERACTIVE WIRING MODE------------------\n";
     string input;
-    int bundle, wire;
-    while( true ) {
-        cout<<"    INPUT A WIRE TO ACTIVATE(q to EXIT): ";
-        cin>>input;
-        if (input=="q") {
-            break;
-        }
-        bundle=(int) input[0]-(int)'A';
-        wire=(int) input[1]-(int)'a';
-        if (bundle>m_letters || bundle<0 || wire>m_letters || wire<0) {
-            cout<<"WRONG INPUT FORMAT. USAGE: Aa, Ab, Zk\n";
+    int    bundle, wire;
+    while (true) {
+        cout << "    INPUT A WIRE TO ACTIVATE(q to EXIT): ";
+        cin >> input;
+        if (input == "q") { break; }
+        bundle= (int)input[0] - (int)'A';
+        wire  = (int)input[1] - (int)'a';
+        if (bundle > m_letters || bundle < 0 || wire > m_letters || wire < 0) {
+            cout << "WRONG INPUT FORMAT. USAGE: Aa, Ab, Zk\n";
             continue;
         }
-        cout<<"activating "<<(char)(bundle+(int)'A')<<(char)(wire+(int)'a')<<"\n";
+        cout << "activating " << (char)(bundle + (int)'A')
+             << (char)(wire + (int)'a') << "\n";
         m_diagonal_board->wipe();
         m_diagonal_board->activate(bundle, wire);
         m_diagonal_board->print();
     }
-
 }
 
 /*

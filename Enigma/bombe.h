@@ -11,6 +11,7 @@ class Wire {
     vector<Wire *> m_connections;
     int            m_live= 0;   // 0: dead, 1: live, -1: just activated
   public:
+    ~Wire();
     void            flow();   // make wire live, and also wires connected to it
     int             get_live() const;   // 0 dead, -1 just set to live, 1 live
     void            set_live(int);
@@ -26,6 +27,7 @@ class DiagonalBoard {
 
   public:
     DiagonalBoard(int);
+    ~DiagonalBoard();
     Wire *get_wire(int bundle, int wire) const;
     void  activate(int, int);
     void  connect(int, int, int, int);
@@ -57,7 +59,7 @@ class Bombe {
 
   public:
     Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector);
-
+    ~Bombe();
     // setters
     void set_ring_setting(const string);
     void set_rotor_position(const string);
