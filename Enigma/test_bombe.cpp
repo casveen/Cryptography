@@ -65,7 +65,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                 CHECK(solutions[0].rotor_position == "CAA");
             }
         }
-
+        /*
         WHEN("Given ciphertext encrypted with ring-setting FGH, ring-position "
              "CDE, no steckering and bombe at same ring set") {
             enigma.set_rotor_position("CDE");
@@ -84,7 +84,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                 REQUIRE(solutions[0].ring_setting == "FGH");
             }
         }
-
+*/
         /*
         WHEN("Given ciphertext encrypted with ring-setting RFW, ring-position "
              "BCD, bombe in same config and steckering") {

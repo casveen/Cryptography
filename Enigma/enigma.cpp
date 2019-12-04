@@ -11,7 +11,7 @@ void split(const std::string &s, char delim, Out result) {
 }*/
 
 // WHEEL
-Rotor::Rotor() {}
+Rotor::Rotor() { cout << "STANDARD ROTOR\n"; }
 Rotor::Rotor(int wires) : m_wires{wires} {
     m_notches = 1;
     m_notch   = new int[m_notches];
@@ -296,7 +296,7 @@ Cartridge::Cartridge(int rotor_count, int wires) :
 Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
                      Reflector                          reflector) {
     cout << "------making cartridge\n";
-    m_wires       = ((Rotor *)rotors.begin())->get_wires();
+    m_wires       = (rotors.begin())->get_wires();
     m_rotor_count = rotors.size();
     m_positions   = new int[m_rotor_count];
     m_ring_setting= new int[m_rotor_count];
@@ -307,7 +307,10 @@ Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
     // set to rotors
     cout << "------constr new rotors\n";
     cout << m_rotor_count << "\n";
-    m_rotors = new Rotor *[m_rotor_count];
+    try {
+        m_rotors= new Rotor *[m_rotor_count];
+    } catch (std::bad_alloc e) { cout << "EXCEEPTION!! bad alloc\n\n"; }
+
     int count= 0;
     cout << "------set new rotors\n";
     for (auto r : rotors) {
@@ -426,7 +429,7 @@ void Cartridge::set_setting(struct EnigmaSetting setting) {
     }
     m_reflector= new Reflector(*setting.reflector);
     m_plugboard= new Plugboard(*setting.plugboard);
-    set_positions(setting.rotor_position);   // XXX copies?
+    set_positions(setting.rotor_position);
     set_ring_setting(setting.ring_setting);
 }
 void Cartridge::set_plugboard(const string str) {
@@ -619,10 +622,8 @@ Enigma::Enigma(int rotors_number, int wires) :
 Enigma::Enigma(const std::initializer_list<Rotor> rotors,
                const Reflector                    reflector) {
     cout << "---making enigma\n";
-    m_cartridge= new Cartridge(rotors, reflector);
-    cout << "---get wires\n";
-    m_wires= (rotors.begin())->get_wires();
-    cout << "---got wires\n";
+    m_cartridge    = new Cartridge(rotors, reflector);
+    m_wires        = (rotors.begin())->get_wires();
     m_rotors_number= rotors.size();
     cout << "---made enigma\n";
 }

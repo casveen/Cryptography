@@ -2,8 +2,9 @@
 #include "bombe.h"   //wire, diagonal board
 
 Wire::~Wire() {
-    m_connections.clear();
-    m_connections.shrink_to_fit();
+    // m_connections.clear();
+    // m_connections.shrink_to_fit();
+    // do not deallocate aythng, handled by diag board
 }
 void Wire::flow() {
     m_live= -1;
@@ -43,12 +44,17 @@ DiagonalBoard::DiagonalBoard(int t_bundles) {
     cout << "--made DB\n";
 }
 DiagonalBoard::~DiagonalBoard() {
+    /*for (int b= 0; b < m_bundles.size(); ++b) {
+        for (int w= 0; w <= m_bundles.at(b).size(); ++w) {
+            delete m_bundles.at(b).at(w);
+        }
+    }
     for (auto bundle : m_bundles) {
         bundle.clear();
         bundle.shrink_to_fit();
     }
     m_bundles.clear();
-    m_bundles.shrink_to_fit();
+    m_bundles.shrink_to_fit();*/
 }
 Wire *DiagonalBoard::get_wire(int t_bundle, int t_wire) const {
     return m_bundles.at(t_bundle).at(t_wire);
@@ -72,25 +78,17 @@ void DiagonalBoard::reset() {
 }
 void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
                             int t_wire_2) {
-    /*if (t_bundle_1==t_bundle_2 && t_bundle_2==t_wire_1 && t_wire_1==t_wire_2)
-    { return;
-    }*/
     get_wire(t_bundle_1, t_wire_1)->connect(get_wire(t_bundle_2, t_wire_2));
     get_wire(t_bundle_2, t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
 void DiagonalBoard::connect_enigma(vector<pair<int, int>> *encryption,
                                    int t_from, int t_to) {
-    // cout<<"diag board wiring in an enigma\n";
     for (unsigned int i= 0; i < encryption->size(); i++) {
-        // cout<<"connecting...";
-        // cout<<t_from<<":"<<encryption->at(i).first<<" <->
-        // "<<t_to<<":"<<encryption->at(i).second<<"\n";
         connect(t_from, encryption->at(i).first, t_to,
                 encryption->at(i).second);
         connect(t_from, encryption->at(i).second, t_to,
                 encryption->at(i).first);
     }
-    // cout<<"finished connecting\n";
 }
 int DiagonalBoard::bundle_sum(int bundle) const {
     int sum= 0;
