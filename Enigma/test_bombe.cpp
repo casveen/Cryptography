@@ -36,6 +36,13 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                     bombe.analyze(ciphertext, plaintext);
                 cout << "test 1, analyzed\n";
                 enigma.set_setting(solutions[0]);
+
+                /*string str= enigma.get_rotor_position_as_string();
+                cout << "\n\n\n\n" << str;
+                str[0]= 'Q';
+                str   = enigma.get_rotor_position_as_string();
+                cout << str << "\n\n\n\n";*/
+
                 cout << "test 1, checking\n";
                 CHECK(enigma.encrypt(ciphertext) == plaintext);
                 CHECK(solutions[0].rotor_position == "AAA");

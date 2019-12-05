@@ -69,7 +69,7 @@ Rotor::~Rotor() {
     delete[] m_notch;
 }
 Rotor::Rotor(Rotor const &copy) {
-    cout << "COPYING ROTOR\n";
+    // cout << "COPYING ROTOR\n";
     // Copy constructor, very important, assures there is no shallow copy
     // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     m_wires     = copy.m_wires;
@@ -86,7 +86,7 @@ Rotor::Rotor(Rotor const &copy) {
 }
 Rotor &Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
-    cout << "ASSIGN\n";
+    // cout << "ASSIGN\n";
     rhs.swap(*this);   // Now swap data with the copy.
                        // The rhs parameter will delete the array when it
                        // goes out of scope at the end of the function
@@ -230,7 +230,7 @@ Plugboard::~Plugboard() {
     m_wiring.shrink_to_fit();
 }
 Plugboard::Plugboard(Plugboard const &copy) {
-    cout << "COPYING PLUGBOARD\n";
+    // cout << "COPYING PLUGBOARD\n";
     m_wires = copy.m_wires;
     m_wiring= vector<int>(copy.m_wiring);
 }
@@ -303,12 +303,12 @@ Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
     m_positions   = new int[m_rotor_count];
     m_ring_setting= new int[m_rotor_count];
     // init positions
-    cout << m_rotor_count << "\n";
+    cout << "------ rotor count " << m_rotor_count << "\n";
     reset_positions();
     reset_ring_setting();
     // set to rotors
     cout << "------constr new rotors\n";
-    cout << m_rotor_count << "\n";
+    cout << "------ rotor count " << m_rotor_count << "\n";
     try {
         m_rotors= new Rotor *[m_rotor_count];
     } catch (std::bad_alloc e) { cout << "EXCEEPTION!! bad alloc\n\n"; }
@@ -421,8 +421,8 @@ void Cartridge::set_setting(struct EnigmaSetting setting) {
     for (int w= 0; w < m_rotor_count; w++) { delete m_rotors[w]; }
     delete[] m_rotors;
     delete m_reflector;
-    delete[] m_positions;
-    delete[] m_ring_setting;
+    // delete[] m_positions; //OKAY NOT GOOD!!!
+    // delete[] m_ring_setting;
     delete m_plugboard;
     // alloc and set everything.
     m_rotors= new Rotor *[m_rotor_count];

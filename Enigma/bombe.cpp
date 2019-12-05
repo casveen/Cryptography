@@ -5,7 +5,8 @@ Wire::~Wire() {
     m_connections.clear();
     m_connections.shrink_to_fit();
     // do not deallocate aythng, handled by diag board
-    cout << "----DEAD WIRE-------------------------------------------------\n";
+    // cout << "----DEAD
+    // WIRE-------------------------------------------------\n";
 }
 void Wire::flow() {
     m_live= -1;
