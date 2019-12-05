@@ -2,11 +2,9 @@
 #include "bombe.h"   //wire, diagonal board
 
 Wire::~Wire() {
+    // do not deallocate aythng, handled by diag board
     m_connections.clear();
     m_connections.shrink_to_fit();
-    // do not deallocate aythng, handled by diag board
-    // cout << "----DEAD
-    // WIRE-------------------------------------------------\n";
 }
 void Wire::flow() {
     m_live= -1;
@@ -28,7 +26,6 @@ vector<Wire *> *Wire::get_connections() { return &m_connections; }
 void            Wire::connect(Wire *w) { m_connections.push_back(w); }
 
 DiagonalBoard::DiagonalBoard(int t_bundles) {
-    cout << "--make DB\n";
     // initialize, in triangle
     for (int b= 0; b < t_bundles; b++) {
         // make wires for bundle
@@ -43,14 +40,11 @@ DiagonalBoard::DiagonalBoard(int t_bundles) {
             m_bundles.at(b).push_back(m_bundles.at(w).at(b));
         }
     }
-    cout << "--made DB\n";
 }
 DiagonalBoard::~DiagonalBoard() {
-    for (int b= 0; b < m_bundles.size(); ++b) {
-        for (int w= 0; w <= b; ++w) { delete m_bundles.at(b).at(w); }
+    for (unsigned int b= 0; b < m_bundles.size(); ++b) {
+        for (unsigned int w= 0; w <= b; ++w) { delete m_bundles.at(b).at(w); }
     }
-    cout << "OOPS\n";
-
     for (auto bundle : m_bundles) {
         bundle.clear();
         bundle.shrink_to_fit();
@@ -167,27 +161,20 @@ bool DiagonalBoard::bundle_contradiction(int bundle) const {
 
 Bombe::Bombe(const std::initializer_list<Rotor> rotors,
              const Reflector                    reflector) {
-    cout << "bombe constr\n";
     m_letters       = (rotors.begin())->get_wires();
     m_rotor_count   = rotors.size();
     m_diagonal_board= new DiagonalBoard(m_letters);
     m_enigma        = new Enigma(rotors, reflector);
 }
 Bombe::~Bombe() {
-    cout << "kill bombe\n";
-    cout << "kill DB\n";
     delete m_diagonal_board;
-    cout << "kill enigma\n";
     delete m_enigma;
     for (auto encryption : m_enigma_encryptions) {
-        cout << "kill encryption\n";
         encryption.clear();
         encryption.shrink_to_fit();
     }
-    cout << "kill encryptions\n";
     m_enigma_encryptions.clear();
     m_enigma_encryptions.shrink_to_fit();
-    cout << "--------->bombe is dead<-------------\n";
 }
 // setters
 void Bombe::set_ring_setting(const string setting) {
@@ -264,15 +251,18 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
     int                          total_permutations= 1;
     int                          most_wired_letter;
     int                          ring_settings= 1;
+    int                          records      = 0;
     for (int j= 0; j < m_enigma->get_rotors(); j++) {
         total_permutations*= m_enigma->get_wires();
     }
     ring_settings= total_permutations / m_enigma->get_wires();
     ring_settings= min(ring_settings, m_setting.max_ring_settings);
 
+    auto start= std::chrono::system_clock::now();
     // find candidates
+    cout << "probable search\n";
     vector<int> candidates= probable_search(ciphertext, crib);
-
+    cout << "probable search done\n";
     // analyze each candidate
     for (unsigned int i= 0; i < candidates.size(); i++) {
         m_enigma->set_ring_setting(m_setting.starting_ring_setting);
@@ -282,7 +272,13 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             ciphertext.substr(candidates[i], crib.length()), crib);
         // for each ring setting
         for (int rs= 0; rs < ring_settings; ++rs) {
-            // setup the wiring for the can didate
+            cout << "I: " << i
+                 << ", Ring setting: " << m_enigma->get_ring_setting_as_string()
+                 << "\n";
+            if (m_setting.time_performance == true) {
+                start= std::chrono::system_clock::now();
+            }
+            // setup the wiring for the candidate
             init_enigma_encryptions(crib.length());
             // for each rotor position
             for (int j= 0; j < total_permutations - 1; j++) {
@@ -304,6 +300,10 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                             solutions.push_back(m_enigma->get_setting());
                             m_enigma->turn(crib.length() + candidates[i]);
                             if (m_setting.stop_on_first_valid == true) {
+                                if (m_setting.time_performance) {
+                                    cout << "average time per ringsetting: "
+                                         << m_setting.performance_mean << "\n";
+                                }
                                 return solutions;
                             }
                         }
@@ -315,9 +315,30 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                 m_enigma_encryptions.push_back(
                     m_enigma->get_encryption_onesided());
                 m_enigma->turn();
-            }
+            }   // for rotor position
             m_enigma->next_ring_setting();
-        }
+
+            if (m_setting.time_performance == true) {
+                auto end= std::chrono::system_clock::now();
+                std::chrono::duration<double> elapsed_time= end - start;
+                auto                          t= elapsed_time.count();
+
+                float mean_p= m_setting.performance_mean;
+                float mean  = mean_p + (t - mean_p) / (records + 1);
+                //    (records / (records + 1)) * mean_p + t / (records + 1);
+
+                float var= (records * m_setting.performance_variance +
+                            (t - mean_p) * (t - mean)) /
+                           (records + 1);
+
+                m_setting.performance_mean    = mean;
+                m_setting.performance_variance= var;
+                cout << "REC " << records << "---> ELAPSED: " << t << " MEAN "
+                     << mean << ", VARIANCE " << var;
+
+                records++;
+            }
+        }   // for ring setting
     }
     return solutions;
 }

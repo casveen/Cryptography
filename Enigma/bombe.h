@@ -47,6 +47,9 @@ struct BombeSetting {
     string starting_ring_setting= "AAA";   // TODO should adapt to more rotors
     string starting_rotor_positions= "AAA";
     bool   interactive_wiring_mode = false;
+    const bool time_performance    = true;   // XXX can only be set in code...
+    double     performance_mean    = 0;      // performance of a rs run
+    double     performance_variance= 0;
 };
 
 class Bombe {

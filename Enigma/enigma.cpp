@@ -1,17 +1,8 @@
 #include "enigma.h"
 using namespace std;
 
-/*template <typename Out>
-void split(const std::string &s, char delim, Out result) {
-    std::istringstream iss(s);
-    std::string item;
-    while (std::getline(iss, item, delim)) {
-        *result++ = item;
-    }
-}*/
-
 // WHEEL
-Rotor::Rotor() { cout << "STANDARD ROTOR\n"; }
+Rotor::Rotor() {}
 Rotor::Rotor(int wires) : m_wires{wires} {
     m_notches = 1;
     m_notch   = new int[m_notches];
@@ -297,33 +288,19 @@ Cartridge::Cartridge(int rotor_count, int wires) :
 }
 Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
                      Reflector                          reflector) {
-    cout << "------making cartridge\n";
     m_wires       = (rotors.begin())->get_wires();
     m_rotor_count = rotors.size();
     m_positions   = new int[m_rotor_count];
     m_ring_setting= new int[m_rotor_count];
     // init positions
-    cout << "------ rotor count " << m_rotor_count << "\n";
     reset_positions();
     reset_ring_setting();
     // set to rotors
-    cout << "------constr new rotors\n";
-    cout << "------ rotor count " << m_rotor_count << "\n";
-    try {
-        m_rotors= new Rotor *[m_rotor_count];
-    } catch (std::bad_alloc e) { cout << "EXCEEPTION!! bad alloc\n\n"; }
-
+    m_rotors = new Rotor *[m_rotor_count];
     int count= 0;
-    cout << "------set new rotors\n";
-    for (auto r : rotors) {
-        cout << count << "\n";
-        m_rotors[count++]= new Rotor(r);
-    }
-    cout << "------plug\n";
+    for (auto r : rotors) { m_rotors[count++]= new Rotor(r); }
     m_plugboard= new Plugboard(m_wires);
-    cout << "------refl\n";
     m_reflector= new Reflector(reflector);
-    cout << "------made cartridge\n";
 }
 Cartridge::Cartridge(Cartridge const &copy) {
     // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
@@ -422,7 +399,7 @@ void Cartridge::set_setting(struct EnigmaSetting setting) {
     delete[] m_rotors;
     delete m_reflector;
     // delete[] m_positions; //OKAY NOT GOOD!!!
-    // delete[] m_ring_setting;
+    // delete[] m_ring_setting; //XXX does not handle if init in other size
     delete m_plugboard;
     // alloc and set everything.
     m_rotors= new Rotor *[m_rotor_count];
@@ -618,22 +595,15 @@ void Cartridge::randomize() {
 // ENIGMA ENGINE
 Enigma::Enigma(int rotors_number, int wires) :
     m_rotors_number{rotors_number}, m_wires{wires} {
-    cout << "enigma constr\n";
     m_cartridge= new Cartridge(rotors_number, wires);
 }
 Enigma::Enigma(const std::initializer_list<Rotor> rotors,
                const Reflector                    reflector) {
-    cout << "---making enigma\n";
     m_cartridge    = new Cartridge(rotors, reflector);
     m_wires        = (rotors.begin())->get_wires();
     m_rotors_number= rotors.size();
-    cout << "---made enigma\n";
 }
-Enigma::~Enigma() {
-    cout << "---kill enigma\n";
-    delete m_cartridge;
-    cout << "---killed enigma\n";
-}
+Enigma::~Enigma() { delete m_cartridge; }
 // getter
 struct EnigmaSetting Enigma::get_setting() {
     return m_cartridge->get_setting();

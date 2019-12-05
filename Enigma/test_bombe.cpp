@@ -7,12 +7,8 @@
 SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 
     GIVEN("Enigma with rotors I, II, III, reflector UKW and a long plaintext") {
-        cout << "--------------------------making bombe---------------------\n";
-        I.print();
         Bombe bombe({I, II, III}, UKWR);
-        cout << "settings\n";
         bombe.get_setting().stop_on_first_valid= true;
-        cout << "making enigma\n";
         Enigma enigma({I, II, III}, UKWR);
         // enigma.set_verbose(true);
         string plaintext=
@@ -20,39 +16,26 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 
         WHEN("Given ciphertext encrypted with ring-setting AAA, "
              "ring-position AAA and no steckering") {
-            cout << "when, test 1\n";
+            cout << "test 1\n";
             enigma.set_rotor_position("AAA");
             enigma.set_ring_setting("AAA");
             enigma.set_plugboard("");
-            cout << "test 1, encrypting\n";
             string ciphertext= enigma.encrypt(plaintext);
-            cout << "test 1, encrypted\n";
             bombe.get_setting().starting_rotor_positions= "AAA";
             bombe.get_setting().starting_ring_setting   = "AAA";
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
-                cout << "test 1, analyzing\n";
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
-                cout << "test 1, analyzed\n";
                 enigma.set_setting(solutions[0]);
-
-                /*string str= enigma.get_rotor_position_as_string();
-                cout << "\n\n\n\n" << str;
-                str[0]= 'Q';
-                str   = enigma.get_rotor_position_as_string();
-                cout << str << "\n\n\n\n";*/
-
-                cout << "test 1, checking\n";
                 CHECK(enigma.encrypt(ciphertext) == plaintext);
                 CHECK(solutions[0].rotor_position == "AAA");
-                cout << "test 1, checked\n";
             }
         }
 
         WHEN("Given ciphertext encrypted with ring-position CAA and no "
              "steckering") {
-            cout << "test 2, when\n";
+            cout << "test 2\n";
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
             enigma.set_rotor_position("CAA");
@@ -72,9 +55,10 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                 CHECK(solutions[0].rotor_position == "CAA");
             }
         }
-        /*
+
         WHEN("Given ciphertext encrypted with ring-setting FGH, ring-position "
              "CDE, no steckering and bombe at same ring set") {
+            cout << "test 3\n";
             enigma.set_rotor_position("CDE");
             enigma.set_ring_setting("FGH");
             string ciphertext= enigma.encrypt(plaintext);
@@ -91,10 +75,10 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                 REQUIRE(solutions[0].ring_setting == "FGH");
             }
         }
-*/
-        /*
+
         WHEN("Given ciphertext encrypted with ring-setting RFW, ring-position "
              "BCD, bombe in same config and steckering") {
+            cout << "test 4\n";
             // there was a bug with the enigma doing two turns for the first
             // check this test would not pass with this bug
             enigma.set_rotor_position("MCW");
@@ -126,6 +110,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 
         WHEN("Given ciphertext encrypted with ring-setting GDA, rotor-position "
              "PAH, steckering and bombe starting from ring-setting AAA") {
+            cout << "test 5\n";
             enigma.set_rotor_position("PAH");
             enigma.set_ring_setting("GDA");
             enigma.set_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX");
@@ -135,6 +120,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             bombe.set_ring_setting("AAA");
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
+                cout << "ANALYZING in test 5\n";
                 vector<struct EnigmaSetting> solutions=
                     bombe.analyze(ciphertext, plaintext);
                 enigma.set_setting(solutions[0]);
@@ -150,7 +136,6 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
                 }
             }
         }
-        */
     }
     /*
     GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {

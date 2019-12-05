@@ -1,10 +1,11 @@
 CC        := g++
 #MPI       := mpicc
-FLAGS      = -Wall -g
+FLAGS      = -Wall -g -O3
 TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
 DEP        = enigma.cpp bombe.cpp
 HEADER     = enigma.h   bombe.h
 PROGRAMS = $(patsubst %.cpp, %.exe, $(wildcard *.cpp))
+OBJECTS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
 
 .PHONY : all clean test valgrind
 
@@ -14,17 +15,29 @@ all:
 enigma.exe: enigma.cpp
 	$(CC) $< -o $@ $(FLAGS)
 
-test.exe : test.cpp enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
-	$(CC) $< -o $@ $(FLAGS) $(TESTDEP)
+enigma.o: enigma.h
+	$(CC) $< -c $(FLAGS) enigma.cpp
 
-bombe.exe : bombe.cpp enigma.cpp
-	$(CC) $< -o $@ $(FLAGS) enigma.cpp
+test.exe : test.cpp enigma.o rotors.o test_enigma.o test_bombe.o bombe.o
+	$(CC) $< -o $@ $(FLAGS) enigma.o rotors.o test_enigma.o test_bombe.o bombe.o
+
+bombe.o : bombe.h enigma.h bombe.cpp
+	$(CC) $< -c $(FLAGS) bombe.cpp
+
+bombe.exe : bombe.cpp enigma.o
+	$(CC) $< -o $@ $(FLAGS) enigma.o
+
+performance.exe : performance.cpp enigma.o bombe.o rotors.cpp
+	$(CC) $< -o $@ $(FLAGS) enigma.o bombe.o
+
 
 test:
 	./test.exe
 
 clean :
-	rm -f $(PROGRAMS)
+	rm -f $(PROGRAMS) $(OBJECTS)
+
+
 
 valgrind :
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./test.exe
