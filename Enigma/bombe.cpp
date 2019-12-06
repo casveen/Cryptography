@@ -466,6 +466,13 @@ void Bombe::interactive_wirechecking() {
 }
 
 /*
+vector<string> equivalent_ring_settings() {
+    // when running the bombe with a small crib, if we have a solution, often
+    // the same rotor position minus one turn is a solution when checking the
+    // next ring setting. return all these settings.
+}*/
+
+/*
 int main() {
     const Rotor I=                 Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q");
     const Rotor II=                Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E");
