@@ -54,7 +54,9 @@ class Rotor {
     void set_verbose(bool);
     // other
     int  encrypt_in(int, int) const;
+    void encrypt_in_inplace(int *, int, int) const;
     int  encrypt_out(int, int) const;
+    void encrypt_out_inplace(int *, int, int) const;
     void randomize();
     void print() const;
     void make_inverse(const int *in, int *out, int n) const;
@@ -86,6 +88,7 @@ class Plugboard {
     void       swap(Plugboard &) noexcept;
     // Plugboard(const char, int);
     int  encrypt(int) const;
+    void encrypt_inplace(int *, int) const;
     void reset();   // make identity
     // int* encrypt(const int*) const;
     void set_wiring(const string);
@@ -229,7 +232,7 @@ class Enigma {
     const string           get_rotor_position_as_string() const;
     const int *            get_ring_setting() const;
     string                 get_ring_setting_as_string() const;
-    vector<int>            get_encryption() const;
+    int *                  get_encryption() const;
     string                 get_encryption_as_string() const;
     vector<pair<int, int>> get_encryption_onesided() const;
     Cartridge *            get_cartridge() const;

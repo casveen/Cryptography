@@ -137,7 +137,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             }
         }
     }
-    /*
+
     GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {
         Bombe bombe({IV, V, VI}, UKWR);
         bombe.get_setting().stop_on_first_valid= true;
@@ -171,6 +171,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             }   // THEN
         }       // WHEN
     }           // GIVEN
+
     /*
     GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {
         Bombe bombe({VII, V, III}, UKWR);

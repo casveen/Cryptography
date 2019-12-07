@@ -105,9 +105,8 @@ void Rotor::set_wiring_in(int pos, int set) { m_wiring_in[pos]= set; }
 void Rotor::set_wiring_out(int pos, int set) { m_wiring_out[pos]= set; }
 void Rotor::set_verbose(bool set) { m_verbose= set; }
 // other
-int Rotor::encrypt_in(int i, int offset) const {
-    int out= (m_wiring_in[(i + offset) % m_wires] + m_wires - offset) % m_wires;
-    if (m_verbose == true) {
+inline int Rotor::encrypt_in(int i, int offset) const {
+    /*if (m_verbose == true) {
         for (int j= 0; j < m_wires; j++) {
             if (j == i) { cout << "("; }
             cout << (char)((m_wiring_in[(j + offset) % m_wires] + m_wires -
@@ -116,24 +115,37 @@ int Rotor::encrypt_in(int i, int offset) const {
                            (int)'A');
             if (j == i) { cout << ")"; }
         }
-    }
-    return out;
+    }*/
+    return (m_wiring_in[(i + offset) % m_wires] + m_wires - offset) % m_wires;
 }
-int Rotor::encrypt_out(int i, int offset) const {
-    int out=
-        (m_wiring_out[(i + offset) % m_wires] + m_wires - offset) % m_wires;
-    if (m_verbose) {
-        for (int j= 0; j < m_wires; j++) {
-            if (j == out) { cout << "("; }
-            cout << (char)((m_wiring_out[(j + offset) % m_wires] + m_wires -
-                            offset) %
-                               m_wires +
-                           (int)'A');
-            if (j == out) { cout << ")"; }
-        }
-    }
-    return out;
+inline int Rotor::encrypt_out(int i, int offset) const {
+    /*if (m_verbose) {
+for (int j= 0; j < m_wires; j++) {
+    if (j == out) { cout << "("; }
+    cout << (char)((m_wiring_out[(j + offset) % m_wires] + m_wires -
+                    offset) %
+                       m_wires +
+                   (int)'A');
+    if (j == out) { cout << ")"; }
 }
+}*/
+    return (m_wiring_out[(i + offset) % m_wires] + m_wires - offset) % m_wires;
+}
+void Rotor::encrypt_in_inplace(int *plaintext, int offset, int n) const {
+    for (int i= 0; i < n; ++i) {
+        plaintext[i]= (m_wiring_in[(plaintext[i] + offset) % m_wires] +
+                       m_wires - offset) %
+                      m_wires;
+    }
+}
+void Rotor::encrypt_out_inplace(int *plaintext, int offset, int n) const {
+    for (int i= 0; i < n; ++i) {
+        plaintext[i]= (m_wiring_out[(plaintext[i] + offset) % m_wires] +
+                       m_wires - offset) %
+                      m_wires;
+    }
+}
+
 void Rotor::randomize() {
     int p1, p2, t;
     // init in as 012345...
@@ -237,7 +249,10 @@ void Plugboard::swap(Plugboard &s) noexcept {
     swap(this->m_wiring, s.m_wiring);
     swap(this->m_wires, s.m_wires);
 }
-int  Plugboard::encrypt(int in) const { return m_wiring[in]; }
+inline int Plugboard::encrypt(int in) const { return m_wiring[in]; }
+void       Plugboard::encrypt_inplace(int *plaintext, int n) const {
+    for (int i= 0; i < n; ++i) { plaintext[i]= m_wiring[plaintext[i]]; }
+}
 void Plugboard::reset() {
     // identity
     for (int i= 0; i < m_wires; i++) { m_wiring[i]= i; }
@@ -622,48 +637,32 @@ const int *Enigma::get_ring_setting() const {
 string Enigma::get_ring_setting_as_string() const {
     return m_cartridge->get_ring_setting_as_string();
 }
-vector<int> Enigma::get_encryption() const {   // TODO pass by reference
-    // return encryption at current step
-    // encrypt all letters
-    // this one is hardcoded to circumvent verbose branches, and avoid
-    // double work due to symmetry
-    // init
-    vector<int> input(m_wires, -1);
+int *Enigma::get_encryption() const {
+    // return encryption of all letters, trying to be cache coherent
+    // return value must be deleted by client.
     // get stuff from the cartridge
-    const Rotor **   rotors   = m_cartridge->get_rotors();
-    const Reflector *reflector= m_cartridge->get_reflector();
-    const int *      positions= m_cartridge->get_positions();
-    // for each letter, encrypt, unless already encrypted
-    int m;
-    for (int i= 0; i < m_wires; i++) {
-        if (input.at(i) == -1) {
-            // encrypt i
-            m= i;
-            // plugboard in
-            m= m_cartridge->plugboard_encrypt(m);
-            // forward
-            for (int j= 0; j < m_rotors_number; j++) {
-                m= rotors[j]->encrypt_in(m, positions[j]);
-            }
-            // reflect
-            m= reflector->encrypt_in(m, m_cartridge->get_reflector_position());
-            // backward
-            for (int j= m_rotors_number - 1; j >= 0; j--) {
-                m= rotors[j]->encrypt_out(m, positions[j]);
-            }
-            // plugboard out
-            m= m_cartridge->plugboard_encrypt(m);
-            // set
-            input[i]= m;
-            input[m]= i;
-        }
+    const Rotor **   rotors    = m_cartridge->get_rotors();
+    const Reflector *reflector = m_cartridge->get_reflector();
+    const int *      positions = m_cartridge->get_positions();
+    const Plugboard *plugboard = m_cartridge->get_plugboard();
+    int *            encryption= new int[m_wires];
+    // plugboard
+    plugboard->encrypt_inplace(encryption, m_wires);
+    for (int r= 0; r < m_rotors_number; ++r) {
+        rotors[r]->encrypt_in_inplace(encryption, positions[r], m_wires);
     }
-    return input;
+    reflector->encrypt_in_inplace(
+        encryption, m_cartridge->get_reflector_position(), m_wires);
+    for (int r= m_rotors_number - 1; r > 0; --r) {
+        rotors[r]->encrypt_out_inplace(encryption, positions[r], m_wires);
+    }
+    plugboard->encrypt_inplace(encryption, m_wires);
+    return encryption;
 }
 string Enigma::get_encryption_as_string() const {
-    vector<int> encryption= get_encryption();
-    string      out       = "";
-    for (int enc : encryption) { out+= (char)(enc + (int)'A'); }
+    int *  encryption= get_encryption();
+    string out       = "";
+    for (int i= 0; i < m_wires; ++i) { out+= (char)(encryption[i] + (int)'A'); }
     return out;
 }
 vector<pair<int, int>> Enigma::get_encryption_onesided() const {   // TODO &
@@ -800,6 +799,14 @@ int *Enigma::encrypt(const int *m, int n) {
     }
     return e;
 }
+/*int *Enigma::encrypt_inplace(const int *m, int n) {
+    // encrypt an array of ints in place
+    for (int i= 0; i < n; i++) {
+        if (m_verbose) { printf("m[%3d] = ", i); }
+        e[i]= encrypt(m[i]);
+    }
+    return e;
+}*/
 string Enigma::encrypt(string str) {
     // string to int*
     int *m= new int[str.length()];
