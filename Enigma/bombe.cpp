@@ -77,14 +77,15 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
     get_wire(t_bundle_1, t_wire_1)->connect(get_wire(t_bundle_2, t_wire_2));
     get_wire(t_bundle_2, t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
-void DiagonalBoard::connect_enigma(vector<pair<int, int>> *encryption,
-                                   int t_from, int t_to) {
-    for (unsigned int i= 0; i < encryption->size(); i++) {
-        connect(t_from, encryption->at(i).first, t_to,
-                encryption->at(i).second);
-        connect(t_from, encryption->at(i).second, t_to,
-                encryption->at(i).first);
+void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
+    int m_letters= m_bundles.size();
+    for (unsigned int i= 0; i < m_letters; i++) {
+        connect(t_from, i, t_to, encryption[i]);
     }
+    /*connect(t_from, encryption->at(i).first, t_to,
+            encryption->at(i).second);
+    connect(t_from, encryption->at(i).second, t_to,
+            encryption->at(i).first);*/
 }
 int DiagonalBoard::bundle_sum(int bundle) const {
     int sum= 0;
@@ -169,10 +170,7 @@ Bombe::Bombe(const std::initializer_list<Rotor> rotors,
 Bombe::~Bombe() {
     delete m_diagonal_board;
     delete m_enigma;
-    for (auto encryption : m_enigma_encryptions) {
-        encryption.clear();
-        encryption.shrink_to_fit();
-    }
+    for (auto encryption : m_enigma_encryptions) { delete[] encryption; }
     m_enigma_encryptions.clear();
     m_enigma_encryptions.shrink_to_fit();
 }
@@ -233,14 +231,14 @@ int Bombe::find_most_wired_letter(const string ciphertext, const string crib) {
 void Bombe::init_enigma_encryptions(int encryptions) {   // TODO get by ref
     m_enigma_encryptions.clear();
     for (int i= 0; i < encryptions; ++i) {
-        m_enigma_encryptions.push_back(m_enigma->get_encryption_onesided());
+        m_enigma_encryptions.push_back(m_enigma->get_encryption());
         m_enigma->turn();
     }
 }
 void Bombe::setup_diagonal_board(const string ciphertext, const string crib) {
     for (unsigned int j= 0; j < crib.length(); j++) {
-        vector<pair<int, int>> encryption= m_enigma_encryptions.at(j);
-        m_diagonal_board->connect_enigma(&encryption, (int)crib[j] - (int)'A',
+        int *encryption= m_enigma_encryptions.at(j);
+        m_diagonal_board->connect_enigma(encryption, (int)crib[j] - (int)'A',
                                          (int)ciphertext[j] - (int)'A');
     }
 }
@@ -280,6 +278,8 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             }
             // setup the wiring for the candidate
             init_enigma_encryptions(crib.length());
+            // print_encryptions();
+            // cin.get();
             // for each rotor position
             for (int j= 0; j < total_permutations - 1; j++) {
                 m_diagonal_board->reset();
@@ -312,8 +312,7 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                 }
                 // push new encryption, del oldest
                 m_enigma_encryptions.erase(m_enigma_encryptions.begin());
-                m_enigma_encryptions.push_back(
-                    m_enigma->get_encryption_onesided());
+                m_enigma_encryptions.push_back(m_enigma->get_encryption());
                 m_enigma->turn();
             }   // for rotor position
             m_enigma->next_ring_setting();
@@ -351,10 +350,12 @@ bool Bombe::check_one_wire(int most_wired_letter) {
     return true;
 }
 void Bombe::print_encryptions() const {
-    for (int wire= 0; wire < m_letters / 2; ++wire) {
+    cout << "size of encryptions: " << m_enigma_encryptions.size() << "\n";
+    for (int wire= 0; wire < m_letters; ++wire) {
+        cout << (char)(wire + (int)'A') << ": ";
         for (unsigned int e= 0; e < m_enigma_encryptions.size(); ++e) {
-            printf("<%2d,%2d>   ", (m_enigma_encryptions[e])[wire].first,
-                   (m_enigma_encryptions[e])[wire].second);
+            cout << (char)(m_enigma_encryptions.at(e)[wire] + (int)'A') << " ";
+            // printf("%2d-", m_enigma_encryptions.at(e)[wire]);
         }
         cout << "\n";
     }

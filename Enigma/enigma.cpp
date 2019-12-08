@@ -646,16 +646,22 @@ int *Enigma::get_encryption() const {
     const int *      positions = m_cartridge->get_positions();
     const Plugboard *plugboard = m_cartridge->get_plugboard();
     int *            encryption= new int[m_wires];
+    for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
     // plugboard
+    // cout << "plug in\n";
     plugboard->encrypt_inplace(encryption, m_wires);
     for (int r= 0; r < m_rotors_number; ++r) {
+        // cout << "rotor " << r << " in\n";
         rotors[r]->encrypt_in_inplace(encryption, positions[r], m_wires);
     }
+    // cout << "reflector\n";
     reflector->encrypt_in_inplace(
         encryption, m_cartridge->get_reflector_position(), m_wires);
-    for (int r= m_rotors_number - 1; r > 0; --r) {
+    for (int r= m_rotors_number - 1; r >= 0; --r) {
+        // cout << "rotor " << r << " out\n";
         rotors[r]->encrypt_out_inplace(encryption, positions[r], m_wires);
     }
+    // cout << "plug out\n";
     plugboard->encrypt_inplace(encryption, m_wires);
     return encryption;
 }

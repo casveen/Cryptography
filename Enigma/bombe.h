@@ -33,7 +33,7 @@ class DiagonalBoard {
     void  connect(int, int, int, int);
     void  print() const;
     void  print_live() const;
-    void  connect_enigma(vector<pair<int, int>> *, int, int);
+    void  connect_enigma(int *, int, int);
     void  wipe();
     void  reset();
     bool  bundle_contradiction(int) const;
@@ -54,11 +54,11 @@ struct BombeSetting {
 
 class Bombe {
   private:
-    int                            m_letters= 26, m_rotor_count= 3;
-    DiagonalBoard *                m_diagonal_board;
-    Enigma *                       m_enigma;
-    vector<vector<pair<int, int>>> m_enigma_encryptions;   // track encryptions
-    struct BombeSetting            m_setting;
+    int                 m_letters= 26, m_rotor_count= 3;
+    DiagonalBoard *     m_diagonal_board;
+    Enigma *            m_enigma;
+    vector<int *>       m_enigma_encryptions;   // track encryptions
+    struct BombeSetting m_setting;
 
   public:
     Bombe(const std::initializer_list<Rotor> rotors, const Reflector reflector);
