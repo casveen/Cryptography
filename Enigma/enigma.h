@@ -53,10 +53,22 @@ class Rotor {
     void set_wiring_out(int, int);
     void set_verbose(bool);
     // other
-    int  encrypt_in(int, int) const;
-    void encrypt_in_inplace(int *, int, int) const;
-    int  encrypt_out(int, int) const;
-    void encrypt_out_inplace(int *, int, int) const;
+    int         encrypt_in(int, int) const;
+    inline void encrypt_in_inplace(int *plaintext, int offset, int n) const {
+        for (int i= 0; i < n; ++i) {
+            plaintext[i]= (m_wiring_in[(plaintext[i] + offset) % m_wires] +
+                           m_wires - offset) %
+                          m_wires;
+        }
+    }
+    int         encrypt_out(int, int) const;
+    inline void encrypt_out_inplace(int *plaintext, int offset, int n) const {
+        for (int i= 0; i < n; ++i) {
+            plaintext[i]= (m_wiring_out[(plaintext[i] + offset) % m_wires] +
+                           m_wires - offset) %
+                          m_wires;
+        }
+    }
     void randomize();
     void print() const;
     void make_inverse(const int *in, int *out, int n) const;
@@ -87,8 +99,10 @@ class Plugboard {
     Plugboard &operator=(Plugboard);
     void       swap(Plugboard &) noexcept;
     // Plugboard(const char, int);
-    int  encrypt(int) const;
-    void encrypt_inplace(int *, int) const;
+    int         encrypt(int) const;
+    inline void encrypt_inplace(int *plaintext, int n) const {
+        for (int i= 0; i < n; ++i) { plaintext[i]= m_wiring[plaintext[i]]; }
+    }
     void reset();   // make identity
     // int* encrypt(const int*) const;
     void set_wiring(const string);

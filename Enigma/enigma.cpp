@@ -131,21 +131,6 @@ for (int j= 0; j < m_wires; j++) {
 }*/
     return (m_wiring_out[(i + offset) % m_wires] + m_wires - offset) % m_wires;
 }
-void Rotor::encrypt_in_inplace(int *plaintext, int offset, int n) const {
-    for (int i= 0; i < n; ++i) {
-        plaintext[i]= (m_wiring_in[(plaintext[i] + offset) % m_wires] +
-                       m_wires - offset) %
-                      m_wires;
-    }
-}
-void Rotor::encrypt_out_inplace(int *plaintext, int offset, int n) const {
-    for (int i= 0; i < n; ++i) {
-        plaintext[i]= (m_wiring_out[(plaintext[i] + offset) % m_wires] +
-                       m_wires - offset) %
-                      m_wires;
-    }
-}
-
 void Rotor::randomize() {
     int p1, p2, t;
     // init in as 012345...
@@ -250,9 +235,6 @@ void Plugboard::swap(Plugboard &s) noexcept {
     swap(this->m_wires, s.m_wires);
 }
 int  Plugboard::encrypt(int in) const { return m_wiring[in]; }
-void Plugboard::encrypt_inplace(int *plaintext, int n) const {
-    for (int i= 0; i < n; ++i) { plaintext[i]= m_wiring[plaintext[i]]; }
-}
 void Plugboard::reset() {
     // identity
     for (int i= 0; i < m_wires; i++) { m_wiring[i]= i; }
