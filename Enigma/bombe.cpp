@@ -1,6 +1,16 @@
 //#include "enigma.h";
 #include "bombe.h"   //wire, diagonal board
 
+void update_performance(double &mean, double &var,
+                        std::chrono::duration<double> measurement,
+                        int &                         records) {
+    auto   t     = measurement.count();
+    double mean_p= mean;
+    mean         = mean_p + (t - mean_p) / (records + 1);
+    var          = (records * var + (t - mean_p) * (t - mean)) / (records + 1);
+    records++;
+}
+
 Wire::~Wire() {
     // do not deallocate aythng, handled by diag board
     m_connections.clear();
@@ -208,6 +218,9 @@ vector<int> Bombe::probable_search(const string ciphertext, const string crib) {
             candidates.push_back(i);
         }
     }
+    if (m_setting.only_one_candidate) {
+        candidates.erase(candidates.begin() + 1, candidates.end());
+    }
     return candidates;
 }
 int Bombe::find_most_wired_letter(const string ciphertext, const string crib) {
@@ -229,19 +242,83 @@ int Bombe::find_most_wired_letter(const string ciphertext, const string crib) {
     return max_index;
 }
 void Bombe::init_enigma_encryptions(int encryptions) {   // TODO get by ref
+    /*auto start_init_encryptions= std::chrono::system_clock::now();
+    if (m_setting.time_performance) {
+        start_init_encryptions= std::chrono::system_clock::now();
+    }*/
+
     m_enigma_encryptions.clear();
     for (int i= 0; i < encryptions; ++i) {
         m_enigma_encryptions.push_back(m_enigma->get_encryption());
         m_enigma->turn();
     }
+
+    /*if (m_setting.time_performance) {
+        auto stop_init_encryptions= std::chrono::system_clock::now();
+        update_performance(m_setting.performance_init_encryptions_mean,
+                           m_setting.performance_init_encryptions_var,
+                           stop_init_encryptions - start_init_encryptions,
+                           m_setting.records_init_encryptions);
+    }*/
+}
+void Bombe::reset_diagonal_board() {
+    /*auto start_reset_diagonal_board= std::chrono::system_clock::now();
+    if (m_setting.time_performance) {
+        start_reset_diagonal_board= std::chrono::system_clock::now();
+    }*/
+
+    m_diagonal_board->reset();
+
+    /*if (m_setting.time_performance) {
+        auto stop_reset_diagonal_board= std::chrono::system_clock::now();
+        update_performance(m_setting.performance_reset_diagonal_board_mean,
+                           m_setting.performance_reset_diagonal_board_var,
+                           stop_reset_diagonal_board -
+                               stop_reset_diagonal_board,
+                           m_setting.records_reset_diagonal_board);
+    }*/
 }
 void Bombe::setup_diagonal_board(const string ciphertext, const string crib) {
+    /*auto start_setup_diagonal_board= std::chrono::system_clock::now();
+    if (m_setting.time_performance) {
+        start_setup_diagonal_board= std::chrono::system_clock::now();
+    }*/
+
     for (unsigned int j= 0; j < crib.length(); j++) {
         int *encryption= m_enigma_encryptions.at(j);
         m_diagonal_board->connect_enigma(encryption, (int)crib[j] - (int)'A',
                                          (int)ciphertext[j] - (int)'A');
     }
+
+    /*if (m_setting.time_performance) {
+        auto stop_setup_diagonal_board= std::chrono::system_clock::now();
+        update_performance(m_setting.performance_setup_diagonal_board_mean,
+                           m_setting.performance_setup_diagonal_board_var,
+                           stop_setup_diagonal_board -
+                               stop_setup_diagonal_board,
+                           m_setting.records_setup_diagonal_board);
+    }*/
 }
+bool Bombe::bundle_contradiction(int bundle) {
+    return m_diagonal_board->bundle_contradiction(bundle);
+}
+bool Bombe::check_one_wire(int most_wired_letter) {
+    /*auto start_check_one_wire= std::chrono::system_clock::now();
+    if (m_setting.time_performance) {
+        start_check_one_wire= std::chrono::system_clock::now();
+    }*/
+    m_diagonal_board->activate(most_wired_letter, 4);
+    bool contradiction= bundle_contradiction(most_wired_letter);
+    /*if (m_setting.time_performance) {
+        auto stop_check_one_wire= std::chrono::system_clock::now();
+        update_performance(m_setting.performance_check_one_wire_mean,
+                           m_setting.performance_check_one_wire_var,
+                           stop_check_one_wire - stop_check_one_wire,
+                           m_setting.records_check_one_wire);
+    }*/
+    return (!contradiction);
+}
+
 vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                                             const string crib) {
     // find total amount of rotor positions
@@ -256,11 +333,13 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
     ring_settings= total_permutations / m_enigma->get_wires();
     ring_settings= min(ring_settings, m_setting.max_ring_settings);
 
-    auto start= std::chrono::system_clock::now();
+    // timing variables
+    auto start_ring_setting= std::chrono::system_clock::now();
+
     // find candidates
-    cout << "probable search\n";
+
     vector<int> candidates= probable_search(ciphertext, crib);
-    cout << "probable search done\n";
+
     // analyze each candidate
     for (unsigned int i= 0; i < candidates.size(); i++) {
         m_enigma->set_ring_setting(m_setting.starting_ring_setting);
@@ -273,20 +352,23 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             cout << "I: " << i
                  << ", Ring setting: " << m_enigma->get_ring_setting_as_string()
                  << "\n";
-            if (m_setting.time_performance == true) {
-                start= std::chrono::system_clock::now();
+            if (m_setting.time_performance) {
+                start_ring_setting= std::chrono::system_clock::now();
             }
+
             // setup the wiring for the candidate
             init_enigma_encryptions(crib.length());
-            // print_encryptions();
-            // cin.get();
+
             // for each rotor position
             for (int j= 0; j < total_permutations - 1; j++) {
-                m_diagonal_board->reset();
+
+                reset_diagonal_board();
+
                 setup_diagonal_board(
                     ciphertext.substr(candidates[i], crib.length()), crib);
 
                 if (check_one_wire(most_wired_letter)) {
+                    // what happens here is not neccesary to optimize
                     if (doublecheck_and_get_plugboard()) {
                         // tripple chack:
                         m_enigma->turn(-crib.length());
@@ -300,10 +382,10 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                             solutions.push_back(m_enigma->get_setting());
                             m_enigma->turn(crib.length() + candidates[i]);
                             if (m_setting.stop_on_first_valid == true) {
-                                if (m_setting.time_performance) {
+                                /*if (m_setting.time_performance) {
                                     cout << "average time per ringsetting: "
                                          << m_setting.performance_mean << "\n";
-                                }
+                                }*/
                                 return solutions;
                             }
                         }
@@ -318,37 +400,18 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             m_enigma->next_ring_setting();
 
             if (m_setting.time_performance == true) {
-                auto end= std::chrono::system_clock::now();
-                std::chrono::duration<double> elapsed_time= end - start;
-                auto                          t= elapsed_time.count();
-
-                float mean_p= m_setting.performance_mean;
-                float mean  = mean_p + (t - mean_p) / (records + 1);
-                //    (records / (records + 1)) * mean_p + t / (records + 1);
-
-                float var= (records * m_setting.performance_variance +
-                            (t - mean_p) * (t - mean)) /
-                           (records + 1);
-
-                m_setting.performance_mean    = mean;
-                m_setting.performance_variance= var;
-                cout << "REC " << records << "---> ELAPSED: " << t << " MEAN "
-                     << mean << ", VARIANCE " << var;
-
-                records++;
+                auto stop_ring_setting= std::chrono::system_clock::now();
+                update_performance(m_setting.performance_ring_setting_mean,
+                                   m_setting.performance_ring_setting_var,
+                                   stop_ring_setting - start_ring_setting,
+                                   m_setting.records_ring_setting);
             }
+            if (m_setting.time_performance) { print_performance(); }
         }   // for ring setting
     }
     return solutions;
 }
-bool Bombe::bundle_contradiction(int bundle) {
-    return m_diagonal_board->bundle_contradiction(bundle);
-}
-bool Bombe::check_one_wire(int most_wired_letter) {
-    m_diagonal_board->activate(most_wired_letter, 4);
-    if (bundle_contradiction(most_wired_letter)) return false;
-    return true;
-}
+
 void Bombe::print_encryptions() const {
     cout << "size of encryptions: " << m_enigma_encryptions.size() << "\n";
     for (int wire= 0; wire < m_letters; ++wire) {
@@ -360,7 +423,32 @@ void Bombe::print_encryptions() const {
         cout << "\n";
     }
 }
-
+void Bombe::print_performance() const {
+    // ring_setting
+    printf("---------------------------------------------------\n");
+    printf("|                   MEAN       VAR        RECORDS |\n");
+    printf("| RING-SETTING      %6.2E   %6.2E   %7d |\n",
+           m_setting.performance_ring_setting_mean,
+           m_setting.performance_ring_setting_var,
+           m_setting.records_ring_setting);
+    /*printf("| INIT-ENCRYPTIONS  %6.2E   %6.2E   %7d |\n",
+           m_setting.performance_init_encryptions_mean,
+           m_setting.performance_init_encryptions_var,
+           m_setting.records_init_encryptions);
+    printf("| DB SETUP          %6.2E   %6.2E   %7d |\n",
+           m_setting.performance_setup_diagonal_board_mean,
+           m_setting.performance_setup_diagonal_board_var,
+           m_setting.records_setup_diagonal_board);
+    printf("| CHECK ONE WIRE    %6.2E   %6.2E   %7d |\n",
+           m_setting.performance_check_one_wire_mean,
+           m_setting.performance_check_one_wire_var,
+           m_setting.records_check_one_wire);
+    printf("| DB RESET          %6.2E   %6.2E   %7d |\n",
+           m_setting.performance_reset_diagonal_board_mean,
+           m_setting.performance_reset_diagonal_board_var,
+           m_setting.records_reset_diagonal_board);*/
+    printf("---------------------------------------------------\n");
+}
 /*
 bool Bombe::doublecheck_and_get_plugboard() {
     //bool false_stop= false;

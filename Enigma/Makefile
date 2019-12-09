@@ -21,14 +21,25 @@ enigma.o: enigma.cpp enigma.h
 test.exe : test.cpp enigma.o rotors.o test_enigma.o test_bombe.o bombe.o
 	$(CC) $< -o $@ $(FLAGS) enigma.o rotors.o test_enigma.o test_bombe.o bombe.o
 
-bombe.o : bombe.cpp enigma.h bombe.h
-	$(CC) $< -c bombe.cpp $(FLAGS) 
+bombe.o : bombe.cpp bombe.h enigma.o
+	$(CC) -c bombe.cpp enigma.h bombe.h $(FLAGS)
 
-bombe.exe : bombe.cpp enigma.o
+bombe.exe : bombe.cpp enigma.o bombe.o
 	$(CC) $< -o $@ $(FLAGS) enigma.o
 
 performance.exe : performance.cpp enigma.o bombe.o rotors.cpp
 	$(CC) $< -o $@ $(FLAGS) enigma.o bombe.o
+
+performance : performance.exe
+	valgrind --tool=callgrind ./performance.exe
+	kcachegrind
+
+benchmarker.exe : benchmarker.cpp enigma.o bombe.o rotors.cpp
+	$(CC) $< -o $@ $(FLAGS) enigma.o bombe.o
+
+benchmark : benchmarker.exe enigma.o bombe.o rotors.cpp
+	./benchmarker.exe
+
 
 
 test:

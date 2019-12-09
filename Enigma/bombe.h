@@ -43,13 +43,27 @@ class DiagonalBoard {
 struct BombeSetting {
     // if true, stops as soon as a valid config is found
     bool   stop_on_first_valid  = false;
+    bool   only_one_candidate   = false;
     int    max_ring_settings    = 26 * 26;
     string starting_ring_setting= "AAA";   // TODO should adapt to more rotors
     string starting_rotor_positions= "AAA";
     bool   interactive_wiring_mode = false;
     const bool time_performance    = true;   // XXX can only be set in code...
-    double     performance_mean    = 0;      // performance of a rs run
-    double     performance_variance= 0;
+    double     performance_ring_setting_mean= 0;   // performance of a rs run
+    double     performance_ring_setting_var = 0;
+    int        records_ring_setting         = 0;
+    double     performance_init_encryptions_mean    = 0;
+    double     performance_init_encryptions_var     = 0;
+    int        records_init_encryptions             = 0;
+    double     performance_setup_diagonal_board_mean= 0;
+    double     performance_setup_diagonal_board_var = 0;
+    int        records_setup_diagonal_board         = 0;
+    double     performance_check_one_wire_mean      = 0;
+    double     performance_check_one_wire_var       = 0;
+    int        records_check_one_wire               = 0;
+    double     performance_reset_diagonal_board_mean= 0;
+    double     performance_reset_diagonal_board_var = 0;
+    int        records_reset_diagonal_board         = 0;
 };
 
 class Bombe {
@@ -72,11 +86,13 @@ class Bombe {
     vector<int> probable_search(const string, const string);
     int         find_most_wired_letter(const string, const string);
     void        init_enigma_encryptions(int);
+    void        reset_diagonal_board();
     vector<struct EnigmaSetting> analyze(const string, const string);
     void setup_diagonal_board(const string, const string);
     bool check_one_wire(int);
     bool bundle_contradiction(int);
     void print_encryptions() const;
+    void print_performance() const;
     bool doublecheck_and_get_plugboard();
     void interactive_wirechecking();
 };
