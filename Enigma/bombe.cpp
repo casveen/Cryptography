@@ -89,7 +89,7 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
 }
 void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
     int m_letters= m_bundles.size();
-    for (unsigned int i= 0; i < m_letters; i++) {
+    for (int i= 0; i < m_letters; i++) {
         connect(t_from, i, t_to, encryption[i]);
     }
     /*connect(t_from, encryption->at(i).first, t_to,
@@ -326,7 +326,6 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
     int                          total_permutations= 1;
     int                          most_wired_letter;
     int                          ring_settings= 1;
-    int                          records      = 0;
     for (int j= 0; j < m_enigma->get_rotors(); j++) {
         total_permutations*= m_enigma->get_wires();
     }
@@ -393,6 +392,7 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                     }
                 }
                 // push new encryption, del oldest
+                delete[] m_enigma_encryptions.at(0);
                 m_enigma_encryptions.erase(m_enigma_encryptions.begin());
                 m_enigma_encryptions.push_back(m_enigma->get_encryption());
                 m_enigma->turn();

@@ -1,12 +1,13 @@
 CC        := g++
 #MPI       := mpicc
-FLAGS      = -Wall -O3
+FLAGS      = -Wall -O3 -g
 TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
 DEP        = enigma.cpp bombe.cpp
 #HEADER     = enigma.h   bombe.h
 PROGRAMS = $(patsubst %.cpp, %.exe, $(wildcard *.cpp))
 OBJECTS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
 GCH = $(patsubst %.h, %.h.gch, $(wildcard *.h))
+CALLGRIND = $( %.out )
 
 .PHONY : all clean test valgrind
 
@@ -28,10 +29,16 @@ all:
 benchmarker.exe : benchmarker.o bombe.o enigma.o rotors.cpp
 	$(CC) -o benchmarker.exe $(FLAGS) benchmarker.o bombe.o enigma.o rotors.cpp
 
+benchmark : benchmarker.exe
+	./benchmarker.exe
 
+performance.exe : performance.o bombe.o enigma.o rotors.cpp
+	$(CC) -o performance.exe $(FLAGS) performance.o bombe.o enigma.o rotors.cpp
 
-	#benchmark : benchmarker.o
-	#	$(CC) -o benchmarker.exe benchmarker.o
+profile : performance.exe
+	valgrind --tool=callgrind ./performance.exe
+	kcachegrind
+	#rm -f $(wildcard *.h)
 
 #object files
 %.o : %.cpp
@@ -79,7 +86,7 @@ benchmarker.o : enigma.h bombe.h
 #	./test.exe
 
 clean :
-	rm -f $(PROGRAMS) $(OBJECTS) $(GCH)
+	rm -f $(PROGRAMS) $(OBJECTS) $(GCH) $(CALLGRIND)
 
 
 
