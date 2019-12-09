@@ -33,6 +33,7 @@ class DiagonalBoard {
     void  connect(int, int, int, int);
     void  print() const;
     void  print_live() const;
+    void  print_connections() const;
     void  connect_enigma(int *, int, int);
     void  wipe();
     void  reset();

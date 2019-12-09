@@ -25,6 +25,7 @@ void Wire::flow() {
     }
     m_live= 1;
 }
+
 int  Wire::get_live() const { return m_live; }
 void Wire::kill() { m_live= 0; }
 void Wire::set_live(int t_set) { m_live= t_set; }
@@ -90,12 +91,10 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
 void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
     int m_letters= m_bundles.size();
     for (int i= 0; i < m_letters; i++) {
-        connect(t_from, i, t_to, encryption[i]);
+        connect(t_from, i, t_to, encryption[i]);   // there will be doubles
     }
-    /*connect(t_from, encryption->at(i).first, t_to,
-            encryption->at(i).second);
-    connect(t_from, encryption->at(i).second, t_to,
-            encryption->at(i).first);*/
+    // print_connections();
+    // cin.get();
 }
 int DiagonalBoard::bundle_sum(int bundle) const {
     int sum= 0;
@@ -121,8 +120,9 @@ void DiagonalBoard::print() const {
         }
         cout << "\n";
     }
-    /*
-    cout << "sizes\n";
+}
+void DiagonalBoard::print_connections() const {
+    unsigned int bundle_size= m_bundles.size();
     cout << "   ";
     for (unsigned int b= 0; b < bundle_size; b++) {
         cout << (char)(b + (int)'a') << "  ";
@@ -137,7 +137,6 @@ void DiagonalBoard::print() const {
         }
         cout << "\n";
     }
-    */
 }
 void DiagonalBoard::print_live() const {
     int bundle_size= m_bundles.size();

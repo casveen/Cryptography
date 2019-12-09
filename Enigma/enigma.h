@@ -236,6 +236,7 @@ class Enigma {
     string                 get_ring_setting_as_string() const;
     int *                  get_encryption() const;
     void                   get_encryption_inplace(int *) const;
+    void                   get_encryption_inplace_lazy(int *) const;
     string                 get_encryption_as_string() const;
     vector<pair<int, int>> get_encryption_onesided() const;
     Cartridge *            get_cartridge() const;

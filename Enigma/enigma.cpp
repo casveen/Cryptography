@@ -719,6 +719,45 @@ void Enigma::get_encryption_inplace(int *encryption) const {
     }
     plugboard->encrypt_inplace(encryption, m_wires);
 }
+void Enigma::get_encryption_inplace_lazy(int *encryption) const {
+    // return encryption of all letters
+    // does the same as inplace, but with one less encryption
+    // if only one wheel turns, use the previous encryption
+    // input encryption must only differ in rotor 0 by one posisiton
+    // e      =P W0^(-1) W1^(-1) W2^(-1) R W2 W1 W0 P m=>
+    // W0 P e =          W1^(-1) W2^(-1) R W2 W1 W0 P m
+    const Rotor **   rotors   = m_cartridge->get_rotors();
+    const Reflector *reflector= m_cartridge->get_reflector();
+    const int *      positions= m_cartridge->get_positions();
+    const Plugboard *plugboard= m_cartridge->get_plugboard();
+    int *            indexes  = new int[m_wires];
+    for (int i= 0; i < m_wires; ++i) { indexes[i]= i; }
+    // peel away plug and rotor_0 encryption from the back(2 encryptions)
+    plugboard->encrypt_inplace(encryption, m_wires);
+    rotors[0]->encrypt_out_inplace(
+        encryption, (positions[0] - 1 + m_wires) % m_wires, m_wires);
+    // encryption is now W0 P e = W1^(-1) W2^(-1) R W2 W1 W0 P m
+    // encrypt indexes to peel away rotor_0 and plugboard from front
+    plugboard->encrypt_inplace(indexes, m_wires);
+    rotors[0]->encrypt_in_inplace(
+        indexes, (positions[0] - 1 + m_wires) % m_wires, m_wires);
+    // indexes= W0 P
+    // encrypt = W1^(-1) W2^(-1) R W2 W1 indexes, write to indexes, then copy
+    // back to encrypt
+    for (int i= 0; i < m_wires; ++i) { indexes[i]= encryption[indexes[i]]; }
+    memcpy(encryption, indexes, m_wires * sizeof(int));
+    // apply W0 with proper position
+    for (int i= 0; i < m_wires; ++i) { indexes[i]= i; }
+    rotors[0]->encrypt_out_inplace(encryption, positions[0], m_wires);
+    plugboard->encrypt_inplace(encryption, m_wires);
+    // encryption=P W0^(-1) W1^(-1) W2^(-1) R W2 W1, now apply this to W0 P m
+    plugboard->encrypt_inplace(indexes, m_wires);
+    rotors[0]->encrypt_in_inplace(indexes, positions[0], m_wires);
+    for (int i= 0; i < m_wires; ++i) { indexes[i]= encryption[indexes[i]]; }
+    memcpy(encryption, indexes, m_wires * sizeof(int));
+
+    delete[] indexes;
+}
 string Enigma::get_encryption_as_string() const {
     int *  encryption= get_encryption();
     string out       = "";
