@@ -29,7 +29,19 @@ int main() {
 
 /*
 REC 258---> ELAPSED: 0.267761 MEAN 0.271836, VARIANCE 0.000271365
+
 ---cache friendly inplace encryption
 REC 100---> ELAPSED: 0.240929 MEAN 0.241077, VARIANCE 2.08026e-05
 
+---after some inlining
+---------------------------------------------------
+|                   MEAN       VAR        RECORDS |
+| RING-SETTING      2.49E-01   2.32E-05       100 |
+---------------------------------------------------
+
+--inline a lot
+---------------------------------------------------
+|                   MEAN       VAR        RECORDS |
+| RING-SETTING      2.50E-01   2.68E-04       100 |
+---------------------------------------------------
 */

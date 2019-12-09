@@ -92,18 +92,18 @@ void Rotor::swap(Rotor &s) noexcept {
     swap(this->m_notch, s.m_notch);
 }
 // getters
-int        Rotor::get_wires() const { return m_wires; }
-const int *Rotor::get_wiring_in() const { return m_wiring_in; }
-int        Rotor::get_wiring_in(int i) const { return m_wiring_in[i]; }
-const int *Rotor::get_wiring_out() const { return m_wiring_out; }
-int        Rotor::get_wiring_out(int i) const { return m_wiring_out[i]; }
-const int *Rotor::get_notch() const { return m_notch; }
-int        Rotor::get_notch(int n) const { return m_notch[n]; }
-int        Rotor::get_notches() const { return m_notches; }
+int               Rotor::get_wires() const { return m_wires; }
+inline const int *Rotor::get_wiring_in() const { return m_wiring_in; }
+inline int        Rotor::get_wiring_in(int i) const { return m_wiring_in[i]; }
+inline const int *Rotor::get_wiring_out() const { return m_wiring_out; }
+inline int        Rotor::get_wiring_out(int i) const { return m_wiring_out[i]; }
+inline const int *Rotor::get_notch() const { return m_notch; }
+inline int        Rotor::get_notch(int n) const { return m_notch[n]; }
+inline int        Rotor::get_notches() const { return m_notches; }
 // setters
-void Rotor::set_wiring_in(int pos, int set) { m_wiring_in[pos]= set; }
-void Rotor::set_wiring_out(int pos, int set) { m_wiring_out[pos]= set; }
-void Rotor::set_verbose(bool set) { m_verbose= set; }
+void        Rotor::set_wiring_in(int pos, int set) { m_wiring_in[pos]= set; }
+void        Rotor::set_wiring_out(int pos, int set) { m_wiring_out[pos]= set; }
+inline void Rotor::set_verbose(bool set) { m_verbose= set; }
 // other
 inline int Rotor::encrypt_in(int i, int offset) const {
     /*if (m_verbose == true) {
@@ -131,14 +131,15 @@ for (int j= 0; j < m_wires; j++) {
 }*/
     return (m_wiring_out[(i + offset) % m_wires] + m_wires - offset) % m_wires;
 }
-void Rotor::encrypt_in_inplace(int *plaintext, int offset, int n) const {
+inline void Rotor::encrypt_in_inplace(int *plaintext, int offset, int n) const {
     for (int i= 0; i < n; ++i) {
         plaintext[i]= (m_wiring_in[(plaintext[i] + offset) % m_wires] +
                        m_wires - offset) %
                       m_wires;
     }
 }
-void Rotor::encrypt_out_inplace(int *plaintext, int offset, int n) const {
+inline void Rotor::encrypt_out_inplace(int *plaintext, int offset,
+                                       int n) const {
     for (int i= 0; i < n; ++i) {
         plaintext[i]= (m_wiring_out[(plaintext[i] + offset) % m_wires] +
                        m_wires - offset) %
@@ -249,8 +250,8 @@ void Plugboard::swap(Plugboard &s) noexcept {
     swap(this->m_wiring, s.m_wiring);
     swap(this->m_wires, s.m_wires);
 }
-inline int Plugboard::encrypt(int in) const { return m_wiring[in]; }
-void       Plugboard::encrypt_inplace(int *plaintext, int n) const {
+inline int  Plugboard::encrypt(int in) const { return m_wiring[in]; }
+inline void Plugboard::encrypt_inplace(int *plaintext, int n) const {
     for (int i= 0; i < n; ++i) { plaintext[i]= m_wiring[plaintext[i]]; }
 }
 void Plugboard::reset() {
@@ -276,9 +277,9 @@ void Plugboard::set_wiring(const string in) {
     }
     // XXX check validity
 }
-void        Plugboard::set_wiring(int pos, int set) { m_wiring[pos]= set; }
-vector<int> Plugboard::get_wiring() const { return m_wiring; }
-int         Plugboard::get_wiring(int i) const { return m_wiring[i]; }
+void Plugboard::set_wiring(int pos, int set) { m_wiring[pos]= set; }
+inline vector<int> Plugboard::get_wiring() const { return m_wiring; }
+inline int         Plugboard::get_wiring(int i) const { return m_wiring[i]; }
 
 // CARTRIDGE
 Cartridge::Cartridge() {}   // XXX should really not be neccesary...
@@ -375,18 +376,20 @@ struct EnigmaSetting Cartridge::get_setting() const {
     out.rotor_position= get_positions_as_string();
     return out;
 }
-const Rotor **Cartridge::get_rotors() const { return (const Rotor **)m_rotors; }
-const Reflector *Cartridge::get_reflector() const { return m_reflector; }
-const int *      Cartridge::get_ring_setting() const { return m_ring_setting; }
-const string     Cartridge::get_ring_setting_as_string() const {
+inline const Rotor **Cartridge::get_rotors() const {
+    return (const Rotor **)m_rotors;
+}
+inline const Reflector *Cartridge::get_reflector() const { return m_reflector; }
+inline const int *Cartridge::get_ring_setting() const { return m_ring_setting; }
+const string      Cartridge::get_ring_setting_as_string() const {
     string out= "";
     for (int i= 0; i < m_rotor_count; i++) {
         out+= (char)(m_ring_setting[i] + (int)'A');
     }
     return out;
 }
-const int *Cartridge::get_positions() const { return m_positions; }
-int        Cartridge::get_positions_as_int() const {
+inline const int *Cartridge::get_positions() const { return m_positions; }
+int               Cartridge::get_positions_as_int() const {
     int turn= 0;
     int mult= 1;
     for (int p= 0; p < m_rotor_count; p++) {
@@ -403,7 +406,9 @@ const string Cartridge::get_positions_as_string() const {
     }
     return out;
 }
-int Cartridge::get_reflector_position() const { return m_reflector_position; }
+inline int Cartridge::get_reflector_position() const {
+    return m_reflector_position;
+}
 Plugboard *Cartridge::get_plugboard() const { return m_plugboard; }
 // setters
 void Cartridge::set_setting(struct EnigmaSetting setting) {
@@ -426,7 +431,7 @@ void Cartridge::set_setting(struct EnigmaSetting setting) {
     set_positions(setting.rotor_position);
     set_ring_setting(setting.ring_setting);
 }
-void Cartridge::set_plugboard(const string str) {
+inline void Cartridge::set_plugboard(const string str) {
     m_plugboard->set_wiring(str);
 }
 void Cartridge::set_rotor(int pos, const Rotor *set) {
@@ -437,10 +442,10 @@ void Cartridge::set_reflector(const Reflector *set) {
     m_reflector=
         (Reflector *)set;   // overwrites. rotor should handle it properly
 }
-void Cartridge::set_positions(const int *p_in) {
+inline void Cartridge::set_positions(const int *p_in) {
     for (int p= 0; p < m_rotor_count; p++) { m_positions[p]= p_in[p]; }
 }
-void Cartridge::set_positions(const string in) {
+inline void Cartridge::set_positions(const string in) {
     // assumes string is all capital english letters
     if (in.length() < (unsigned int)m_rotor_count ||
         in.length() > (unsigned int)m_rotor_count + 1) {
@@ -455,13 +460,15 @@ void Cartridge::set_positions(const string in) {
         m_reflector_position= (int)in[m_rotor_count + 1] - (int)'A';
     }
 }
-void Cartridge::set_ring_setting(const int *p) { m_ring_setting= (int *)p; }
-void Cartridge::set_ring_setting(const string in) {
+inline void Cartridge::set_ring_setting(const int *p) {
+    m_ring_setting= (int *)p;
+}
+inline void Cartridge::set_ring_setting(const string in) {
     for (int i= 0; i < m_rotor_count; i++) {
         m_ring_setting[i]= (int)(in[i]) - (int)('A');
     }
 }
-void Cartridge::set_verbose(bool set) {
+inline void Cartridge::set_verbose(bool set) {
     // set verbose of self, and all my parts
     for (int w= 0; w < m_rotor_count; w++) { m_rotors[w]->set_verbose(set); }
     m_reflector->set_verbose(set);

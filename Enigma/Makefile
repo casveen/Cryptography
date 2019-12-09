@@ -15,13 +15,13 @@ all:
 enigma.exe: enigma.cpp
 	$(CC) $< -o $@ $(FLAGS)
 
-enigma.o: enigma.cpp enigma.h
+enigma.o: enigma.cpp
 	$(CC) -c enigma.cpp $(FLAGS)
 
 test.exe : test.cpp enigma.o rotors.o test_enigma.o test_bombe.o bombe.o
 	$(CC) $< -o $@ $(FLAGS) enigma.o rotors.o test_enigma.o test_bombe.o bombe.o
 
-bombe.o : bombe.cpp bombe.h enigma.o
+bombe.o : bombe.cpp enigma.o
 	$(CC) -c bombe.cpp enigma.h bombe.h $(FLAGS)
 
 bombe.exe : bombe.cpp enigma.o bombe.o

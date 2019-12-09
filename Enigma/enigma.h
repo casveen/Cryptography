@@ -40,27 +40,27 @@ class Rotor {
     void   swap(Rotor &s) noexcept;
     ~Rotor();
     // getters
-    int        get_wires() const;
-    const int *get_wiring_in() const;
-    const int *get_wiring_out() const;
-    int        get_wiring_in(int i) const;
-    int        get_wiring_out(int i) const;
-    const int *get_notch() const;
-    int        get_notch(int) const;
-    int        get_notches() const;
+    int               get_wires() const;
+    inline const int *get_wiring_in() const;
+    inline const int *get_wiring_out() const;
+    inline int        get_wiring_in(int i) const;
+    inline int        get_wiring_out(int i) const;
+    inline const int *get_notch() const;
+    inline int        get_notch(int) const;
+    inline int        get_notches() const;
     // setters
-    void set_wiring_in(int, int);
-    void set_wiring_out(int, int);
-    void set_verbose(bool);
+    void        set_wiring_in(int, int);
+    void        set_wiring_out(int, int);
+    inline void set_verbose(bool);
     // other
-    int  encrypt_in(int, int) const;
-    void encrypt_in_inplace(int *, int, int) const;
-    int  encrypt_out(int, int) const;
-    void encrypt_out_inplace(int *, int, int) const;
-    void randomize();
-    void print() const;
-    void make_inverse(const int *in, int *out, int n) const;
-    bool is_valid() const;
+    inline int  encrypt_in(int, int) const;
+    inline void encrypt_in_inplace(int *, int, int) const;
+    inline int  encrypt_out(int, int) const;
+    inline void encrypt_out_inplace(int *, int, int) const;
+    void        randomize();
+    void        print() const;
+    void        make_inverse(const int *in, int *out, int n) const;
+    bool        is_valid() const;
 };
 
 class Reflector: public Rotor {
@@ -87,15 +87,15 @@ class Plugboard {
     Plugboard &operator=(Plugboard);
     void       swap(Plugboard &) noexcept;
     // Plugboard(const char, int);
-    int  encrypt(int) const;
-    void encrypt_inplace(int *, int) const;
-    void reset();   // make identity
+    inline int  encrypt(int) const;
+    inline void encrypt_inplace(int *, int) const;
+    void        reset();   // make identity
     // int* encrypt(const int*) const;
     void set_wiring(const string);
     void set_wiring(int, int);
     // getters
-    vector<int> get_wiring() const;
-    int         get_wiring(int) const;
+    inline vector<int> get_wiring() const;
+    inline int         get_wiring(int) const;
 };
 
 class Cartridge {
@@ -118,38 +118,38 @@ class Cartridge {
     void       swap(Cartridge &s) noexcept;
     ~Cartridge();
     // getters
-    struct EnigmaSetting get_setting() const;
-    const Rotor **       get_rotors() const;
-    const Reflector *    get_reflector() const;
-    const int *          get_positions() const;
-    Plugboard *          get_plugboard() const;   // hard to handle if const...
-    int                  get_positions_as_int() const;
-    int                  get_reflector_position() const;
-    const int *          get_ring_setting() const;
-    const string         get_positions_as_string() const;
-    const string         get_ring_setting_as_string() const;
+    struct EnigmaSetting    get_setting() const;
+    inline const Rotor **   get_rotors() const;
+    inline const Reflector *get_reflector() const;
+    inline const int *      get_positions() const;
+    Plugboard *       get_plugboard() const;   // hard to handle if const...
+    int               get_positions_as_int() const;
+    inline int        get_reflector_position() const;
+    inline const int *get_ring_setting() const;
+    const string      get_positions_as_string() const;
+    const string      get_ring_setting_as_string() const;
     // setters
-    void set_setting(struct EnigmaSetting);
-    void set_plugboard(const string);
-    void set_rotor(int, const Rotor *);
-    void set_reflector(const Reflector *);
-    void set_positions(const int *p);
-    void set_positions(const string in);
-    void set_ring_setting(const int *p);
-    void set_ring_setting(const string in);
-    void set_verbose(bool);
+    void        set_setting(struct EnigmaSetting);
+    inline void set_plugboard(const string);
+    void        set_rotor(int, const Rotor *);
+    void        set_reflector(const Reflector *);
+    inline void set_positions(const int *p);
+    inline void set_positions(const string in);
+    inline void set_ring_setting(const int *p);
+    inline void set_ring_setting(const string in);
+    inline void set_verbose(bool);
     // other
-    void reset_positions();
-    void reset_ring_setting();
-    void turn(int);
-    void turn();   // overloaded, single turn
-    int  encrypt_without_turning(
-         int i) const;   // pass integer through wires without turning
-    int  plugboard_encrypt(int i) const;
-    void next_ring_setting();
-    void print() const;             // PRINT cartridge
-    void print_positions() const;   // print positions of the rotors
-    void randomize();
+    inline void reset_positions();
+    inline void reset_ring_setting();
+    void        turn(int);
+    void        turn();   // overloaded, single turn
+    int         encrypt_without_turning(
+                int i) const;   // pass integer through wires without turning
+    inline int plugboard_encrypt(int i) const;
+    void       next_ring_setting();
+    void       print() const;             // PRINT cartridge
+    void       print_positions() const;   // print positions of the rotors
+    void       randomize();
     // Rotor* make_random_rotors(int n, int wires); //make array of n random
     // rotors
 
