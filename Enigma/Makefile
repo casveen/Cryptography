@@ -39,6 +39,12 @@ profile : performance.exe
 	valgrind --tool=callgrind ./performance.exe
 	kcachegrind
 	#rm -f $(wildcard *.h)
+test.exe : test.o bombe.o enigma.o test_bombe.o test_enigma.o
+	$(CC) -o test.exe $(FLAGS) $^ rotors.cpp
+
+test : test.exe
+	./test.exe
+
 
 #object files
 %.o : %.cpp

@@ -391,10 +391,12 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                         m_enigma->set_plugboard("");   // reset plugboard
                     }
                 }
-                // push new encryption, del oldest
-                delete[] m_enigma_encryptions.at(0);
+                // take the oldest encryption, give the newest encryption and
+                // push to front
+                int *encryption= m_enigma_encryptions.at(0);
+                m_enigma->get_encryption_inplace(encryption);
                 m_enigma_encryptions.erase(m_enigma_encryptions.begin());
-                m_enigma_encryptions.push_back(m_enigma->get_encryption());
+                m_enigma_encryptions.push_back(encryption);
                 m_enigma->turn();
             }   // for rotor position
             m_enigma->next_ring_setting();

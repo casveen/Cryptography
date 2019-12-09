@@ -32,4 +32,10 @@ REC 258---> ELAPSED: 0.267761 MEAN 0.271836, VARIANCE 0.000271365
 ---cache friendly inplace encryption
 REC 100---> ELAPSED: 0.240929 MEAN 0.241077, VARIANCE 2.08026e-05
 
+---------------------------------------------------
+|                   MEAN       VAR        RECORDS |
+| RING-SETTING      2.32E-01   6.17E-05       100 |
+---------------------------------------------------
+
+
 */

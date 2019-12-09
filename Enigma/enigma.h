@@ -55,9 +55,11 @@ class Rotor {
     // other
     int  encrypt_in(int, int) const;
     void encrypt_in_inplace(int *, int, int) const;
+    void encrypt_in_inplace(int *, vector<bool> &, bool, int, int) const;
     int  encrypt_out(int, int) const;
     void encrypt_out_inplace(int *, int, int) const;
     void randomize();
+    void encrypt_out_inplace(int *, vector<bool> &, bool, int, int) const;
     void print() const;
     void make_inverse(const int *in, int *out, int n) const;
     bool is_valid() const;
@@ -233,6 +235,7 @@ class Enigma {
     const int *            get_ring_setting() const;
     string                 get_ring_setting_as_string() const;
     int *                  get_encryption() const;
+    void                   get_encryption_inplace(int *) const;
     string                 get_encryption_as_string() const;
     vector<pair<int, int>> get_encryption_onesided() const;
     Cartridge *            get_cartridge() const;

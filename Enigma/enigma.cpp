@@ -138,11 +138,43 @@ void Rotor::encrypt_in_inplace(int *plaintext, int offset, int n) const {
                       m_wires;
     }
 }
+void Rotor::encrypt_in_inplace(int *plaintext, vector<bool> &flag, bool flagged,
+                               int offset, int n) const {
+    // encrypt plaintext[i] only if flag[i]==flagged
+    int set= 0;
+    for (int i= 0; i < n; ++i) {
+        if (flag[i] == flagged) {
+            set= (m_wiring_in[(plaintext[i] + offset) % m_wires] + m_wires -
+                  offset) %
+                 m_wires;
+            plaintext[i]  = set;
+            plaintext[set]= i;
+            flag[set]     = !flagged;
+            flag[i]       = !flagged;
+        }
+    }
+}
 void Rotor::encrypt_out_inplace(int *plaintext, int offset, int n) const {
     for (int i= 0; i < n; ++i) {
         plaintext[i]= (m_wiring_out[(plaintext[i] + offset) % m_wires] +
                        m_wires - offset) %
                       m_wires;
+    }
+}
+void Rotor::encrypt_out_inplace(int *plaintext, vector<bool> &flag,
+                                bool flagged, int offset, int n) const {
+    // encrypt plaintext[i] only if flag[i]==flagged
+    int set= 0;
+    for (int i= 0; i < n; ++i) {
+        if (flag[i] == flagged) {
+            set= (m_wiring_out[(plaintext[i] + offset) % m_wires] + m_wires -
+                  offset) %
+                 m_wires;
+            plaintext[i]  = set;
+            plaintext[set]= i;
+            flag[set]     = !flagged;
+            flag[i]       = !flagged;
+        }
     }
 }
 
@@ -647,8 +679,7 @@ int *Enigma::get_encryption() const {
     const Plugboard *plugboard = m_cartridge->get_plugboard();
     int *            encryption= new int[m_wires];
     for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
-    // plugboard
-    // cout << "plug in\n";
+
     plugboard->encrypt_inplace(encryption, m_wires);
     for (int r= 0; r < m_rotors_number; ++r) {
         // cout << "rotor " << r << " in\n";
@@ -664,6 +695,29 @@ int *Enigma::get_encryption() const {
     // cout << "plug out\n";
     plugboard->encrypt_inplace(encryption, m_wires);
     return encryption;
+}
+
+void Enigma::get_encryption_inplace(int *encryption) const {
+    // return encryption of all letters, trying to be cache coherent
+    // encryption is assumed to conatin m_wires integers
+    // encrypts in place onto encryption, no allocation
+    // get stuff from the cartridge
+    const Rotor **   rotors   = m_cartridge->get_rotors();
+    const Reflector *reflector= m_cartridge->get_reflector();
+    const int *      positions= m_cartridge->get_positions();
+    const Plugboard *plugboard= m_cartridge->get_plugboard();
+    for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
+
+    plugboard->encrypt_inplace(encryption, m_wires);
+    for (int r= 0; r < m_rotors_number; ++r) {
+        rotors[r]->encrypt_in_inplace(encryption, positions[r], m_wires);
+    }
+    reflector->encrypt_in_inplace(
+        encryption, m_cartridge->get_reflector_position(), m_wires);
+    for (int r= m_rotors_number - 1; r >= 0; --r) {
+        rotors[r]->encrypt_out_inplace(encryption, positions[r], m_wires);
+    }
+    plugboard->encrypt_inplace(encryption, m_wires);
 }
 string Enigma::get_encryption_as_string() const {
     int *  encryption= get_encryption();
