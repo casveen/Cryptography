@@ -105,7 +105,7 @@ void Rotor::set_wiring_in(int pos, int set) { m_wiring_in[pos]= set; }
 void Rotor::set_wiring_out(int pos, int set) { m_wiring_out[pos]= set; }
 void Rotor::set_verbose(bool set) { m_verbose= set; }
 // other
-inline int Rotor::encrypt_in(int i, int offset) const {
+int Rotor::encrypt_in(int i, int offset) const {
     /*if (m_verbose == true) {
         for (int j= 0; j < m_wires; j++) {
             if (j == i) { cout << "("; }
@@ -118,7 +118,7 @@ inline int Rotor::encrypt_in(int i, int offset) const {
     }*/
     return (m_wiring_in[(i + offset) % m_wires] + m_wires - offset) % m_wires;
 }
-inline int Rotor::encrypt_out(int i, int offset) const {
+int Rotor::encrypt_out(int i, int offset) const {
     /*if (m_verbose) {
 for (int j= 0; j < m_wires; j++) {
     if (j == out) { cout << "("; }
@@ -249,8 +249,8 @@ void Plugboard::swap(Plugboard &s) noexcept {
     swap(this->m_wiring, s.m_wiring);
     swap(this->m_wires, s.m_wires);
 }
-inline int Plugboard::encrypt(int in) const { return m_wiring[in]; }
-void       Plugboard::encrypt_inplace(int *plaintext, int n) const {
+int  Plugboard::encrypt(int in) const { return m_wiring[in]; }
+void Plugboard::encrypt_inplace(int *plaintext, int n) const {
     for (int i= 0; i < n; ++i) { plaintext[i]= m_wiring[plaintext[i]]; }
 }
 void Plugboard::reset() {
