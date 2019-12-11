@@ -630,7 +630,7 @@ void Cartridge::print() const {
     }
     printf("\n");
     return;
-};
+}
 void Cartridge::print_positions() const {
     for (int p= 0; p < m_rotor_count; p++) { printf("%2d ", m_positions[p]); }
     printf("\n");
@@ -726,8 +726,8 @@ void Enigma::get_encryption_inplace_lazy(int *encryption) const {
     // input encryption must only differ in rotor 0 by one posisiton
     // e      =P W0^(-1) W1^(-1) W2^(-1) R W2 W1 W0 P m=>
     // W0 P e =          W1^(-1) W2^(-1) R W2 W1 W0 P m
-    const Rotor **   rotors   = m_cartridge->get_rotors();
-    const Reflector *reflector= m_cartridge->get_reflector();
+    const Rotor **rotors= m_cartridge->get_rotors();
+    // const Reflector *reflector= m_cartridge->get_reflector();
     const int *      positions= m_cartridge->get_positions();
     const Plugboard *plugboard= m_cartridge->get_plugboard();
     int *            indexes  = new int[m_wires];

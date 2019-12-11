@@ -1,6 +1,7 @@
 CC        := g++
 #MPI       := mpicc
-FLAGS      = -Wall -O3 -g
+FLAGS      = -Wall -O3 -pedantic
+#-finline-functions
 TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
 DEP        = enigma.cpp bombe.cpp
 #HEADER     = enigma.h   bombe.h
@@ -25,6 +26,9 @@ all:
 #benchmarker.o : bombe.o enigma.o rotors.cpp
 #	$(CC) -c benchmarker.cpp $(FLAGS)
 #	echo "benchmarker.o made"
+
+enigma_main : enigma_main.o enigma.o
+	$(CC) enigma_main.cpp -o enigma.exe $(FLAGS) enigma.o rotors.cpp -L/usr/lib -lboost_program_options
 
 benchmarker.exe : benchmarker.o bombe.o enigma.o rotors.cpp
 	$(CC) -o benchmarker.exe $(FLAGS) benchmarker.o bombe.o enigma.o rotors.cpp
