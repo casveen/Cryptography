@@ -242,28 +242,24 @@ int main(int argc, char *argv[]) {
     enigma.set_setting(setting);
 
     // ENCRYPT
-    ofstream outstream;
+    ofstream   outfilestream;
+    streambuf *streambuffer= cout.rdbuf();
     if (vm.count("o")) {
-        cout << "opening outstream\n";
-        outstream.open(vm["o"].as<string>());
-        cout << "opened outstream\n";
-    } else {
-        // outstream= cout;
+        outfilestream.open(vm["o"].as<string>());
+        streambuffer= outfilestream.rdbuf();
     }
+    ostream outstream(streambuffer);
 
     if (vm.count("plaintext")) {
-        cout << enigma.encrypt(vm["plaintext"].as<string>()) << "\n";
+        outstream << enigma.encrypt(vm["plaintext"].as<string>()) << "\n";
     }
 
     if (vm.count("inputfile")) {
-        cout << "opening instream\n";
         ifstream instream(vm["inputfile"].as<string>());
-        cout << "opened ifstream\n";
         enigma.encrypt(instream, outstream);
     }
-
+    outfilestream.close();
     delete reflector;   // XXX double free of reflector?
     delete plugboard;
-
     return 0;
 }

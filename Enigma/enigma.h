@@ -280,7 +280,7 @@ class Enigma {
     void   print_positions() const;
     void   print() const;
     string preprocess(string in) const;
-    void   encrypt(ifstream &, ofstream &);
+    void   encrypt(istream &, ostream &);
 
     // FACTORY
     static Enigma make_random_enigma(int rotors, int wires) {

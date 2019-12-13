@@ -899,7 +899,7 @@ int *Enigma::encrypt(const int *m, int n) {
     }
     return e;
 }
-void Enigma::encrypt(ifstream &in, ofstream &out) {
+void Enigma::encrypt(istream &in, ostream &out) {
     // read in line for line, format line, encrypt and write to ostream.
     string line;
     while (getline(in, line)) { out << encrypt(preprocess(line)) << "\n"; }
