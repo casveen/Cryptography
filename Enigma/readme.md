@@ -126,3 +126,35 @@ cartridges for each step.
 This is my first large C++ project, knowing only the basics and some related languages like C. The biggest source of bugs seems to be my insistence to program as is this was a java project, meaning that I really lost control of ownership of pointers and allocating at proper times. Here I catalogue some things that I had to learn the hard way in this process.
 -classes that have ownership of some object O, and which does not allocate this object at standard instantiation should be pointers as the eventual cleanup will deallocate O which is then not allocated.(ex. Reflector r, and then trying to assign to it, which calls the first r-s destructor, deallocating "nothing").
 -when working with streams. If trying to make the program output to either cout or some ofstream, it is easier to make your own outstream object and then give it the appropriate streambuf object(either from cout or the ofstream through .rdbuf()) with initialising it as myostream(appropriate_streambuf).
+-initialize in the same order that variables are declared in class
+
+
+
+
+P       R0      R1      R2      R3      R
+     |V|     | |   |     |   |     |   |     |   |     | |   |
+     |W|     | |   |   |-+---+---| |   |     |   |     | |   |
+     |X|     | |   |   | |   |   | |   |     |   |     | |   |
+D->--|Y|-----| |---+-| | |   |   | |   |     |   |     | |   |
+     |Z|     | |   | | | |   |   | |   |     |   |     | |   |
+     |A|     | |   | |-+-+---+-| | |   |     |   | |---+-+-| |
+     |B|     | |   |   | |   | | | |   |     |   | | |-+-+-| |
+     |C|     | |   |   | |   | | | |   |     |   | | | | |   |
+     |D|     | |   |   | |   | |-+-+---+-|   |   | | | | |   |
+     |E|     |X|   |   | |   |   |-+---+-+-| |   | | | | |   |
+     |F|     | |   |   | |   |     |   | | | |   | | | | |   |
+     |G|     | |   |   | |   |     |   | | | |   | | | | |   |
+     | |     | |   |   | |   |     |   | | | |   | | | | |   |
+     | |     | |   |   | |   |     |   | | | |   | | | | |   |
+     | |     | |   |   | |   |     |   | | | |   | | | | |   |
+     | |     | |   |   | |   |     |   | | | |   | | | | |   |
+     | |     | |   |   | |   |     |   | | | |   | | | | |   |
+     | |     | |   |   | |   |     |   | |-+-+---+-| | | |   |
+     | |     | |   |   | |   |     |   |   | |   |   | | |   |
+     | |     | |   |   | |   |     |   |   |-+---+---| | |   |
+     | |     | |   |   | |   |     |   |     |   |     | |   |
+     | |     | |   |   | |   |     |   |     |   |     | |   |
+W-<---+-----+---+---| |   |     |   |     |   |     | |   |
+      |     |   |     |   |     |   |     |   |     | |   |
+      |     |   |     |   |     |   |     |   |     | |   |
+      |     |   |     |   |     |   |     |   |     | |   |

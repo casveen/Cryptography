@@ -38,10 +38,9 @@ class Rotor {
     bool m_verbose= false;
 
   public:
-    Rotor();
-    Rotor(const int wires);
-    Rotor(const string);   // construct from string, ABCDEFGHIJKLMNOPQRSTUVWXYZ
-                           // etc
+    // Rotor();
+    Rotor(const int, const int= 1);
+    Rotor(const string, const int= 1);   // constr from string,
     Rotor(const string, const string);
     // constexpr Rotor(const string, const string);
     Rotor(Rotor const &copy);
@@ -76,7 +75,7 @@ class Rotor {
 
 class Reflector: public Rotor {
   public:
-    Reflector();
+    // Reflector();
     Reflector(int wires);
     Reflector(const string);
     Reflector(const string, const string);
@@ -115,19 +114,24 @@ class Plugboard {
 class Cartridge {
   private:
     Rotor **   m_rotors;
+    Rotor *    m_stator;
     Reflector *m_reflector;
     int        m_rotor_count, m_wires, m_reflector_position;   // wires?
     int *      m_positions,
         *m_ring_setting;   // ringscthellung, moves the notches in the wheels
     bool m_verbose= false;
+
+    const bool m_trivial_stator;
+
     // int       *m_notch_position;
     Plugboard *m_plugboard;
 
   public:
-    Cartridge();                             // XXX stupitt
-    Cartridge(int rotor_count, int wires);   // CONSTRUCTOR, random rotors
-    Cartridge(const std::initializer_list<Rotor> rotors, Reflector reflector);
-    Cartridge(Cartridge const &copy);
+    // Cartridge();                             // XXX stupitt
+    Cartridge(int, int);   // CONSTRUCTOR, random rotors
+    Cartridge(const initializer_list<Rotor>, Reflector, const bool= true);
+    Cartridge(Rotor, const initializer_list<Rotor>, Reflector);
+    // Cartridge(Cartridge const &copy);
     Cartridge &operator=(Cartridge rhs);
     void       swap(Cartridge &s) noexcept;
     ~Cartridge();
@@ -142,6 +146,8 @@ class Cartridge {
     const int *          get_ring_setting() const;
     const string         get_positions_as_string() const;
     const string         get_ring_setting_as_string() const;
+    void                 get_encryption_inplace(int *) const;
+    bool                 get_if_trivial_stator() const;
     // setters
     void set_setting(struct EnigmaSetting);
     void set_plugboard(const string);
@@ -159,11 +165,12 @@ class Cartridge {
     void turn();   // overloaded, single turn
     int  encrypt_without_turning(
          int i) const;   // pass integer through wires without turning
-    int  plugboard_encrypt(int i) const;
-    void next_ring_setting();
-    void print() const;             // PRINT cartridge
-    void print_positions() const;   // print positions of the rotors
-    void randomize();
+    vector<int> encrypt_stepwise(int) const;
+    int         plugboard_encrypt(int i) const;
+    void        next_ring_setting();
+    void        print() const;             // PRINT cartridge
+    void        print_positions() const;   // print positions of the rotors
+    void        randomize();
     // Rotor* make_random_rotors(int n, int wires); //make array of n random
     // rotors
 
@@ -176,7 +183,7 @@ class Cartridge {
     ...
     --.--                        //last rotor, must be a reflector, ie symmetric
     */
-    static Cartridge *from_file(const char *filename) {
+    /*static Cartridge *from_file(const char *filename) {
         int      rotors_number, wires, k= 0, wire;
         string   line;
         int      len= 0;
@@ -214,7 +221,7 @@ class Cartridge {
             k++;
         }
         return out;
-    }
+    }*/
 };
 
 struct EnigmaSetting {
@@ -229,7 +236,7 @@ class Enigma {
   private:
     Cartridge *m_cartridge;
     int        m_rotors_number, m_wires;
-    bool       m_verbose= false;
+    bool       m_verbose= true, m_verbose_exploded= false;
     // int  *m_rotor_position, m_ring_setting;
 
   public:
@@ -276,6 +283,7 @@ class Enigma {
     int    encrypt_without_turning(int m) const;
     string encrypt(string);
     int *  encrypt(const int *m, int n);
+    int    encrypt_verbose_exploded(int m) const;
     void   next_ring_setting();
     void   print_positions() const;
     void   print() const;

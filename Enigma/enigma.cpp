@@ -1,59 +1,37 @@
 #include "enigma.h"
 using namespace std;
 
-// WHEEL
-Rotor::Rotor() {}
-Rotor::Rotor(int wires) : m_wires{wires} {
-    m_notches = 1;
-    m_notch   = new int[m_notches];
-    m_notch[0]= 0;   // corresponds to notch at A
+// ROTOR
+Rotor::Rotor(int wires, int notches /*1*/) :
+    m_wires{wires}, m_notches{notches} {
+    // base constructor
+    m_notch= new int[m_notches];
+    // make ok spread of notched from A
+    for (int j= 0; j < m_notches; ++j) {
+        m_notch[j]= (m_wires / m_notches) * j;
+    }
     // allocate to wiring array
     m_wiring_in = new int[m_wires];
     m_wiring_out= new int[m_wires];
-    // make a legal wiring, essentially a substitution cipher
+    // make identity wiring
     for (int j= 0; j < m_wires; j++) {
         m_wiring_in[j] = j;
         m_wiring_out[j]= j;
     }
 }
-Rotor::Rotor(const string in) {
-    m_notches = 1;
-    m_notch   = new int[m_notches];
-    m_notch[0]= 0;   // corresponds to notch at A
-    m_wires   = in.length();
-    // allocate to wiring array
-    m_wiring_in = new int[m_wires];
-    m_wiring_out= new int[m_wires];
-    int wire;
+Rotor::Rotor(const string in, int notches /*1*/) :
+    Rotor{(int)in.length(), notches} {
     for (int i= 0; i < m_wires; i++) {
-        wire              = (int)in[i] - (int)'A';
+        int wire          = (int)in[i] - (int)'A';
         m_wiring_in[i]    = wire;
         m_wiring_out[wire]= i;
     }
 }
-Rotor::Rotor(const string in, const string notch) : Rotor(in) {
-    m_notches= notch.length();
-    delete[] m_notch;   // XXX Not ood solution
-    m_notch= new int[m_notches];
+Rotor::Rotor(const string in, const string notch) :
+    Rotor(in, (int)notch.length()) {
     for (int i= 0; i < m_notches; i++) { m_notch[i]= (int)notch[i] - (int)'A'; }
 }
-/*constexpr Rotor::Rotor(const string in, const string notch): Rotor(in) {
-    m_notches=   notch.length();
-    m_notch=     new int[m_notches];
-    m_wires=     in.length();
-    //allocate to wiring array
-    m_wiring_in= new int[m_wires];
-    m_wiring_out=new int[m_wires];
-    int wire;
-    for(int i=0; i<m_wires; i++)  {
-        wire=(int) in[i]-(int) 'A';
-        m_wiring_in[i] =wire;
-        m_wiring_out[wire]=i;
-    }
-    for(int i=0; i<m_notches; i++)  {
-        m_notch[i]=(int) notch[i]-(int) 'A';
-    }
-}*/
+
 Rotor::~Rotor() {
     // cout << "somewhere, a rotor died(" << get_wiring_in(0) << ") \n";
     delete[] m_wiring_in;
@@ -107,30 +85,34 @@ void Rotor::set_wiring_out(int pos, int set) { m_wiring_out[pos]= set; }
 void Rotor::set_verbose(bool set) { m_verbose= set; }
 // other
 int Rotor::encrypt_in(int i, int offset) const {
-    /*if (m_verbose == true) {
+    int out=
+        (m_wiring_in[(i + offset) % m_wires] + 2 * m_wires - offset) % m_wires;
+    if (m_verbose == true) {   // make const
         for (int j= 0; j < m_wires; j++) {
             if (j == i) { cout << "("; }
-            cout << (char)((m_wiring_in[(j + offset) % m_wires] + m_wires -
+            cout << (char)((m_wiring_in[(j + offset) % m_wires] + 2 * m_wires -
                             offset) %
                                m_wires +
                            (int)'A');
             if (j == i) { cout << ")"; }
         }
-    }*/
-    return (m_wiring_in[(i + offset) % m_wires] + m_wires - offset) % m_wires;
+    }
+    return out;
 }
 int Rotor::encrypt_out(int i, int offset) const {
-    /*if (m_verbose) {
-for (int j= 0; j < m_wires; j++) {
-    if (j == out) { cout << "("; }
-    cout << (char)((m_wiring_out[(j + offset) % m_wires] + m_wires -
-                    offset) %
-                       m_wires +
-                   (int)'A');
-    if (j == out) { cout << ")"; }
-}
-}*/
-    return (m_wiring_out[(i + offset) % m_wires] + m_wires - offset) % m_wires;
+    int out=
+        (m_wiring_out[(i + offset) % m_wires] + 2 * m_wires - offset) % m_wires;
+    if (m_verbose) {
+        for (int j= 0; j < m_wires; j++) {
+            if (j == out) { cout << "("; }
+            cout << (char)((m_wiring_in[(j + offset) % m_wires] + 2 * m_wires -
+                            offset) %
+                               m_wires +
+                           (int)'A');
+            if (j == out) { cout << ")"; }
+        }
+    }
+    return out;
 }
 void Rotor::encrypt_in_inplace(int *plaintext, int offset, int n) const {
     for (int i= 0; i < n; ++i) {
@@ -216,7 +198,7 @@ bool Rotor::is_valid() const {
     }
     return true;
 }
-Reflector::Reflector() : Rotor() {}
+// Reflector::Reflector() : Rotor() {}
 Reflector::Reflector(int wires) : Rotor(wires) {
     for (int j= 0; j < wires; j++) { m_wiring_in[j]= j + 1 - 2 * (j % 2); }
 }
@@ -317,9 +299,9 @@ vector<int> Plugboard::get_wiring() const { return m_wiring; }
 int         Plugboard::get_wiring(int i) const { return m_wiring[i]; }
 
 // CARTRIDGE
-Cartridge::Cartridge() {}   // XXX should really not be neccesary...
+// Cartridge::Cartridge() {}   // XXX should really not be neccesary...
 Cartridge::Cartridge(int rotor_count, int wires) :
-    m_rotor_count{rotor_count}, m_wires{wires} {
+    m_rotor_count{rotor_count}, m_wires{wires}, m_trivial_stator(true) {
     m_positions   = new int[rotor_count];
     m_ring_setting= new int[rotor_count];
     // init positions
@@ -338,9 +320,9 @@ Cartridge::Cartridge(int rotor_count, int wires) :
     m_reflector->randomize();
 }
 Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
-                     Reflector                          reflector) {
-    m_wires       = (rotors.begin())->get_wires();
-    m_rotor_count = rotors.size();
+                     Reflector reflector, const bool trivial_stator /*true*/) :
+    m_rotor_count(rotors.size()),
+    m_wires((rotors.begin())->get_wires()), m_trivial_stator(trivial_stator) {
     m_positions   = new int[m_rotor_count];
     m_ring_setting= new int[m_rotor_count];
     // init positions
@@ -353,13 +335,19 @@ Cartridge::Cartridge(const std::initializer_list<Rotor> rotors,
     m_plugboard= new Plugboard(m_wires);
     m_reflector= new Reflector(reflector);
 }
+Cartridge::Cartridge(Rotor stator, const std::initializer_list<Rotor> rotors,
+                     Reflector reflector) :
+    Cartridge(rotors, reflector, false) {
+    m_stator= new Rotor(stator);
+}
+/*
 Cartridge::Cartridge(Cartridge const &copy) {
-    // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
+    //
+src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     m_wires      = copy.m_wires;
     m_rotor_count= copy.m_rotor_count;
     m_rotors     = new Rotor *[m_rotor_count];
     // m_plugboard         =new Plugboard();
-    cout << "\n\n\n\n\nWOOOOOOPS\n\n\n\n\n";
     m_reflector         = copy.m_reflector;
     m_positions         = new int[m_rotor_count];
     m_ring_setting      = new int[m_rotor_count];
@@ -371,7 +359,7 @@ Cartridge::Cartridge(Cartridge const &copy) {
     std::copy(&copy.m_positions[0], &copy.m_positions[m_wires], m_positions);
     std::copy(&copy.m_ring_setting[0], &copy.m_ring_setting[m_wires],
               m_ring_setting);
-}
+}*/
 Cartridge &Cartridge::operator=(
     Cartridge rhs) {   // Pass by value (thus generating a copy)
     rhs.swap(*this);   // Now swap data with the copy.
@@ -397,6 +385,7 @@ Cartridge::~Cartridge() {
     delete[] m_positions;
     delete[] m_ring_setting;
     delete m_plugboard;
+    if (!m_trivial_stator) delete m_stator;
 }
 // getters
 struct EnigmaSetting Cartridge::get_setting() const {
@@ -440,6 +429,25 @@ const string Cartridge::get_positions_as_string() const {
 }
 int Cartridge::get_reflector_position() const { return m_reflector_position; }
 Plugboard *Cartridge::get_plugboard() const { return m_plugboard; }
+void       Cartridge::get_encryption_inplace(int *encryption) const {
+    for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
+    m_plugboard->encrypt_inplace(encryption, m_wires);
+    if (!m_trivial_stator) {   // stator, if nontrivial
+        m_stator->encrypt_in_inplace(encryption, 0, m_wires);
+    }
+    for (int r= 0; r < m_rotor_count; ++r) {
+        m_rotors[r]->encrypt_in_inplace(encryption, m_positions[r], m_wires);
+    }
+    m_reflector->encrypt_in_inplace(encryption, m_reflector_position, m_wires);
+    for (int r= m_rotor_count - 1; r >= 0; --r) {
+        m_rotors[r]->encrypt_out_inplace(encryption, m_positions[r], m_wires);
+    }
+    if (!m_trivial_stator) {   // stator, if nontrivial
+        m_stator->encrypt_out_inplace(encryption, 0, m_wires);
+    }
+    m_plugboard->encrypt_inplace(encryption, m_wires);
+}
+bool Cartridge::get_if_trivial_stator() const { return m_trivial_stator; }
 // setters
 void Cartridge::set_setting(struct EnigmaSetting setting) {
     m_rotor_count= (signed int)setting.rotors.size();   // TODO check if not 0
@@ -575,7 +583,8 @@ int Cartridge::encrypt_without_turning(int i) const {
             cout << "  W" << rotor << "(" << (char)(i + (int)'A') << ")-> ";
         }
         // cout<<i<<" - > \n";
-        i= m_rotors[rotor]->encrypt_in(i, m_positions[rotor]);
+        i= m_rotors[rotor]->encrypt_in(i, m_positions[rotor] -
+                                              m_ring_setting[rotor] + m_wires);
         // cout<<i<<"\n";
         if (m_verbose) {
             cout << " " << (char)(m_positions[rotor] + (int)'A') << "\n";
@@ -597,7 +606,8 @@ int Cartridge::encrypt_without_turning(int i) const {
         if (m_verbose) {
             cout << "  W" << rotor << "(" << (char)(i + (int)'A') << ")-> ";
         }
-        i= m_rotors[rotor]->encrypt_out(i, m_positions[rotor]);
+        i= m_rotors[rotor]->encrypt_out(i, m_positions[rotor] -
+                                               m_ring_setting[rotor] + m_wires);
         if (m_verbose) {
             cout << " " << (char)(m_positions[rotor] + (int)'A') << "\n";
         }
@@ -606,6 +616,36 @@ int Cartridge::encrypt_without_turning(int i) const {
     // plug back
     i= m_plugboard->encrypt(i);
     return i;
+}
+vector<int> Cartridge::encrypt_stepwise(int i) const {
+    // encrypt m, showing its value throughout encryption
+    vector<int> path;
+    path.push_back(i);
+    i= m_plugboard->encrypt(i);
+    path.push_back(i);
+    if (!m_trivial_stator) {
+        i= m_stator->encrypt_in(i, 0);
+        path.push_back(i);
+    }
+    for (int rotor= 0; rotor < m_rotor_count; rotor++) {
+        i= m_rotors[rotor]->encrypt_in(i, m_positions[rotor] -
+                                              m_ring_setting[rotor]);
+        path.push_back(i);
+    }
+    i= m_reflector->encrypt_in(i, 0);
+    path.push_back(i);
+    for (int rotor= m_rotor_count - 1; rotor >= 0; rotor--) {
+        i= m_rotors[rotor]->encrypt_out(i, m_positions[rotor] -
+                                               m_ring_setting[rotor]);
+        path.push_back(i);
+    }
+    if (!m_trivial_stator) {
+        i= m_stator->encrypt_out(i, 0);
+        path.push_back(i);
+    }
+    i= m_plugboard->encrypt(i);
+    path.push_back(i);
+    return path;
 }
 void Cartridge::next_ring_setting() {
     int carry= 1, next;
@@ -702,23 +742,7 @@ void Enigma::get_encryption_inplace(int *encryption) const {
     // return encryption of all letters, trying to be cache coherent
     // encryption is assumed to conatin m_wires integers
     // encrypts in place onto encryption, no allocation
-    // get stuff from the cartridge
-    const Rotor **   rotors   = m_cartridge->get_rotors();
-    const Reflector *reflector= m_cartridge->get_reflector();
-    const int *      positions= m_cartridge->get_positions();
-    const Plugboard *plugboard= m_cartridge->get_plugboard();
-    for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
-
-    plugboard->encrypt_inplace(encryption, m_wires);
-    for (int r= 0; r < m_rotors_number; ++r) {
-        rotors[r]->encrypt_in_inplace(encryption, positions[r], m_wires);
-    }
-    reflector->encrypt_in_inplace(
-        encryption, m_cartridge->get_reflector_position(), m_wires);
-    for (int r= m_rotors_number - 1; r >= 0; --r) {
-        rotors[r]->encrypt_out_inplace(encryption, positions[r], m_wires);
-    }
-    plugboard->encrypt_inplace(encryption, m_wires);
+    m_cartridge->get_encryption_inplace(encryption);
 }
 void Enigma::get_encryption_inplace_lazy(int *encryption) const {
     // return encryption of all letters
@@ -727,6 +751,7 @@ void Enigma::get_encryption_inplace_lazy(int *encryption) const {
     // input encryption must only differ in rotor 0 by one posisiton
     // e      =P W0^(-1) W1^(-1) W2^(-1) R W2 W1 W0 P m=>
     // W0 P e =          W1^(-1) W2^(-1) R W2 W1 W0 P m
+    // XXX ignores stator, ok if trivial
     const Rotor **rotors= m_cartridge->get_rotors();
     // const Reflector *reflector= m_cartridge->get_reflector();
     const int *      positions= m_cartridge->get_positions();
@@ -819,7 +844,7 @@ void Enigma::set_verbose(bool set) {   // XXX bretter impl
     // m_cartridge->set_verbose(false);
     m_verbose= set;
 }
-void Enigma::set_cartridge_verbose(bool set) {   // XXX bretter impl
+void Enigma::set_cartridge_verbose(bool set) {   // XXX better impl
     m_cartridge->set_verbose(set);
 }
 void Enigma::set_rotor_position(const int *in) {
@@ -843,12 +868,15 @@ void Enigma::reset() { m_cartridge->reset_positions(); }
 void Enigma::turn(int turns) { m_cartridge->turn(turns); }
 void Enigma::turn() { m_cartridge->turn(); }
 int  Enigma::encrypt(int m) {
+    m_cartridge->turn();   // XXX turns first???
     // cout<<"encr "<<m<<"\n";
     if (m_verbose) {
         // set parts to non-verbose
         m_cartridge->set_verbose(false);
     }
+
     int c= encrypt_without_turning(m);
+
     if (m_verbose) {
         cout << (char)(m + (int)'A') << " ->";
         if (m == 0) {
@@ -872,16 +900,188 @@ int  Enigma::encrypt(int m) {
         cout << " --- " << get_ring_setting_as_string();
         cout << "\n";
     }
-    m_cartridge->turn();
+
     return c;
 }
+
+const std::string wc("\033[0;31m");
+const std::string rc("\033[0;33m");
+const std::string bgc("\033[0;40m");
+const std::string bgr("\033[0;40m");
+
+string line_begin(int left_in, int left_out, int wire, int pos= -1,
+                  int wires= 26) {
+    string line= "";
+    line+= (left_in == wire)
+               ? wc + "-->--+" + rc
+               : (left_out == wire) ? wc + "--<--+" + rc : "     |";
+    if (pos != -1) {
+        line+= (char)((pos + wire + wires) % wires + (int)'A');
+    } else {
+        line+= " ";
+    }
+    // line+= "|";
+    //----PLUG START
+    line+= (left_in == wire || left_out == wire) ? wc + "+" + rc : "|";
+    line+= ((left_in == wire || left_out == wire) ? wc + "-" + rc : " ");
+    return line;
+}
+string line_mid(int left_in, int right_in, int left_out, int right_out,
+                int wire) {
+    string line= "";
+    if (((left_in == right_in) && left_in == wire) ||
+        ((left_out == right_out) && left_out == wire))
+        return wc + "---" + rc;
+    // first column
+    if (wire >= min(left_in, right_in) && wire <= max(left_in, right_in)) {
+        if (wire == left_out) {
+            line+= wc + "+" + rc;
+        } else {
+            line+= wc + "|" + rc;
+        }
+    } else if (wire == left_out) {
+        line+= wc + "-" + rc;
+    } else {
+        line+= " ";
+    }
+    // second column
+    if (wire == left_out) {
+        line+= wc + "-" + rc;
+    } else if (wire == right_in) {
+        line+= wc + "-" + rc;
+    } else {
+        line+= " ";
+    }
+    // third column
+    if (wire >= min(left_out, right_out) && wire <= max(left_out, right_out)) {
+        if (wire == right_in) {
+            line+= wc + "+" + rc;
+        } else {
+            line+= wc + "|" + rc;
+        }
+    } else if (wire == right_in) {
+        line+= wc + "-" + rc;
+    } else {
+        line+= " ";
+    }
+
+    return line;
+}
+string line_end(int right_in, int right_out, int wire, int pos, int wires,
+                int notches, const int *notch, int rs) {
+    string line= "";
+    // CHECK IF NOTCH
+    bool notched= false;
+    for (int n= 0; n < notches; ++n) {
+        if ((wire + notch[n]) % wires == (-pos + rs + wires) % wires) {
+            notched= true;
+            break;
+        }
+    }
+
+    line+= (right_in == wire || right_out == wire) ? wc + "-+" + rc : " |";
+    line+= notched ? "X" : " ";
+    line+= (right_in == wire || right_out == wire) ? wc + "+" + rc : "|";
+    return line;
+}
+string line_all(int left_in, int right_in, int left_out, int right_out,
+                int wire, int pos= -1, int notches= 0, const int *notch= {0},
+                int rs= 0, int wires= 26) {
+
+    return line_begin(left_in, left_out, wire, pos, wires) +
+           line_mid(left_in, right_in, left_out, right_out, wire) +
+           line_end(right_in, right_out, wire, pos, wires, notches, notch, rs);
+}
+int Enigma::encrypt_verbose_exploded(int m) const {
+
+    // show exploded view of the cartridge, and the pathway m takes in
+    const bool  trivial_stator= m_cartridge->get_if_trivial_stator();
+    string      line, total;
+    vector<int> path= m_cartridge->encrypt_stepwise(m);
+    int         pl  = (int)path.size();
+    // DESC
+    line= "\n   ";
+    line+= "      PLUGBOARD  ";
+    if (!trivial_stator) line+= "     STATOR    ";
+    for (int i= 0; i < m_rotors_number; ++i) {
+        line+= "      ROTOR " + to_string(i) + "   ";
+    }
+    line+= "    REFLECTOR  \n";
+    total+= line;
+    // top rotorline 1
+    string outerline= "        ";
+    string unit     = "-----------     ";
+    outerline+= unit;   // PLUG TOP
+    if (!trivial_stator) {
+        outerline+= unit;   // STATOR TOP
+    }
+    for (int r= 0; r < m_rotors_number; ++r) { outerline+= unit; /*ROTOR TOP*/ }
+    outerline+= "---------  \n";   // REFLECTOR TOP
+    total+= outerline;
+    // top rotor line 2
+    string midline= "        ";
+    unit          = "| ------- |     ";
+    midline+= unit;   // PLUG TOP
+    if (!trivial_stator) {
+        midline+= unit;   // STATOR TOP
+    }
+    for (int r= 0; r < m_rotors_number; ++r) { midline+= unit; /*ROTOR TOP*/ }
+    midline+= "| ----- |   \n";   // REFLECTOR TOP
+    total+= midline;
+
+    // ROTORS TOP
+    for (int wire= 0; wire < m_wires; ++wire) {
+        line= "";
+        if (wire == path[0]) {
+            line+= (char)(wire + (int)'A') + wc + "->" + rc;
+        } else if (wire == path[pl - 1]) {
+            line+= (char)(wire + (int)'A') + wc + "-<" + rc;
+        } else {
+            line+= "   ";
+        }
+        // PLUGBOARD
+        line+= line_all(path[0], path[1], path[pl - 2], path[pl - 1], wire);
+        if (!trivial_stator) {
+            // STATOR
+            line+= line_all(path[1], path[2], path[pl - 3], path[pl - 2], wire);
+        }
+        // ROTORS
+        for (int r= 0; r < m_rotors_number; ++r) {
+            const Rotor *rotor= m_cartridge->get_rotors()[r];
+            int          i    = 1 + (trivial_stator ? 0 : 1) + r;
+            int          j    = pl - i - 2;   // from other dir
+            line+= line_all(path[i], path[i + 1], path[j + 1], path[j], wire,
+                            get_rotor_position()[r], rotor->get_notches(),
+                            rotor->get_notch(), get_ring_setting()[r], m_wires);
+        }
+        // REFLECTOR
+        int i= pl / 2 - 1;
+        line+= line_begin(path[i], path[i + 1], wire, -1, m_wires);
+        /*line+= (path[i] == wire || path[i + 1] == wire) ? wc + "-" + rc : " ";
+        //----REFLECTOR START
+        line+= (path[i] == wire || path[i + 1] == wire) ? wc + "+-" + rc : "|
+        ";*/
+        //----REFLECTOR MID
+        line+= (wire >= min(path[i], path[i + 1]) &&
+                wire <= max(path[i], path[i + 1]))
+                   ? wc + "| " + rc
+                   : "  ";
+        //----REFLECTOR END
+        line+= "| |";
+        total+= line + "\n";
+    }
+    cout << total + midline + outerline;
+    cout << get_rotor_position_as_string();
+    return path[pl - 1];
+}
+
 int Enigma::encrypt_without_turning(int m) const {
     return m_cartridge->encrypt_without_turning(m);
 }
 int *Enigma::encrypt(const int *m, int n) {
     // encrypt an array of ints
     // return value must be freed!
-    if (m_verbose) {
+    if (m_verbose && !m_verbose_exploded) {
         cout << "\n              ";
         for (int i= 0; i < m_wires; i++) {
             cout << (char)(i + (int)'A') << " ";
@@ -895,7 +1095,12 @@ int *Enigma::encrypt(const int *m, int n) {
     int *e= new int[n];   // must be freed outside
     for (int i= 0; i < n; i++) {
         if (m_verbose) { printf("m[%3d] = ", i); }
-        e[i]= encrypt(m[i]);
+        if (m_verbose_exploded) {
+            m_cartridge->turn();
+            e[i]= encrypt_verbose_exploded(m[i]);
+        } else {
+            e[i]= encrypt(m[i]);
+        }
     }
     return e;
 }
@@ -912,14 +1117,6 @@ string Enigma::preprocess(string in) const {
     std::for_each(in.begin(), in.end(), [](char &c) { c= ::toupper(c); });
     return in;
 }
-/*int *Enigma::encrypt_inplace(const int *m, int n) {
-    // encrypt an array of ints in place
-    for (int i= 0; i < n; i++) {
-        if (m_verbose) { printf("m[%3d] = ", i); }
-        e[i]= encrypt(m[i]);
-    }
-    return e;
-}*/
 string Enigma::encrypt(string str) {
     // string to int*
     int *m= new int[str.length()];
