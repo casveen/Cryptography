@@ -55,6 +55,7 @@ Rotor::Rotor(const string in, const string notch) : Rotor(in) {
     }
 }*/
 Rotor::~Rotor() {
+    // cout << "somewhere, a rotor died(" << get_wiring_in(0) << ") \n";
     delete[] m_wiring_in;
     delete[] m_wiring_out;
     delete[] m_notch;
@@ -77,7 +78,7 @@ Rotor::Rotor(Rotor const &copy) {
 }
 Rotor &Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
-    // cout << "ASSIGN\n";
+    cout << "ASSIGN\n";
     rhs.swap(*this);   // Now swap data with the copy.
                        // The rhs parameter will delete the array when it
                        // goes out of scope at the end of the function
@@ -221,6 +222,9 @@ Reflector::Reflector(int wires) : Rotor(wires) {
 }
 Reflector::Reflector(string wiring) : Rotor(wiring) {}
 Reflector::Reflector(string wiring, string notches) : Rotor(wiring, notches) {}
+Reflector::Reflector(Reflector const &copy) : Rotor(copy) {}
+// Reflector &operator=(Reflector rhs): ;
+
 void Reflector::randomize() {
     int w1, w2, v1, v2;
     for (int k= 0; k < m_wires * m_wires; k++) {
@@ -396,10 +400,9 @@ Cartridge::~Cartridge() {
 }
 // getters
 struct EnigmaSetting Cartridge::get_setting() const {
-    // these are pointers, should be COPIED if used by other cartridge
     struct EnigmaSetting out;
     for (int w= 0; w < m_rotor_count; ++w) {
-        out.rotors.push_back(m_rotors[w]);
+        out.rotors.push_back(Rotor(*m_rotors[w]));   // make a copy
     }
     out.reflector     = m_reflector;
     out.plugboard     = m_plugboard;
@@ -440,18 +443,16 @@ Plugboard *Cartridge::get_plugboard() const { return m_plugboard; }
 // setters
 void Cartridge::set_setting(struct EnigmaSetting setting) {
     m_rotor_count= (signed int)setting.rotors.size();   // TODO check if not 0
-    m_wires      = setting.rotors[0]->get_wires();      // begin?
+    m_wires      = setting.rotors[0].get_wires();       // begin?
     // dealloc everything
     for (int w= 0; w < m_rotor_count; w++) { delete m_rotors[w]; }
     delete[] m_rotors;
     delete m_reflector;
-    // delete[] m_positions; //OKAY NOT GOOD!!!
-    // delete[] m_ring_setting; //XXX does not handle if init in other size
     delete m_plugboard;
     // alloc and set everything.
     m_rotors= new Rotor *[m_rotor_count];
     for (int r= 0; r < m_rotor_count; ++r) {
-        m_rotors[r]= new Rotor(*setting.rotors[r]);
+        m_rotors[r]= new Rotor(setting.rotors[r]);
     }
     m_reflector= new Reflector(*setting.reflector);
     m_plugboard= new Plugboard(*setting.plugboard);
@@ -808,7 +809,7 @@ Cartridge *Enigma::get_cartridge() const { return m_cartridge; }
 // setter
 void Enigma::set_setting(struct EnigmaSetting setting) {
     m_rotors_number= (signed int)setting.rotors.size();   // TODO check if not 0
-    m_wires        = setting.rotors[0]->get_wires();
+    m_wires        = setting.rotors[0].get_wires();
     m_cartridge->set_setting(setting);
 }
 void Enigma::set_coder() {
@@ -897,6 +898,19 @@ int *Enigma::encrypt(const int *m, int n) {
         e[i]= encrypt(m[i]);
     }
     return e;
+}
+void Enigma::encrypt(ifstream &in, ofstream &out) {
+    // read in line for line, format line, encrypt and write to ostream.
+    string line;
+    while (getline(in, line)) { out << encrypt(preprocess(line)) << "\n"; }
+}
+string Enigma::preprocess(string in) const {
+    // remove everything that is not an alpha
+    std::regex nonalpha("[^a-zA-Z]");
+    in= regex_replace(in, nonalpha, "");
+    // convert string to upper case
+    std::for_each(in.begin(), in.end(), [](char &c) { c= ::toupper(c); });
+    return in;
 }
 /*int *Enigma::encrypt_inplace(const int *m, int n) {
     // encrypt an array of ints in place

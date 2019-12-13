@@ -20,7 +20,7 @@ Information on the Enigma can be found [here](http://users.telenet.be/d.rijmenan
 ## Usage
 
 ### Enigma
-To create a randomly wired enigma machine with a specified number of rotors(pluss a reflector), run 
+To create a randomly wired enigma machine with a specified number of rotors(pluss a reflector), run
 ```c++
 Enigma enigma(number_of_rotors, number_of_letters);
 ```
@@ -39,7 +39,7 @@ enigma.indicator_early("KGR");
 ```
 We are now ready to encrypt. You can encrypt a string, a file or an integer array
 ```c++
-enigma.encrypt("ATTACKXATXDAWN"); 
+enigma.encrypt("ATTACKXATXDAWN");
 enigma.encrypt_file("plaintext.txt", "ciphertext.txt");
 enigma.encrypt({0,,,0,,,0,,,0,,}) //whatever attackatdawn represents
 ```
@@ -63,8 +63,8 @@ From here the bombe does a exhaustive search by ruling out most possible rotor- 
 
 ## To be done:
 * Enigma
-  - [ ] Plugborad/Steckerbrettt
-  - [ ] Find appropriate method to make static Rotor objects representing the usual rotors.
+  - [x] Plugborad/Steckerbrettt
+  - [/] Find appropriate method to make static Rotor objects representing the usual rotors.
      Candidates:
     * in the enigma header (probably really bad practice)
     * in the enigma.cpp, then enigma.cpp has to be included for the rotors to be used
@@ -74,22 +74,21 @@ From here the bombe does a exhaustive search by ruling out most possible rotor- 
   - [ ] Make subclasses of the very general class Enigma, representing the more specific types of Enigma
   - [ ] Double stepping. Sources are very vague on how to implement this in general cases.
   - [ ] Encrypt from file
-  - [ ] Test on a known cipher- plaintext pair. (requires doublestepping, and correct indicator procedure)
-  - [ ] Make efficient version of Enigma::get_encryption(),  which gets the whole transformation of the enigma at a given rotation. Used in the Bombe, and needs to be quick
+  - [/] Test on a known cipher- plaintext pair. (requires doublestepping, and correct indicator procedure)
+  - [x] Make efficient version of Enigma::get_encryption(),  which gets the whole transformation of the enigma at a given rotation. Used in the Bombe, and needs to be quick
   - [ ] Parallelize
       * mpi?
       * openmp? wiring arrays might slosh if shared between threads
 * Bombe
-  - [ ] 
-  - [ ] Make it work
-  - [ ] Make efficient wiring of diagonal board to the enigma
+  - [x] Make it work
+  - [/] Make efficient wiring of diagonal board to the enigma
   - [ ] Parallelize
       * mpi? probably most suitable, one thread on each rotor composition
       * openmp? again, sloshing might be a problem
 * Coding practice
-  - [ ] Const all possible variables
+  - [x] Const all possible variables
   - [ ] Use consistent names
-  - [ ] delete unused functions 
+  - [ ] delete unused functions
 * Other
   - [ ] make a vocabulary/code class, so that we are not restricted to just the standard 26 capital english letters
 ## Bombe
@@ -103,7 +102,7 @@ a class Wire representing each wire.
 Each letter (A-Z) has a bundle of wires representing the value it is steckered to.
 f. ex, there are 26 wires representing the value A is steckered to.
 So, there are 26 bundles (A-Z) with 26 wires each (steckered to A-Z).
-This is represented by an array of wires, Wire ***wires, where the first index is the bundle
+This is represented by an array of wires, Wire tripplepointer wires, where the first index is the bundle
 and the second index is the wire in the bundle. We use a tripple pointer since we
 want the array elements to be pointers to a specific wire.
 
@@ -117,8 +116,12 @@ connecting wire w1 and w2 uses the syntax w1.connect(w2)
 Using the map, we have to do some wiring. if A is connected to B at position
 0, we have to connect all wires in the A bundle to the B bundle through a
 cartridge(battery?) offset by 0. this is done through the function
-connect_cartridge(Wire **bundle1, Wire **bundle2, Cartridge cart, int offset)
+connect_cartridge(Wire dp bundle1, Wire  dp bundle2, Cartridge cart, int offset)
 and has to be done for each step(XXX not good)
 
 Ideally, we only need to do a single turn of one cartridge, and not turn all
 cartridges for each step.
+
+##What I learned
+This is my first large C++ project, knowing only the basics and some related languages like C. The biggest source of bugs seems to be my insistence to program as is this was a java project, meaning that I really lost control of ownership of pointers and allocating at proper times. Here I catalogue some things that I had to learn the hard way in this process.
+-classes that have ownership of some object O, and which does not allocate this object at standard instantiation should be pointers as the eventual cleanup will deallocate O which is then not allocated.(ex. Reflector r, and then trying to assign to it, which calls the first r-s destructor, deallocating "nothing").

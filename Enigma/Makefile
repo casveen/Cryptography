@@ -1,6 +1,6 @@
 CC        := g++
 #MPI       := mpicc
-FLAGS      = -Wall -O3 -pedantic
+FLAGS      = -Wall -pedantic -O3
 #-finline-functions
 TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
 DEP        = enigma.cpp bombe.cpp
@@ -42,7 +42,11 @@ performance.exe : performance.o bombe.o enigma.o rotors.cpp
 profile : performance.exe
 	valgrind --tool=callgrind ./performance.exe
 	kcachegrind
-	#rm -f $(wildcard *.h)
+
+valgrind : performance.exe enigma_main
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./performance.exe
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./enigma.exe --rotors I,II,III --reflector UKWK --plaintext ARTADOZSDUXDHCAMMRTCBVBLUYTOKGGEWZFYUICNNVPBRNYBRSCTSNUMLAYVAW
+
 test.exe : test.o bombe.o enigma.o test_bombe.o test_enigma.o
 	$(CC) -o test.exe $(FLAGS) $^ rotors.cpp
 
@@ -100,9 +104,6 @@ clean :
 
 
 
-valgrind :
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./test.exe
 
 print:
 	echo $(PROGRAMS)
-#only cpp files on compile line

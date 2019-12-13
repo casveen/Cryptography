@@ -1,6 +1,12 @@
 #ifndef ENIGMA_H   // include guard
 #define ENIGMA_H
 
+// Remember that, when depressing a key, the rotors advance before the
+// KDO KDP, KDQ, KER, LFS, LFT, LFU
+// electrical signal runs through the rotors.
+// These points can be specified in terms of which letter appears in the window
+// when the knock-on occurs RFWKA
+
 using namespace std;
 #include <fstream>
 #include <initializer_list>
@@ -10,10 +16,13 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 //#include "boost"
 #include <algorithm>
+#include <map>
+#include <regex>
 #include <sstream>
 //#include <iterator>
 //#include <sstream>
@@ -38,7 +47,7 @@ class Rotor {
     Rotor(Rotor const &copy);
     Rotor &operator=(Rotor rhs);
     void   swap(Rotor &s) noexcept;
-    ~Rotor();
+    virtual ~Rotor();
     // getters
     int        get_wires() const;
     const int *get_wiring_in() const;
@@ -71,6 +80,9 @@ class Reflector: public Rotor {
     Reflector(int wires);
     Reflector(const string);
     Reflector(const string, const string);
+    Reflector(Reflector const &copy);
+    // Reflector &operator=(Reflector rhs);
+    //~Reflector(); XXX might be needed?
     void randomize();
     bool is_valid() const;
 };
@@ -206,11 +218,11 @@ class Cartridge {
 };
 
 struct EnigmaSetting {
-    vector<Rotor *> rotors;
-    Reflector *     reflector;
-    Plugboard *     plugboard;
-    string          ring_setting;
-    string          rotor_position;
+    vector<Rotor> rotors;
+    Reflector *   reflector;
+    Plugboard *   plugboard;
+    string        ring_setting;
+    string        rotor_position;
 };
 
 class Enigma {
@@ -267,6 +279,9 @@ class Enigma {
     void   next_ring_setting();
     void   print_positions() const;
     void   print() const;
+    string preprocess(string in) const;
+    void   encrypt(ifstream &, ofstream &);
+
     // FACTORY
     static Enigma make_random_enigma(int rotors, int wires) {
         // cout<<"init enigma\n";

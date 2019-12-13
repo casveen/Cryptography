@@ -3,14 +3,14 @@
 #include "include/catch.hpp"
 #include "rotors.cpp"   //all rotors,
 
-const int MAX_TESTS   = 1;
+const int MAX_TESTS   = 10;
 const int MESSAGE_SIZE= 26 * 10;
 const int WIRES       = 26;
 const int WHEELS      = 4;
 
 TEST_CASE("Testing wiring of all known commonly used rotors") {
     // cout << "HHHHHHHHHH\n";
-    for (Rotor rotor : allRotors) { REQUIRE(rotor.is_valid()); }
+    for (Rotor rotor : ALLROTORS) { REQUIRE(rotor.is_valid()); }
 }
 
 TEST_CASE("Testing wiring of single random rotors") {
@@ -67,8 +67,8 @@ TEST_CASE("Testing a concrete example; encryption of a sample of the Donitz "
           "message") {
     // test if the enigma can encrypt/decrypt a portion of the Karl donitz
     // message
-    Reflector ThinReflectorC= Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
-    Enigma    enigma({VIII, VI, V, Beta}, ThinReflectorC);
+    // Reflector ThinReflectorC= Reflector("RDOBJNTKVEHMLFCWZAXGYIPSUQ");
+    Enigma enigma({VIII, VI, V, BETA}, THINREFLECTORC);
     enigma.set_plugboard("AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW");
     enigma.set_rotor_position("ZPOY");
     enigma.set_ring_setting("KTDC");
