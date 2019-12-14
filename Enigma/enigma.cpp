@@ -427,9 +427,20 @@ const string Cartridge::get_positions_as_string() const {
     }
     return out;
 }
+const string Cartridge::get_physical_position_as_string() const {
+    string out;
+    out= "";
+    for (int w= 0; w < m_rotor_count; w++) {
+        out+= to_string((m_positions[w] - m_ring_setting[w] + m_wires) %
+                        m_wires) +
+              " ";
+    }
+    return out;
+}
 int Cartridge::get_reflector_position() const { return m_reflector_position; }
 Plugboard *Cartridge::get_plugboard() const { return m_plugboard; }
-void       Cartridge::get_encryption_inplace(int *encryption) const {
+
+void Cartridge::get_encryption_inplace(int *encryption) const {
     for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
     m_plugboard->encrypt_inplace(encryption, m_wires);
     if (!m_trivial_stator) {   // stator, if nontrivial
@@ -545,17 +556,16 @@ void Cartridge::turn(int turns) {
 }
 void Cartridge::turn() {
     // single turn
+    // physical positio of wire A=ring_setting-rotor_position
+    // physical position of notch=ring_setting-rotor_position+notch
+    // stepping happens at wire -8
     int carry= 1, next;
     for (int p= 0; p < m_rotor_count && carry > 0; p++) {
         next= m_positions[p] + carry;
         // check m_notch
         carry= 0;
         for (int n= 0; n < m_rotors[p]->get_notches(); n++) {
-            if (m_rotors[p]->get_notch(n) ==
-                (m_positions[p] + m_ring_setting[p] + 1) %
-                    m_wires) {   // carry only if on notch and moving
-                carry= 1;
-            }
+            if (m_positions[p] == m_rotors[p]->get_notch(n)) { carry= 1; }
         }
         m_positions[p]= next % m_wires;
         // carry=(int) next/m_wires; //only carry if exceeded a notch - ring
@@ -565,53 +575,56 @@ void Cartridge::turn() {
 int Cartridge::plugboard_encrypt(int i) const {
     return m_plugboard->encrypt(i);
 }
+
 int Cartridge::encrypt_without_turning(int i) const {
     if (m_verbose) {
         cout << (char)(i + (int)'A') << " ------> ";
-        // printf("%s ------> ", );
         for (int j= 0; j < m_wires; j++) { cout << (char)(j + (int)'A'); }
         cout << "\n";
     }   // plug
-    // cout<<i<<" - > \n";
     i= m_plugboard->encrypt(i);
-    // cout<<i<<"\n";
-    // cout<<"OUTSIDE PLUG\n";
     // forward pass
     for (int rotor= 0; rotor < m_rotor_count; rotor++) {
-        // m_rotors[rotor]->print();
         if (m_verbose) {
-            cout << "  W" << rotor << "(" << (char)(i + (int)'A') << ")-> ";
+            cout << "      W" << rotor << "(" << (char)(i + (int)'A') << ")-> ";
         }
-        // cout<<i<<" - > \n";
-        i= m_rotors[rotor]->encrypt_in(i, m_positions[rotor] -
-                                              m_ring_setting[rotor] + m_wires);
-        // cout<<i<<"\n";
+
+        i= m_rotors[rotor]->encrypt_in(i, -m_ring_setting[rotor] +
+                                              m_positions[rotor] + m_wires);
+
         if (m_verbose) {
-            cout << " " << (char)(m_positions[rotor] + (int)'A') << "\n";
+            cout << " " << (char)(m_positions[rotor] + (int)'A') << " "
+                 << (-m_ring_setting[rotor] + m_positions[rotor] + m_wires) %
+                        m_wires
+                 << "\n";
         }
-        //
     }
     // reflector
-    // i=(m_reflector->get_wiring_in((i+m_reflector_position)%m_wires)+m_wires-m_reflector_position)%m_wires;
     if (m_verbose) {
-        cout << "  R"
+        cout << "      R"
              << "(" << (char)(i + (int)'A') << ")--> ";
     }
+
     i= m_reflector->encrypt_in(i, 0);
+
     if (m_verbose) {
         cout << " " << (char)(m_reflector_position + (int)'A') << "\n";
     }
     // backward pass
     for (int rotor= m_rotor_count - 1; rotor >= 0; rotor--) {
         if (m_verbose) {
-            cout << "  W" << rotor << "(" << (char)(i + (int)'A') << ")-> ";
+            cout << "      W" << rotor << "(" << (char)(i + (int)'A') << ")-> ";
         }
-        i= m_rotors[rotor]->encrypt_out(i, m_positions[rotor] -
-                                               m_ring_setting[rotor] + m_wires);
+
+        i= m_rotors[rotor]->encrypt_out(i, -m_ring_setting[rotor] +
+                                               m_positions[rotor] + m_wires);
+
         if (m_verbose) {
-            cout << " " << (char)(m_positions[rotor] + (int)'A') << "\n";
+            cout << " " << (char)(m_positions[rotor] + (int)'A') << " "
+                 << (-m_ring_setting[rotor] + m_positions[rotor] + m_wires) %
+                        m_wires
+                 << "\n";
         }
-        // i=(m_rotors[rotor]->get_wiring_out((i+m_positions[rotor])%m_wires)+m_wires-m_positions[rotor])%m_wires;
     }
     // plug back
     i= m_plugboard->encrypt(i);
@@ -898,6 +911,7 @@ int  Enigma::encrypt(int m) {
         // print posiions
         cout << " --- " << get_rotor_position_as_string();
         cout << " --- " << get_ring_setting_as_string();
+        cout << " --- " << m_cartridge->get_physical_position_as_string();
         cout << "\n";
     }
 

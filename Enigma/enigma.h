@@ -117,9 +117,8 @@ class Cartridge {
     Rotor *    m_stator;
     Reflector *m_reflector;
     int        m_rotor_count, m_wires, m_reflector_position;   // wires?
-    int *      m_positions,
-        *m_ring_setting;   // ringscthellung, moves the notches in the wheels
-    bool m_verbose= false;
+    int *      m_positions, *m_ring_setting;
+    bool       m_verbose= false;
 
     const bool m_trivial_stator;
 
@@ -146,6 +145,7 @@ class Cartridge {
     const int *          get_ring_setting() const;
     const string         get_positions_as_string() const;
     const string         get_ring_setting_as_string() const;
+    const string         get_physical_position_as_string() const;
     void                 get_encryption_inplace(int *) const;
     bool                 get_if_trivial_stator() const;
     // setters

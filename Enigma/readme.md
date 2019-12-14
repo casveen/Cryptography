@@ -127,34 +127,33 @@ This is my first large C++ project, knowing only the basics and some related lan
 -classes that have ownership of some object O, and which does not allocate this object at standard instantiation should be pointers as the eventual cleanup will deallocate O which is then not allocated.(ex. Reflector r, and then trying to assign to it, which calls the first r-s destructor, deallocating "nothing").
 -when working with streams. If trying to make the program output to either cout or some ofstream, it is easier to make your own outstream object and then give it the appropriate streambuf object(either from cout or the ofstream through .rdbuf()) with initialising it as myostream(appropriate_streambuf).
 -initialize in the same order that variables are declared in class
+Q=16
+rot at pos 18, so rot from 02 to 03
+VIII at Z  M
+        25 12
 
-
-
-
-P       R0      R1      R2      R3      R
-     |V|     | |   |     |   |     |   |     |   |     | |   |
-     |W|     | |   |   |-+---+---| |   |     |   |     | |   |
-     |X|     | |   |   | |   |   | |   |     |   |     | |   |
-D->--|Y|-----| |---+-| | |   |   | |   |     |   |     | |   |
-     |Z|     | |   | | | |   |   | |   |     |   |     | |   |
-     |A|     | |   | |-+-+---+-| | |   |     |   | |---+-+-| |
-     |B|     | |   |   | |   | | | |   |     |   | | |-+-+-| |
-     |C|     | |   |   | |   | | | |   |     |   | | | | |   |
-     |D|     | |   |   | |   | |-+-+---+-|   |   | | | | |   |
-     |E|     |X|   |   | |   |   |-+---+-+-| |   | | | | |   |
-     |F|     | |   |   | |   |     |   | | | |   | | | | |   |
-     |G|     | |   |   | |   |     |   | | | |   | | | | |   |
-     | |     | |   |   | |   |     |   | | | |   | | | | |   |
-     | |     | |   |   | |   |     |   | | | |   | | | | |   |
-     | |     | |   |   | |   |     |   | | | |   | | | | |   |
-     | |     | |   |   | |   |     |   | | | |   | | | | |   |
-     | |     | |   |   | |   |     |   | | | |   | | | | |   |
-     | |     | |   |   | |   |     |   | |-+-+---+-| | | |   |
-     | |     | |   |   | |   |     |   |   | |   |   | | |   |
-     | |     | |   |   | |   |     |   |   |-+---+---| | |   |
-     | |     | |   |   | |   |     |   |     |   |     | |   |
-     | |     | |   |   | |   |     |   |     |   |     | |   |
-W-<---+-----+---+---| |   |     |   |     |   |     | |   |
-      |     |   |     |   |     |   |     |   |     | |   |
-      |     |   |     |   |     |   |     |   |     | |   |
-      |     |   |     |   |     |   |     |   |     | |   |
+0
+1 A
+2 B
+3 C
+4 D
+5 E
+6 F
+7 G
+8 H
+9 I
+10J
+11K
+12L
+13M
+14N
+15O
+16P
+17Q
+18R
+19S
+20T
+22U
+23VW
+24
+25
