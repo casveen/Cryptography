@@ -264,3 +264,27 @@ int main(int argc, char *argv[]) {
     delete plugboard;
     return 0;
 }
+
+/*
+EXAMPLES
+WIKIPEDIA EXAMPLE
+./enigma.exe --rotors VIII,VI,V,BETA --reflector THINREFLECTORC --plaintext
+RBBFPMPHHGCZXTDYGAHGUFXGEWKBLKGJ --ringsetting LEPE --rotorposition JTDC
+--plugboard AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW
+works well
+
+indicator of WIKIOEDIA EXAMPLE
+./enigma.exe --rotors VIII,VI,V,BETA --reflector THINREFLECTORC --plaintext QEOB
+--ringsetting LEPE --rotorposition MEAN --plugboard
+AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW
+              A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+              | | | | | | | | | | | | | | | | | | | | | | | | | |
+m[  0] = Q -> J W Q H N O Y D K A I V P E F M[C]X U Z S L B R G T
+m[  1] = E -> U M F E[D]C Z I H O W V B X J R T P Y Q A L K N S G
+m[  2] = O -> G D Y B K X A R L N E I P J[S]M V H O W Z Q T F C U
+m[  3] = B -> K[Z]G W L Y C S V R A E Q O N X M J H U T I D P F B
+CDSZ
+works well
+
+
+*/

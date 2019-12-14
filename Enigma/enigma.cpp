@@ -641,15 +641,15 @@ vector<int> Cartridge::encrypt_stepwise(int i) const {
         path.push_back(i);
     }
     for (int rotor= 0; rotor < m_rotor_count; rotor++) {
-        i= m_rotors[rotor]->encrypt_in(i, m_positions[rotor] -
-                                              m_ring_setting[rotor]);
+        i= m_rotors[rotor]->encrypt_in(i, -m_ring_setting[rotor] +
+                                              m_positions[rotor] + m_wires);
         path.push_back(i);
     }
     i= m_reflector->encrypt_in(i, 0);
     path.push_back(i);
     for (int rotor= m_rotor_count - 1; rotor >= 0; rotor--) {
-        i= m_rotors[rotor]->encrypt_out(i, m_positions[rotor] -
-                                               m_ring_setting[rotor]);
+        i= m_rotors[rotor]->encrypt_out(i, -m_ring_setting[rotor] +
+                                               m_positions[rotor] + m_wires);
         path.push_back(i);
     }
     if (!m_trivial_stator) {
@@ -920,6 +920,7 @@ int  Enigma::encrypt(int m) {
 
 const std::string wc("\033[0;31m");
 const std::string rc("\033[0;33m");
+const std::string gc("\033[1;30m");
 const std::string bgc("\033[0;40m");
 const std::string bgr("\033[0;40m");
 
@@ -1007,12 +1008,13 @@ string line_all(int left_in, int right_in, int left_out, int right_out,
            line_end(right_in, right_out, wire, pos, wires, notches, notch, rs);
 }
 int Enigma::encrypt_verbose_exploded(int m) const {
-
     // show exploded view of the cartridge, and the pathway m takes in
-    const bool  trivial_stator= m_cartridge->get_if_trivial_stator();
-    string      line, total;
+    const bool trivial_stator= m_cartridge->get_if_trivial_stator();
+    string     line, total;
+    m_cartridge->turn();
     vector<int> path= m_cartridge->encrypt_stepwise(m);
     int         pl  = (int)path.size();
+
     // DESC
     line= "\n   ";
     line+= "      PLUGBOARD  ";
@@ -1047,17 +1049,17 @@ int Enigma::encrypt_verbose_exploded(int m) const {
     for (int wire= 0; wire < m_wires; ++wire) {
         line= "";
         if (wire == path[0]) {
-            line+= (char)(wire + (int)'A') + wc + "->" + rc;
+            line+= wc + (char)(wire + (int)'A') + "->" + rc;
         } else if (wire == path[pl - 1]) {
-            line+= (char)(wire + (int)'A') + wc + "-<" + rc;
+            line+= wc + (char)(wire + (int)'A') + "-<" + rc;
         } else {
-            line+= "   ";
+            line+= rc + ((char)(wire + (int)'A')) + rc + "  ";
         }
         // PLUGBOARD
-        line+= line_all(path[0], path[1], path[pl - 2], path[pl - 1], wire);
+        line+= line_all(path[0], path[1], path[pl - 1], path[pl - 2], wire);
         if (!trivial_stator) {
             // STATOR
-            line+= line_all(path[1], path[2], path[pl - 3], path[pl - 2], wire);
+            line+= line_all(path[1], path[2], path[pl - 2], path[pl - 3], wire);
         }
         // ROTORS
         for (int r= 0; r < m_rotors_number; ++r) {
@@ -1071,11 +1073,6 @@ int Enigma::encrypt_verbose_exploded(int m) const {
         // REFLECTOR
         int i= pl / 2 - 1;
         line+= line_begin(path[i], path[i + 1], wire, -1, m_wires);
-        /*line+= (path[i] == wire || path[i + 1] == wire) ? wc + "-" + rc : " ";
-        //----REFLECTOR START
-        line+= (path[i] == wire || path[i + 1] == wire) ? wc + "+-" + rc : "|
-        ";*/
-        //----REFLECTOR MID
         line+= (wire >= min(path[i], path[i + 1]) &&
                 wire <= max(path[i], path[i + 1]))
                    ? wc + "| " + rc
@@ -1110,7 +1107,6 @@ int *Enigma::encrypt(const int *m, int n) {
     for (int i= 0; i < n; i++) {
         if (m_verbose) { printf("m[%3d] = ", i); }
         if (m_verbose_exploded) {
-            m_cartridge->turn();
             e[i]= encrypt_verbose_exploded(m[i]);
         } else {
             e[i]= encrypt(m[i]);

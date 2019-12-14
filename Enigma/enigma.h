@@ -236,7 +236,7 @@ class Enigma {
   private:
     Cartridge *m_cartridge;
     int        m_rotors_number, m_wires;
-    bool       m_verbose= true, m_verbose_exploded= false;
+    bool       m_verbose= true, m_verbose_exploded= true;
     // int  *m_rotor_position, m_ring_setting;
 
   public:
