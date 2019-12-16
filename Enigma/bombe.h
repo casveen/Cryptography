@@ -69,10 +69,10 @@ struct BombeSetting {
 
 class Bombe {
   private:
-    int                 m_letters= 26, m_rotor_count= 3;
-    DiagonalBoard *     m_diagonal_board;
-    Enigma *            m_enigma;
-    vector<int *>       m_enigma_encryptions;   // track encryptions
+    int            m_letters= 26, m_rotor_count= 3;
+    DiagonalBoard *m_diagonal_board;
+    Enigma *       m_enigma;
+    // track encryptions
     struct BombeSetting m_setting;
 
   public:
@@ -86,7 +86,7 @@ class Bombe {
     // other
     vector<int> probable_search(const string, const string);
     int         find_most_wired_letter(const string, const string);
-    void        init_enigma_encryptions(int);
+    void        init_enigma_encryptions(int, vector<string> &);
     void        reset_diagonal_board();
     vector<struct EnigmaSetting> analyze(const string, const string);
     void setup_diagonal_board(const string, const string);

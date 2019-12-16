@@ -1,6 +1,6 @@
 CC        := g++
 #MPI       := mpicc
-FLAGS      = -Wall -pedantic -O3 
+FLAGS      = -Wall -pedantic -O3
 #-finline-functions
 TESTDEP    = enigma.cpp rotors.cpp test_enigma.cpp test_bombe.cpp bombe.cpp
 DEP        = enigma.cpp bombe.cpp
@@ -47,7 +47,7 @@ valgrind : performance.exe enigma_main
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./performance.exe
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./enigma.exe --rotors I,II,III --reflector UKWK --plaintext ARTADOZSDUXDHCAMMRTCBVBLUYTOKGGEWZFYUICNNVPBRNYBRSCTSNUMLAYVAW
 
-test.exe : test.o bombe.o enigma.o test_bombe.o test_enigma.o
+test.exe : test.o bombe.o enigma.o  test_enigma.o test_bombe.o
 	$(CC) -o test.exe $(FLAGS) $^ rotors.cpp
 
 test : test.exe

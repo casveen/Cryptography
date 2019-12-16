@@ -1,17 +1,21 @@
 #ifndef ENIGMA_H   // include guard
 #define ENIGMA_H
 
-// Remember that, when depressing a key, the rotors advance before the
 // KDO KDP, KDQ, KER, LFS, LFT, LFU
 // electrical signal runs through the rotors.
 // These points can be specified in terms of which letter appears in the window
 // when the knock-on occurs RFWKA
+// should position update if ring setting is changed? or vice versa?
 
 using namespace std;
+#include <algorithm>
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <map>
 #include <memory>
+#include <regex>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,30 +23,23 @@ using namespace std;
 #include <typeinfo>
 #include <utility>
 #include <vector>
-//#include "boost"
-#include <algorithm>
-#include <map>
-#include <regex>
-#include <sstream>
-//#include <iterator>
-//#include <sstream>
-/*
-class Plugboard: public Reflector {
-}*/
+//#inlcude "alphabet"
 
 class Rotor {
+    /* A rotor is the basic component of the enigma.
+    The rotor represents a simple substitution cipher, but the substitutions
+    can be offset by a given mount, represented by that the rotor rotates during
+    encryption.*/
   protected:
     int *m_wiring_in, *m_wiring_out,
-        *m_notch;   // index i goes to value at index i
-    int  m_wires, m_notches;
-    bool m_verbose= false;
+        *m_notch;   // determines at which positions the next rotor is engaged
+    int  m_wires, m_notches;   // typically 26 and 1
+    bool m_verbose= false;     // prints entire encryption under encryption
 
   public:
-    // Rotor();
     Rotor(const int, const int= 1);
-    Rotor(const string, const int= 1);   // constr from string,
+    Rotor(const string, const int= 1);
     Rotor(const string, const string);
-    // constexpr Rotor(const string, const string);
     Rotor(Rotor const &copy);
     Rotor &operator=(Rotor rhs);
     void   swap(Rotor &s) noexcept;
@@ -63,47 +60,48 @@ class Rotor {
     // other
     int  encrypt_in(int, int) const;
     void encrypt_in_inplace(int *, int, int) const;
-    void encrypt_in_inplace(int *, vector<bool> &, bool, int, int) const;
+    // void encrypt_in_inplace(int *, vector<bool> &, bool, int, int) const;
     int  encrypt_out(int, int) const;
     void encrypt_out_inplace(int *, int, int) const;
     void randomize();
-    void encrypt_out_inplace(int *, vector<bool> &, bool, int, int) const;
+    // void encrypt_out_inplace(int *, vector<bool> &, bool, int, int) const;
     void print() const;
     void make_inverse(const int *in, int *out, int n) const;
     bool is_valid() const;
 };
 
 class Reflector: public Rotor {
+    /*A form of rotor, but it usually does not rotate. A reflector has a
+    symmetric wiring, meaning that if A is wired to K, K is also wired to A*/
   public:
-    // Reflector();
     Reflector(int wires);
     Reflector(const string);
     Reflector(const string, const string);
     Reflector(Reflector const &copy);
-    // Reflector &operator=(Reflector rhs);
-    //~Reflector(); XXX might be needed?
     void randomize();
     bool is_valid() const;
 };
 
 class Plugboard {
+    /*the plugboard is, like the reflector, a symmetric substitution cipher. The
+    plugboard switches up two -and-two letters, typically 10. is the first and
+    last encryption to take place in the encryption of a single letter with the
+    enigma*/
   private:
     int         m_wires;
     vector<int> m_wiring;
 
   public:
-    // Plugboard();
     Plugboard(int);
     Plugboard(const string, int);
     Plugboard(Plugboard const &copy);
     ~Plugboard();
     Plugboard &operator=(Plugboard);
     void       swap(Plugboard &) noexcept;
-    // Plugboard(const char, int);
-    int  encrypt(int) const;
-    void encrypt_inplace(int *, int) const;
-    void reset();   // make identity
-    // int* encrypt(const int*) const;
+    int        encrypt(int) const;
+    void       encrypt_inplace(int *, int) const;
+    void       reset();   // make identity
+    // setters
     void set_wiring(const string);
     void set_wiring(int, int);
     // getters
@@ -112,64 +110,71 @@ class Plugboard {
 };
 
 class Cartridge {
+    /*The crtridge is a class for containing all the parts of an enigma.
+    Handles the flow of current from one encryption element to the next*/
   private:
     Rotor **   m_rotors;
     Rotor *    m_stator;
+    Plugboard *m_plugboard;
     Reflector *m_reflector;
-    int        m_rotor_count, m_wires, m_reflector_position;   // wires?
-    int *      m_positions, *m_ring_setting;
+    int        m_rotor_count, m_wires, m_reflector_position;
+    // positions refers to the actual positioning of a rotor relative to the
+    // stator, not rotor position which is the letter shown in the window of the
+    // enigma. Ring setting is which input in the rotor core the A wire goes to
+    // position= rotor_position-ring_setting
+    int *m_positions, *m_ring_setting;
+    // if verbose, prints entire path of encryption when passing through
+    // elements
     bool       m_verbose= false;
-
     const bool m_trivial_stator;
 
-    // int       *m_notch_position;
-    Plugboard *m_plugboard;
-
   public:
-    // Cartridge();                             // XXX stupitt
     Cartridge(int, int);   // CONSTRUCTOR, random rotors
     Cartridge(const initializer_list<Rotor>, Reflector, const bool= true);
     Cartridge(Rotor, const initializer_list<Rotor>, Reflector);
-    // Cartridge(Cartridge const &copy);
+    Cartridge(struct EnigmaSetting);
     Cartridge &operator=(Cartridge rhs);
     void       swap(Cartridge &s) noexcept;
     ~Cartridge();
-    // getters
+    // GETTERS
+    // elements
     struct EnigmaSetting get_setting() const;
-    const Rotor **       get_rotors() const;
+    inline const Rotor **get_rotors() const { return (const Rotor **)m_rotors; }
     const Reflector *    get_reflector() const;
-    const int *          get_positions() const;
     Plugboard *          get_plugboard() const;   // hard to handle if const...
-    int                  get_positions_as_int() const;
-    int                  get_reflector_position() const;
-    const int *          get_ring_setting() const;
-    const string         get_positions_as_string() const;
-    const string         get_ring_setting_as_string() const;
-    const string         get_physical_position_as_string() const;
-    void                 get_encryption_inplace(int *) const;
-    bool                 get_if_trivial_stator() const;
-    // setters
+    // get values
+    int          get_reflector_position() const;
+    const int *  get_ring_setting() const;
+    const string get_ring_setting_as_string() const;
+    const int *  get_positions() const;
+    const string get_positions_as_string() const;
+    const string get_rotor_position_as_string() const;   // computed, not stored
+    // get other
+    void get_encryption_inplace(int *) const;
+    bool get_if_trivial_stator() const;
+    // SETTERS
+    // set elements
     void set_setting(struct EnigmaSetting);
     void set_plugboard(const string);
     void set_rotor(int, const Rotor *);
     void set_reflector(const Reflector *);
+    // set values
     void set_positions(const int *p);
-    void set_positions(const string in);
+    void set_rotor_position(const string in);
     void set_ring_setting(const int *p);
     void set_ring_setting(const string in);
     void set_verbose(bool);
     // other
-    void reset_positions();
-    void reset_ring_setting();
-    void turn(int);
-    void turn();   // overloaded, single turn
-    int  encrypt_without_turning(
-         int i) const;   // pass integer through wires without turning
+    void        reset_positions();
+    void        reset_ring_setting();
+    void        turn(int);
+    void        turn();
+    int         encrypt_without_turning(int i) const;
     vector<int> encrypt_stepwise(int) const;
     int         plugboard_encrypt(int i) const;
     void        next_ring_setting();
-    void        print() const;             // PRINT cartridge
-    void        print_positions() const;   // print positions of the rotors
+    void        print() const;
+    void        print_positions() const;
     void        randomize();
     // Rotor* make_random_rotors(int n, int wires); //make array of n random
     // rotors
@@ -227,6 +232,8 @@ class Cartridge {
 struct EnigmaSetting {
     vector<Rotor> rotors;
     Reflector *   reflector;
+    Rotor *       stator;
+    bool          trivial_stator= true;
     Plugboard *   plugboard;
     string        ring_setting;
     string        rotor_position;
@@ -236,7 +243,7 @@ class Enigma {
   private:
     Cartridge *m_cartridge;
     int        m_rotors_number, m_wires;
-    bool       m_verbose= true, m_verbose_exploded= true;
+    bool       m_verbose= false, m_verbose_exploded= false;
     // int  *m_rotor_position, m_ring_setting;
 
   public:
@@ -246,10 +253,11 @@ class Enigma {
     Enigma(struct EnigmaSetting setting);
     ~Enigma();
     // getters
-    struct EnigmaSetting   get_setting();
-    int                    get_wires() const;
-    int                    get_rotors() const;
-    const int *            get_rotor_position() const;
+    struct EnigmaSetting get_setting();
+    int                  get_wires() const;
+    int                  get_rotors() const;
+    const int *          get_positions() const;
+    // const int *            get_rotor_position() const;
     const string           get_rotor_position_as_string() const;
     const int *            get_ring_setting() const;
     string                 get_ring_setting_as_string() const;
@@ -264,8 +272,8 @@ class Enigma {
     void set_coder();
     void set_verbose(bool);
     void set_cartridge_verbose(bool);
+    void set_positions(const int *);
     void set_rotor_position(const string);
-    void set_rotor_position(const int *);
     void set_ring_setting(const string);
     void set_ring_setting(const int *);
     void set_plugboard(const string);
@@ -275,7 +283,7 @@ class Enigma {
     string indicator_procedure_kenngruppenbuch(string, string);   // naval
     string indicator_procedure_verfahrenkenngruppe(string, string);
     // void indicator_procedure_kriegsmarine(string, string);
-    void   turn(int);
+    // void   turn(int);
     void   turn();
     void   reset();
     void   randomize();
@@ -291,15 +299,16 @@ class Enigma {
     void   encrypt(istream &, ostream &);
 
     // FACTORY
+    /*
     static Enigma make_random_enigma(int rotors, int wires) {
         // cout<<"init enigma\n";
         Enigma *enigma;
         enigma= new Enigma(rotors, wires);
         // cout<<"randomize enigma\n";
         enigma->randomize();
-        // cout<<"return enigma\n";
         return *enigma;
     }
+    */
 };
 
 #endif

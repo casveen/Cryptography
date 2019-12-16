@@ -112,6 +112,8 @@ int main(int argc, char *argv[]) {
                        "string that is to be encrypted");
     desc.add_options()("reflector, r", po::value<string>(),
                        "set reflector wiring");
+    // TODO or wiring
+    desc.add_options()("stator, s", po::value<string>(), "set stator");
     desc.add_options()("o", po::value<string>(),
                        " file to write output to. If none provided encrypts "
                        "into the terminal");
@@ -128,6 +130,8 @@ int main(int argc, char *argv[]) {
     string        ring_setting;
     string        plugging;
     Reflector *   reflector;
+    Rotor *       stator;
+    bool          trivial_stator= true;
 
     // HELP
     if (vm.count("help")) {
@@ -182,6 +186,23 @@ int main(int argc, char *argv[]) {
                 "reflector names: \n"
              << ALLREFLECTORDESC << "\n ";
         return 1;
+    }
+
+    // STATOR
+    if (vm.count("stator")) {
+        string stator_name= vm["stator"].as<string>();
+        trivial_stator    = false;
+        if (ALLROTORMAP.count(stator_name)) {
+            stator= new Rotor(ALLROTORMAP.at(stator_name).first);
+        } else {   // wrong name
+            cerr << "ERROR: stator name " << stator_name
+                 << " is wrong or not implemented yet. Use the following "
+                    "rotor names: \n"
+                 << ALLROTORDESC;
+            return 1;
+        }
+    } else {   // no reflector
+        cout << "WARNING: No stator provided. Using identity stator\n";
     }
 
     // ROTOR POSITIONS
@@ -239,8 +260,10 @@ int main(int argc, char *argv[]) {
     setting.plugboard     = plugboard;   // copied by enigma
     setting.ring_setting  = ring_setting;
     setting.rotor_position= rotor_position;
-    Enigma enigma(rotors_num, 26);   // has random rotors and identity plugboard
-    enigma.set_setting(setting);
+    setting.stator        = stator;
+    setting.trivial_stator= trivial_stator;
+    Enigma enigma(setting);   // has random rotors and identity plugboard
+    // enigma.set_setting(setting);
 
     // ENCRYPT
     ofstream   outfilestream;

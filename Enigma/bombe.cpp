@@ -240,16 +240,21 @@ int Bombe::find_most_wired_letter(const string ciphertext, const string crib) {
     delete[] histogram;
     return max_index;
 }
-void Bombe::init_enigma_encryptions(int encryptions) {   // TODO get by ref
+void Bombe::init_enigma_encryptions(
+    int encryptions, vector<string> &positions) {   // TODO get by ref
     /*auto start_init_encryptions= std::chrono::system_clock::now();
     if (m_setting.time_performance) {
         start_init_encryptions= std::chrono::system_clock::now();
     }*/
 
     m_enigma_encryptions.clear();
+    positions.clear();
+    positions.push_back(m_enigma->get_rotor_position_as_string());
     for (int i= 0; i < encryptions; ++i) {
+
+        m_enigma->turn();   // enigma turns before encryption
         m_enigma_encryptions.push_back(m_enigma->get_encryption());
-        m_enigma->turn();
+        positions.push_back(m_enigma->get_rotor_position_as_string());
     }
 
     /*if (m_setting.time_performance) {
@@ -336,7 +341,8 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
 
     // find candidates
 
-    vector<int> candidates= probable_search(ciphertext, crib);
+    vector<int>    candidates= probable_search(ciphertext, crib);
+    vector<string> rotor_positions;   // used to reset
 
     // analyze each candidate
     for (unsigned int i= 0; i < candidates.size(); i++) {
@@ -355,7 +361,7 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
             }
 
             // setup the wiring for the candidate
-            init_enigma_encryptions(crib.length());
+            init_enigma_encryptions(crib.length(), rotor_positions);
 
             // for each rotor position
             for (int j= 0; j < total_permutations - 1; j++) {
@@ -369,16 +375,19 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                     // what happens here is not neccesary to optimize
                     if (doublecheck_and_get_plugboard()) {
                         // tripple chack:
-                        m_enigma->turn(-crib.length());
+                        m_enigma->set_rotor_position(
+                            rotor_positions[rotor_positions.size() -
+                                            crib.length() - 1]);
                         string recrypt= m_enigma->encrypt(
                             ciphertext.substr(candidates[i], crib.length()));
                         if (m_setting.interactive_wiring_mode) {
                             interactive_wirechecking();
                         }
                         if (recrypt == crib) {
-                            m_enigma->turn(-crib.length() - candidates[i]);
+                            m_enigma->set_rotor_position(rotor_positions[0]);
                             solutions.push_back(m_enigma->get_setting());
-                            m_enigma->turn(crib.length() + candidates[i]);
+                            m_enigma->set_rotor_position(
+                                rotor_positions[rotor_positions.size() - 1]);
                             if (m_setting.stop_on_first_valid == true) {
                                 /*if (m_setting.time_performance) {
                                     cout << "average time per ringsetting: "
@@ -392,11 +401,16 @@ vector<struct EnigmaSetting> Bombe::analyze(const string ciphertext,
                 }
                 // take the oldest encryption, give the newest encryption and
                 // push to front
+                m_enigma->turn();
                 int *encryption= m_enigma_encryptions.at(0);
                 m_enigma->get_encryption_inplace(encryption);
                 m_enigma_encryptions.erase(m_enigma_encryptions.begin());
                 m_enigma_encryptions.push_back(encryption);
-                m_enigma->turn();
+                if (rotor_positions.size() > crib.length() + candidates[i]) {
+                    rotor_positions.erase(rotor_positions.begin());
+                }
+                rotor_positions.push_back(
+                    m_enigma->get_rotor_position_as_string());
             }   // for rotor position
             m_enigma->next_ring_setting();
 
