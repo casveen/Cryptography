@@ -7,40 +7,54 @@ INCLUDE=include
 ##NAMES
 SOURCE_NAME    =enigma.cpp bombe.cpp enigma_main.cpp rotors.cpp
 OBJECT_NAME    = $(SOURCE_NAME:%.cpp=%.o)
-EXECUTABLE_NAME=enigma.exe test.exe performance.exe benchmark.exe
+EXECUTABLE_NAME=enigma.exe test.exe performance.exe benchmarker.exe
 #TEST_NAME      =test.cpp test_bombe.cpp test_enigma.cpp
 ##FILES
 SOURCE_FILES     = $(SOURCE_NAME:%=$(SRC)/%)
 EXECUTABLE_FILES = $(EXECUTABLE_NAME:%=$(BIN)/%)
 OBJECT_FILES     = $(SOURCE_NAME:%.cpp=$(BUILD)/%.o)
-#TEST_FILES       = $(TEST_NAME:%.cpp=$(BUILD)/%.o)
+##DEPENDENCIES
+ENIGMA_DEP_NAMES = enigma_main.o enigma.o rotors.o
+ENIGMA_DEP       = $(ENIGMA_DEP_NAMES:%=$(BUILD)/%)
+TEST_DEP_NAMES   = test.o test_enigma.o test_bombe.o enigma.o bombe.o
+TEST_DEP         = $(TEST_DEP_NAMES:%=$(BUILD)/%)
+BENCHMARKER_DEP_NAMES   = benchmarker.o enigma.o bombe.o
+BENCHMARKER_DEP         = $(BENCHMARKER_DEP_NAMES:%=$(BUILD)/%)
+PERFORMANCE_DEP_NAMES   = performance.o bombe.o enigma.o
+PERFORMANCE_DEP         = $(PERFORMANCE_DEP_NAMES:%=$(BUILD)/%)
 
 LIB := -L lib -lboost_program_options
-INC := -I include
+INC := -I $(INCLUDE) -I $(SRC)
+
+.PHONY : all clean test valgrind benchmark remake
 
 #VPATH, so that make looks in correct directories
 vpath %.cpp src test
-vpath %.h   include
-vpath %.o   build
-vpath %.exe bin
-#.PHONY : all clean test valgrind
+#vpath %.hpp include
+#vpath %.o   build
+#vpath %.exe bin
 
-check:
-	@echo $(SOURCE_NAME:%=$(BUILD)/%)
+
+
+#check:
+#	@echo $(SOURCE_NAME:%=$(BUILD)/%)
 
 ##EXECUTABLES
-enigma.exe : enigma_main.o enigma.o rotors.o
+all : $(EXECUTABLE_NAME)
+
+enigma.exe : $(ENIGMA_DEP)
 	$(CC) -o bin/enigma.exe $(FLAGS) $^ $(LIB)
 
-benchmarker.exe : benchmarker.o bombe.o enigma.o rotors.cpp
-	$(CC) -o bin/benchmarker.exe $(FLAGS) $^
+benchmarker.exe : $(BENCHMARKER_DEP)
+	$(CC) -o bin/benchmarker.exe $(FLAGS) $^ $(INC)
 
-performance.exe : performance.o bombe.o enigma.o rotors.cpp
-	$(CC) -o bin/performance.exe $(FLAGS) $^
+performance.exe : $(PERFORMANCE_DEP)
+	$(CC) -o bin/performance.exe $(FLAGS) $^ $(INC)
 
-test.exe : test.o bombe.o enigma.o test_enigma.o test_bombe.o rotors.o
-	$(CC) -o bin/test.exe $(FLAGS) $^
+test.exe : $(TEST_DEP)
+	$(CC) -o bin/test.exe $(FLAGS) $^ $(INC)
 
+#COMMANDS
 profile : performance.exe
 	valgrind --tool=callgrind ./performance.exe
 	kcachegrind
@@ -49,22 +63,21 @@ valgrind : performance.exe enigma.exe
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./performance.exe
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./enigma.exe --rotors I,II,III --reflector UKWK --plaintext ARTADOZSDUXDHCAMMRTCBVBLUYTOKGGEWZFYUICNNVPBRNYBRSCTSNUMLAYVAW
 
-
-
 test : test.exe
-	./test.exe
+	./bin/test.exe
 
 benchmark : benchmarker.exe
-	./benchmarker.exe
-
+	./bin/benchmarker.exe
 
 clean:
 	@echo " Cleaning...";
-	@echo " rm -r $(BUILDDIR) $(EXECUTABLE_FILES)"; rm -r $(BUILD) $(EXECUTABLE_FILES)
+	@echo " rm -r $(BUILDDIR) $(EXECUTABLE_FILES)"; rm -r -f $(BUILD) $(EXECUTABLE_FILES)
 
-#object files, static pattern
-$(OBJECT_NAME): %.o: %.cpp
+remake:
+	make clean
+	make all
+
+#object files
+$(BUILD)/%.o: %.cpp
 	@mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) -c $< -o $(BUILD)/$@ -I $(INCLUDE)
-#%.o : %.cpp
-#	g++ -o $@ -c $< $(FLAGS)
+	$(CC) $(FLAGS) -c $< -o $@ $(INC)

@@ -2,7 +2,7 @@
 #define BOMBE_H
 
 using namespace std;
-#include "enigma.h"
+#include "enigma.hpp"
 #include <chrono>
 
 // wiring

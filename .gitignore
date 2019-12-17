@@ -3,3 +3,5 @@ Enigma/readingmaterial/*
 .clang-format
 .project
 .cproject
+*.o
+*.exe
