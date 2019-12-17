@@ -7,7 +7,7 @@
 SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 
     GIVEN("Enigma with rotors I, II, III, reflector UKW and a long plaintext") {
-        Bombe                bombe({I, II, III}, UKWR);
+        BombeUnit            bombe({I, II, III}, UKWR);
         struct EnigmaSetting enigma_setting;
         bombe.get_setting().stop_on_first_valid= true;
         Enigma enigma({I, II, III}, UKWR);
@@ -144,7 +144,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
     }
 
     GIVEN("Enigma with rotors IV, V, VI, reflector UKW and plaintext") {
-        Bombe bombe({IV, V, VI}, UKWR);
+        BombeUnit bombe({IV, V, VI}, UKWR);
         bombe.get_setting().stop_on_first_valid= true;
         bombe.get_setting().max_ring_settings  = 30;
         // bombe.get_setting().interactive_wiring_mode= true;
