@@ -27,19 +27,49 @@ void Wiring::connect(int wire1, int wire2) {
             connector2.get_connections_count()) {
             // connector 2 is smallest
             // update connected to
+            // cout << "H";
+            // connector1.get_connections().reserve(
+            //    connector1.get_connections_count());
+
+            /*connector1.get_connections().reserve(
+                connector1.get_connections_count() +
+                connector2.get_connections_count());*/
             for (int connection_index : connector2.get_connections()) {
                 m_connected_to[connection_index]= &connector1;
+                connector1.get_connections().push_back(connection_index);
             }
+            connector1.set_connections_count(
+                connector1.get_connections_count() +
+                connector2.get_connections_count());
+            connector2.get_connections().clear();
+            // connector1.set_connections_count(
+            //    connector1.get_connections_count() +
+            //    connector2.get_connections_count());
             // take connections
-            connector1.take_connections_of(connector2);
+            // connector1.take_connections_of(connector2);
+
         } else {
             // connector 1 is smallest
             // update connected to
+            // cout << "V";
+            // connector2.get_connections().reserve(
+            //    connector2.get_connections_count());
+
+            /*connector2.get_connections().reserve(
+                connector1.get_connections_count() +
+                connector2.get_connections_count());
+*/
             for (int connection_index : connector1.get_connections()) {
                 m_connected_to[connection_index]= &connector2;
+                connector2.get_connections().push_back(connection_index);
             }
+            connector2.set_connections_count(
+                connector1.get_connections_count() +
+                connector2.get_connections_count());
+            connector1.get_connections().clear();
+
             // take connections
-            connector2.take_connections_of(connector1);
+            // connector2.take_connections_of(connector1);
         }
     }
 }
@@ -54,16 +84,17 @@ bool Wiring::get(int wire) const { return m_live[wire]; }
 void Wiring::reset() {
     for (int i= 0; i < m_wires; ++i) {
         m_live[i]= false;
-        /*if (m_connected_to[i]->get_connections().size() > 1) {
+        if (m_connected_to[i]->get_connections().size() > 1) {
             m_connected_to[i]->get_connections().clear();
         }
-        m_all_connectors[i]->get_connections().push_back(i);*/
+        m_all_connectors[i]->get_connections().push_back(i);
+        // cout << "R";
         // redistribute the connectors connections
-        Connector * from         = m_all_connectors[i];
-        list<wint> &from_connects= from->get_connections();
+        // Connector * from         = m_all_connectors[i];
+        // ist<wint> &from_connects= from->get_connections();
         // cout << "C" << i << " (" << from_connects.size() << "):\n";
 
-        if (from_connects.size() > 1) {
+        /*if (from_connects.size() > 1) {
             list<wint>::iterator it= from_connects.begin();
             while (from_connects.size() > 1) {
                 if (*it == i) it++;
@@ -72,7 +103,7 @@ void Wiring::reset() {
                 to_connects.splice(to_connects.end(), from_connects, it++);
                 // cin.get();
             }
-        }
+        }*/
         m_connected_to[i]= m_all_connectors[i];
     }
     // cout << "DONE\n";
@@ -89,15 +120,20 @@ Wiring::Connector::Connector(wint initial_wire) {
 Wiring::Connector::~Connector() {}
 void Wiring::Connector::take_connections_of(Connector &other) {
     m_connections_count+= other.get_connections_count();
+
+    other.get_connections().clear();
     // connects.reserve(m_connections_count); // preallocate memory
-    m_connects.splice(m_connects.end(), other.get_connections());   // moves
+    // m_connects.splice(m_connects.end(), other.get_connections());   // moves
 }
 int Wiring::Connector::get_connections_count() const {
     return m_connections_count;
 }
+void Wiring::Connector::set_connections_count(int in) {
+    m_connections_count= in;
+}
 // reference...
-list<wint> &Wiring::Connector::get_connections() { return m_connects; }
-void        Wiring::Connector::reset(wint initial_wire) {
+vector<wint> &Wiring::Connector::get_connections() { return m_connects; }
+void          Wiring::Connector::reset(wint initial_wire) {
     // redistirbut
 
     m_connections_count= 1;

@@ -5,22 +5,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-typedef short int wint;
+typedef int wint;
 using namespace std;
 
 class Wiring {
   private:
     class Connector {
       private:
-        int        m_connections_count;
-        list<wint> m_connects;   // points to live of Wiring
+        int          m_connections_count;
+        vector<wint> m_connects;   // points to live of Wiring
       public:
         Connector(wint);
         ~Connector();
-        void        take_connections_of(Connector &);
-        int         get_connections_count() const;
-        list<wint> &get_connections();
-        void        reset(wint);
+        void          take_connections_of(Connector &);
+        int           get_connections_count() const;
+        void          set_connections_count(int);
+        vector<wint> &get_connections();
+        void          reset(wint);
     };
 
   protected:
