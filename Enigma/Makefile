@@ -16,11 +16,11 @@ OBJECT_FILES     = $(SOURCE_NAME:%.cpp=$(BUILD)/%.o)
 ##DEPENDENCIES
 ENIGMA_DEP_NAMES = enigma_main.o enigma.o rotors.o
 ENIGMA_DEP       = $(ENIGMA_DEP_NAMES:%=$(BUILD)/%)
-TEST_DEP_NAMES   = test.o test_enigma.o test_bombe.o enigma.o bombe.o
+TEST_DEP_NAMES   = test.o test_enigma.o test_bombe.o enigma.o bombe.o wiring.o
 TEST_DEP         = $(TEST_DEP_NAMES:%=$(BUILD)/%)
-BENCHMARKER_DEP_NAMES   = benchmarker.o enigma.o bombe.o
+BENCHMARKER_DEP_NAMES   = benchmarker.o enigma.o bombe.o wiring.o
 BENCHMARKER_DEP         = $(BENCHMARKER_DEP_NAMES:%=$(BUILD)/%)
-PERFORMANCE_DEP_NAMES   = performance.o bombe.o enigma.o
+PERFORMANCE_DEP_NAMES   = performance.o bombe.o enigma.o wiring.o
 PERFORMANCE_DEP         = $(PERFORMANCE_DEP_NAMES:%=$(BUILD)/%)
 
 LIB := -L lib -lboost_program_options
@@ -56,12 +56,12 @@ test.exe : $(TEST_DEP)
 
 #COMMANDS
 profile : performance.exe
-	valgrind --tool=callgrind ./performance.exe
+	valgrind --tool=callgrind ./bin/performance.exe
 	kcachegrind
 
 valgrind : performance.exe enigma.exe
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./performance.exe
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./enigma.exe --rotors I,II,III --reflector UKWK --plaintext ARTADOZSDUXDHCAMMRTCBVBLUYTOKGGEWZFYUICNNVPBRNYBRSCTSNUMLAYVAW
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./bin/performance.exe
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./bin/enigma.exe --rotors I,II,III --reflector UKWK --plaintext ARTADOZSDUXDHCAMMRTCBVBLUYTOKGGEWZFYUICNNVPBRNYBRSCTSNUMLAYVAW
 
 test : test.exe
 	./bin/test.exe
