@@ -5,3 +5,4 @@ Enigma/readingmaterial/*
 .cproject
 *.o
 *.exe
+*.map

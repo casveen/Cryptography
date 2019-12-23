@@ -241,10 +241,11 @@ struct EnigmaSetting {
 
 class Enigma {
   private:
+    string     description= "A general implementation of an enigma";
     Cartridge *m_cartridge;
     int        m_rotors_number, m_wires;
-    bool       m_verbose= false, m_verbose_exploded= false;
-    // int  *m_rotor_position, m_ring_setting;
+    bool m_verbose= false, m_verbose_exploded= false, m_verbose_wheels= false,
+         m_verbose_cartridge= false;
 
   public:
     Enigma(int rotors_number, int wires);
