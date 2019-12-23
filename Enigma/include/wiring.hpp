@@ -17,15 +17,15 @@ class Wiring {
       public:
         Connector(int);
         ~Connector();
-        void      take_connections_of(Connector &);
-        int       get_connections_count() const;
-        list<int> get_connections() const;
-        void      reset(int);
+        void       take_connections_of(Connector &);
+        int        get_connections_count() const;
+        list<int> &get_connections();
+        void       reset(int);
     };
 
   protected:
     int                 m_wires;
-    vector<bool *>      m_live;
+    bool *              m_live;
     vector<Connector *> m_connected_to;
     vector<Connector *> m_all_connectors;
 

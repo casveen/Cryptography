@@ -2,15 +2,20 @@
 
 Wiring::Wiring(int wires) : m_wires{wires} {
     // init attributes
+    m_live= new bool[m_wires];
     for (int i= 0; i < m_wires; ++i) {
-        m_live.push_back(new bool(false));
+        // cout << "push\n";
+        m_live[i]= false;
         m_all_connectors.push_back(new Connector(i));
         m_connected_to.push_back(m_all_connectors[i]);
+        // cout << "end of loop\n";
     }
+    // cout << "made\n";
 }
 Wiring::~Wiring() {
+    // cout << "wiring destroyed\n";
     for (auto connection : m_all_connectors) { delete connection; }
-    for (auto value : m_live) { delete value; }
+    delete[] m_live;
 }
 void Wiring::connect(int wire1, int wire2) {
     // find connector of each
@@ -42,19 +47,19 @@ void Wiring::set(int wire, bool value) {
     // get connector of, then set all this one is connected tot to value
     Connector &connector= *m_connected_to[wire];   // XXX might die after
     for (int connection_index : connector.get_connections()) {
-        *m_live[connection_index]= value;
+        m_live[connection_index]= value;
     }
 }
-bool Wiring::get(int wire) const { return *m_live[wire]; }
+bool Wiring::get(int wire) const { return m_live[wire]; }
 void Wiring::reset() {
     for (int i= 0; i < m_wires; ++i) {
-        *m_live[i]= false;
+        m_live[i]= false;
         m_all_connectors[i]->reset(i);
         m_connected_to[i]= m_all_connectors[i];
     }
 }
 void Wiring::wipe() {
-    for (int i= 0; i < m_wires; ++i) { *m_live[i]= false; }
+    for (int i= 0; i < m_wires; ++i) { m_live[i]= false; }
 }
 
 Wiring::Connector::Connector(int initial_wire) {
@@ -62,7 +67,7 @@ Wiring::Connector::Connector(int initial_wire) {
     m_connects.push_back(initial_wire);
     m_connections_count= 1;
 }
-Wiring::Connector::~Connector() {}
+Wiring::Connector::~Connector() { cout << "connector destrpyed\n"; }
 void Wiring::Connector::take_connections_of(Connector &other) {
     m_connections_count+= other.get_connections_count();
     // connects.reserve(m_connections_count); // preallocate memory
@@ -72,10 +77,13 @@ int Wiring::Connector::get_connections_count() const {
     return m_connections_count;
 }
 // reference...
-list<int> Wiring::Connector::get_connections() const { return m_connects; }
-void      Wiring::Connector::reset(int initial_wire) {
+list<int> &Wiring::Connector::get_connections() { return m_connects; }
+void       Wiring::Connector::reset(int initial_wire) {
+    // cout << m_connects.size() << " - ";
+    // if (m_connects.size() > 0) {
     m_connects.clear();
     m_connections_count= 1;
+    //}
     m_connects.push_back(initial_wire);
 }
 int Wiring::get_connections_count(int wire) const {
