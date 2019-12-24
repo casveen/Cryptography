@@ -1,5 +1,5 @@
 CC:= g++
-FLAGS= -Wall -pedantic -g -pg -O3
+FLAGS= -Wall -pedantic -O3
 SRC=src
 BIN=bin
 BUILD=build
@@ -58,6 +58,7 @@ test.exe : $(TEST_DEP)
 profile : performance.exe
 	valgrind --tool=callgrind ./bin/performance.exe
 	kcachegrind
+	rm $(wildcard callgrind.out.*)
 
 valgrind : performance.exe enigma.exe
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./bin/performance.exe

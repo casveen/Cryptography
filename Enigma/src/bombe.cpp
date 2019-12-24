@@ -10,22 +10,26 @@ void update_performance(double &mean, double &var,
     var          = (records * var + (t - mean_p) * (t - mean)) / (records + 1);
     records++;
 }
+int inline wire_transform(int bundles, int bundle, int wire) {
+    int row= min(bundle, wire), column= max(bundle, wire);
+    return (2 * (bundles + 1) - row - 1) * row / 2 + (column - row);
+}
 
 DiagonalBoard::DiagonalBoard(int t_bundles) :
-    m_bundle_size{t_bundles}, Wiring(t_bundles * t_bundles) {}
+    m_bundle_size{t_bundles}, Wiring{t_bundles * (t_bundles + 1) / 2} {}
 DiagonalBoard::~DiagonalBoard() {
     // use parent destructor
 }
 bool DiagonalBoard::get_wire(int t_bundle, int t_wire) const {
-    return get(t_bundle * m_bundle_size + t_wire);
+    return get(wire_transform(m_bundle_size, t_bundle, t_wire));
 }
 void DiagonalBoard::activate(int t_bundle, int t_wire) {
-    set(t_bundle * m_bundle_size + t_wire, true);
+    set(wire_transform(m_bundle_size, t_bundle, t_wire), true);
 }
 void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
                             int t_wire_2) {
-    Wiring::connect(t_bundle_1 * m_bundle_size + t_wire_1,
-                    t_bundle_2 * m_bundle_size + t_wire_2);
+    Wiring::connect(wire_transform(m_bundle_size, t_bundle_1, t_wire_1),
+                    wire_transform(m_bundle_size, t_bundle_2, t_wire_2));
 }
 void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
     for (int i= 0; i < m_bundle_size; ++i) {

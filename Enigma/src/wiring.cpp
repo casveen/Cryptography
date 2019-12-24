@@ -19,63 +19,38 @@ Wiring::~Wiring() {
 }
 void Wiring::connect(int wire1, int wire2) {
     // find connector of each
-    Connector &connector1= *m_connected_to[wire1];
-    Connector &connector2= *m_connected_to[wire2];
+    Connector *connector1= m_connected_to[wire1];
+    Connector *connector2= m_connected_to[wire2];
+
     // merge connectors, /merge smallest into
-    if (&connector1 != &connector2) {
-        if (connector1.get_connections_count() >
-            connector2.get_connections_count()) {
-            // connector 2 is smallest
-            // update connected to
-            // cout << "H";
-            // connector1.get_connections().reserve(
-            //    connector1.get_connections_count());
-
-            /*connector1.get_connections().reserve(
-                connector1.get_connections_count() +
-                connector2.get_connections_count());*/
-            for (int connection_index : connector2.get_connections()) {
-                m_connected_to[connection_index]= &connector1;
-                connector1.get_connections().push_back(connection_index);
-            }
-            connector1.set_connections_count(
-                connector1.get_connections_count() +
-                connector2.get_connections_count());
-            connector2.get_connections().clear();
-            // connector1.set_connections_count(
-            //    connector1.get_connections_count() +
-            //    connector2.get_connections_count());
-            // take connections
-            // connector1.take_connections_of(connector2);
-
-        } else {
-            // connector 1 is smallest
-            // update connected to
-            // cout << "V";
-            // connector2.get_connections().reserve(
-            //    connector2.get_connections_count());
-
-            /*connector2.get_connections().reserve(
-                connector1.get_connections_count() +
-                connector2.get_connections_count());
-*/
-            for (int connection_index : connector1.get_connections()) {
-                m_connected_to[connection_index]= &connector2;
-                connector2.get_connections().push_back(connection_index);
-            }
-            connector2.set_connections_count(
-                connector1.get_connections_count() +
-                connector2.get_connections_count());
-            connector1.get_connections().clear();
-
-            // take connections
-            // connector2.take_connections_of(connector1);
+    if (connector1 != connector2) {
+        if (connector1->get_connections_count() <
+            connector2->get_connections_count()) {
+            Connector *temp= connector1;
+            connector1     = connector2;
+            connector2     = temp;
         }
+        int connection_sum= connector1->get_connections_count() +
+                            connector2->get_connections_count();
+        connector1->get_connections().reserve(connection_sum);
+        connector1->set_connections_count(connection_sum);
+        int pos= connector1->get_connections_count();
+        for (int connection_index : connector2->get_connections()) {
+            m_connected_to[connection_index]= connector1;
+            connector1->get_connections().push_back(connection_index);
+        }
+        /*connector1->get_connections().insert(
+            connector1->get_connections().end(),
+            connector2->get_connections().begin(),
+            connector2->get_connections().end());*/
+
+        connector2->set_connections_count(0);
+        connector2->get_connections().clear();
     }
 }
 void Wiring::set(int wire, bool value) {
     // get connector of, then set all this one is connected tot to value
-    Connector &connector= *m_connected_to[wire];   // XXX might die after
+    Connector &connector= *m_connected_to[wire];
     for (int connection_index : connector.get_connections()) {
         m_live[connection_index]= value;
     }
