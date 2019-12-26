@@ -296,9 +296,9 @@ void Plugboard::set_wiring(const string in) {
     }
     // XXX check validity
 }
-void        Plugboard::set_wiring(int pos, int set) { m_wiring[pos]= set; }
-vector<int> Plugboard::get_wiring() const { return m_wiring; }
-int         Plugboard::get_wiring(int i) const { return m_wiring[i]; }
+void         Plugboard::set_wiring(int pos, int set) { m_wiring[pos]= set; }
+vector<int> &Plugboard::get_wiring() { return m_wiring; }
+int          Plugboard::get_wiring(int i) const { return m_wiring[i]; }
 
 // CARTRIDGE
 // Cartridge::Cartridge() {}   // XXX should really not be neccesary...
@@ -466,8 +466,8 @@ bool Cartridge::get_if_trivial_stator() const { return m_trivial_stator; }
 }*/
 void Cartridge::get_encryption_inplace(int *encryption) const {
     // crucial that this function is optimal. Used by Bombe
-    for (int i= 0; i < m_wires; ++i) { encryption[i]= i; }
-    m_plugboard->encrypt_inplace(encryption, m_wires);
+    copy(&m_plugboard->get_wiring()[0], &m_plugboard->get_wiring()[m_wires],
+         encryption);
     if (!m_trivial_stator) {
         m_stator->encrypt_in_inplace(encryption, 0, m_wires);
     }
@@ -903,7 +903,7 @@ void Enigma::reset() { m_cartridge->reset_positions(); }
 // void Enigma::turn(int turns) { m_cartridge->turn(turns); }
 void Enigma::turn() { m_cartridge->turn(); }
 int  Enigma::encrypt(int m) {
-    m_cartridge->turn();   // XXX turns first???
+    m_cartridge->turn();
     // cout<<"encr "<<m<<"\n";
 
     /*if (m_verbose && m_verbose_wheels) {}
@@ -1159,7 +1159,6 @@ int Enigma::encrypt_verbose_exploded(int m) const {
     cout << get_rotor_position_as_string();
     return path[pl - 1];
 }
-
 int Enigma::encrypt_without_turning(int m) const {
     return m_cartridge->encrypt_without_turning(m);
 }

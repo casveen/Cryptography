@@ -85,15 +85,24 @@ void DiagonalBoard::reset() {
 void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
                             int t_wire_2) {
     get_wire(t_bundle_1, t_wire_1)->connect(get_wire(t_bundle_2, t_wire_2));
-    get_wire(t_bundle_2, t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
+    // get_wire(t_bundle_1, t_wire_2)->connect(get_wire(t_bundle_2, t_wire_1));
+    get_wire(t_bundle_2, t_wire_1)->connect(get_wire(t_bundle_1, t_wire_2));
+    // XXX this is the correct secoind one!!!
+    // get_wire(t_bundle_2,
+    // t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
 void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
-    int m_letters= m_bundles.size();
+    int            m_letters= m_bundles.size();
+    vector<Wire *> bundle_1 = m_bundles[t_from];
+    vector<Wire *> bundle_2 = m_bundles[t_to];
+    /*for (int i= 0; i < m_letters; i++) {
+        bundle_1[i]->connect(bundle_2[encryption[i]]);
+        bundle_1[encryption[i]]->connect(bundle_2[i]);
+    }*/
+
     for (int i= 0; i < m_letters; i++) {
-        connect(t_from, i, t_to, encryption[i]);   // there will be doubles
+        connect(t_from, i, t_to, encryption[i]);
     }
-    // print_connections();
-    // cin.get();
 }
 int DiagonalBoard::bundle_sum(int bundle) const {
     int sum= 0;
@@ -391,10 +400,6 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string ciphertext,
                             m_enigma->set_rotor_position(
                                 rotor_positions[rotor_positions.size() - 1]);
                             if (m_setting.stop_on_first_valid == true) {
-                                /*if (m_setting.time_performance) {
-                                    cout << "average time per ringsetting: "
-                                         << m_setting.performance_mean << "\n";
-                                }*/
                                 return solutions;
                             }
                         }
@@ -570,7 +575,15 @@ void BombeUnit::interactive_wirechecking() {
         m_diagonal_board->print();
     }
 }
-
+vector<string> BombeUnit::get_special_rotor_positions() {
+    /*the turning of the engma rotors is not a surjective function.
+    this function returns the rotor positions not hit when turning from
+    bombesetting::starting_rotor_position
+    The problem stems from the double stepping mechanism, which occurs when a
+    non fast rotor is turned and its left rotor is in notch. It then turs twice
+    meaning that the 25 rotor posiitons where the given rotor was in its first
+    stepped position is ignored*/
+}
 /*
 vector<string> equivalent_ring_settings() {
     // when running the bombe with a small crib, if we have a solution, often

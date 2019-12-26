@@ -105,8 +105,8 @@ class Plugboard {
     void set_wiring(const string);
     void set_wiring(int, int);
     // getters
-    vector<int> get_wiring() const;
-    int         get_wiring(int) const;
+    vector<int> &get_wiring();
+    int          get_wiring(int) const;
 };
 
 class Cartridge {
