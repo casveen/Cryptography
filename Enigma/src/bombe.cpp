@@ -311,9 +311,10 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string ciphertext,
             ciphertext.substr(candidates[i], crib.length()), crib);
         // for each ring setting
         for (int rs= 0; rs < ring_settings; ++rs) {
-            cout << "I: " << i
-                 << ", Ring setting: " << m_enigma->get_ring_setting_as_string()
-                 << "\n";
+            printf("\r[%3d] (candidate %2d/%2d) ",
+                   (int)(100 * rs / ring_settings), i, (int)candidates.size());
+            cout << m_enigma->get_ring_setting_as_string() << flush;
+            //     << "\n";
             if (m_setting.time_performance) {
                 start_ring_setting= std::chrono::system_clock::now();
             }
@@ -323,7 +324,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string ciphertext,
 
             // for each rotor position
             for (int j= 0; j < total_permutations - 1; j++) {
-
+                // cout << m_enigma->get_rotor_position_as_string() << " ";
                 reset_diagonal_board();
 
                 setup_diagonal_board(
@@ -379,8 +380,9 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string ciphertext,
                                    stop_ring_setting - start_ring_setting,
                                    m_setting.records_ring_setting);
             }
-            if (m_setting.time_performance) { print_performance(); }
+
         }   // for ring setting
+        if (m_setting.time_performance) { print_performance(); }
     }
     return solutions;
 }

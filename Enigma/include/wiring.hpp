@@ -12,16 +12,24 @@ class Wiring {
   private:
     class Connector {
       private:
-        int          m_connections_count;
-        vector<wint> m_connects;   // points to live of Wiring
+        int                  m_connections_count;
+        vector<Connector *> *m_connects;   // points to live of Wiring
+        vector<Connector *> *m_connects_original;
+        bool *               m_bool;
+        int                  m_id;
+
       public:
-        Connector(wint);
+        Connector(bool *);
         ~Connector();
-        void          take_connections_of(Connector &);
-        int           get_connections_count() const;
-        void          set_connections_count(int);
-        vector<wint> &get_connections();
-        void          reset(wint);
+        void                 take_connections_of(Connector &);
+        int                  get_connections_count() const;
+        void                 set_connections_count(int);
+        vector<Connector *> *get_connections();
+        void                 set_connections(vector<Connector *> *);
+        void                 reset();
+        void                 set_value(bool value);
+        int                  get_id();
+        void                 set_id(int);
     };
 
   protected:
