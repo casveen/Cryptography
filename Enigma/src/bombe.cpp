@@ -92,9 +92,9 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
     // t_wire_2)->connect(get_wire(t_bundle_1, t_wire_1));
 }
 void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
-    int            m_letters= m_bundles.size();
-    vector<Wire *> bundle_1 = m_bundles[t_from];
-    vector<Wire *> bundle_2 = m_bundles[t_to];
+    int m_letters= m_bundles.size();
+    // vector<Wire *> bundle_1 = m_bundles[t_from];
+    // vector<Wire *> bundle_2 = m_bundles[t_to];
     /*for (int i= 0; i < m_letters; i++) {
         bundle_1[i]->connect(bundle_2[encryption[i]]);
         bundle_1[encryption[i]]->connect(bundle_2[i]);
@@ -583,6 +583,9 @@ vector<string> BombeUnit::get_special_rotor_positions() {
     non fast rotor is turned and its left rotor is in notch. It then turs twice
     meaning that the 25 rotor posiitons where the given rotor was in its first
     stepped position is ignored*/
+    vector<string> out;
+
+    return out;
 }
 /*
 vector<string> equivalent_ring_settings() {
