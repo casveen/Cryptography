@@ -34,20 +34,46 @@ void Wiring::connect(int wire1, int wire2) {
                             connector2->get_connections_count();
         connector1->get_connections().reserve(connection_sum);
         connector1->set_connections_count(connection_sum);
-        int pos= connector1->get_connections_count();
         for (int connection_index : connector2->get_connections()) {
             m_connected_to[connection_index]= connector1;
             connector1->get_connections().push_back(connection_index);
         }
-        /*connector1->get_connections().insert(
-            connector1->get_connections().end(),
-            connector2->get_connections().begin(),
-            connector2->get_connections().end());*/
-
         connector2->set_connections_count(0);
         connector2->get_connections().clear();
     }
 }
+// wrong
+/*void Wiring::connect(vector<int> wires) {
+    // find largest connector and unique connectors
+    int                 largest_index= 0, connection_sum= 0;
+    vector<connector *> unique_connectors;
+    Connector *         largest_connector;
+    for (int w : wires) {
+        Connector *connector= m_connected_to[w];
+        connection_sum+= connector->get_connections().size();
+        if (connector->get_connections().size() > largest_value) {
+            largest_value    = connector->get_connections().size();
+            largest_connector= connector;
+        }
+        unique_connectors.push_back(connector);
+        wires.erase(connector->get_connections());
+    }
+    cout << "unique connetors: " << unique_connectors.size();
+    largest_connector->get_connections().reserve(connection_sum);
+    largest_connector->set_connections_count(connection_sum);
+    for (Connector *connector : unique_connectors) {
+        if (connector != largest_connector) {
+            for (int connection_index : connector->get_connections()) {
+                m_connected_to[connection_index]= largest_connector;
+                largest_connector->get_connections().push_back(
+                    connection_index);
+            }
+            connector->set_connections_count(0);
+            connector->get_connections().clear();
+        }
+    }
+}*/
+
 void Wiring::set(int wire, bool value) {
     // get connector of, then set all this one is connected tot to value
     Connector &connector= *m_connected_to[wire];

@@ -29,11 +29,13 @@ class Wiring {
     bool *              m_live;
     vector<Connector *> m_connected_to;
     vector<Connector *> m_all_connectors;
+    // vector<Connector *> m_unique_connectors;
 
   public:
     Wiring(int wires);
     ~Wiring();
     void connect(int, int);
+    void connect(vector<int>, vector<int>);
     bool get(int) const;
     void set(int, bool);
     void reset();

@@ -1,6 +1,7 @@
 //#include "enigma.h";
 #include "bombe.hpp"   //wire, diagonal board
 
+int  A= (int)'A';
 void update_performance(double &mean, double &var,
                         std::chrono::duration<double> measurement,
                         int &                         records) {
@@ -12,7 +13,7 @@ void update_performance(double &mean, double &var,
 }
 int inline wire_transform(int bundles, int bundle, int wire) {
     int row= min(bundle, wire), column= max(bundle, wire);
-    return (2 * (bundles + 1) - row - 1) * row / 2 + (column - row);
+    return (2 * bundles - row - 1) * row / 2 + column;
 }
 
 DiagonalBoard::DiagonalBoard(int t_bundles) :
@@ -31,6 +32,18 @@ void DiagonalBoard::connect(int t_bundle_1, int t_wire_1, int t_bundle_2,
     Wiring::connect(wire_transform(m_bundle_size, t_bundle_1, t_wire_1),
                     wire_transform(m_bundle_size, t_bundle_2, t_wire_2));
 }
+/*void DiagonalBoard::connect(int t_bundle_1, int t_bundle_2,
+                            vector<int> t_wires) {
+    vector<int> wires_transformed;
+    for (int w : t_wires) {
+        wires_transformed.push_back(
+            wire_transform(m_bundle_size, t_bundle_1, w));
+        wires_transformed.push_back(
+            wire_transform(m_bundle_size, t_bundle_1, w));
+    }
+    Wiring::connect(wire_transform(m_bundle_size, t_bundle_1, t_wire_1),
+                    ;
+}*/
 void DiagonalBoard::connect_enigma(int *encryption, int t_from, int t_to) {
     for (int i= 0; i < m_bundle_size; ++i) {
         connect(t_from, i, t_to, encryption[i]);
@@ -218,9 +231,25 @@ void BombeUnit::setup_diagonal_board(const string ciphertext,
 
     for (unsigned int j= 0; j < crib.length(); j++) {
         int *encryption= m_enigma_encryptions.at(j);
+        m_diagonal_board->connect_enigma(encryption, (int)crib[j] - A,
+                                         (int)ciphertext[j] - A);
+    }
+    /*vector<vector<int>> connections;
+    for (unsigned int j= 0; j < crib.length(); j++) {
+
+        int *encryption= m_enigma_encryptions.at(j);
+
+        //and all encryptions of j
+        for(unsigned int i=0; i<crib.size(); ++i) {
+            connections[j].push_back(wire_transform(m_bundles, (int)crib[j] -
+    (int)'A' ,j));
+
+
+        }
         m_diagonal_board->connect_enigma(encryption, (int)crib[j] - (int)'A',
                                          (int)ciphertext[j] - (int)'A');
-    }
+
+    }*/
 
     /*if (m_setting.time_performance) {
         auto stop_setup_diagonal_board= std::chrono::system_clock::now();
