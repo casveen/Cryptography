@@ -1,5 +1,5 @@
 CC:= g++
-FLAGS= -Wall -pedantic -Ofast
+FLAGS= -Wall -pedantic 
 SRC=src
 BIN=bin
 BUILD=build

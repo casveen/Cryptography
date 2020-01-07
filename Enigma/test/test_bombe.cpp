@@ -22,6 +22,7 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
         Enigma enigma({I, IV, II}, UKWR);
         enigma.set_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX");
         // enigma.set_verbose(true);
+        // TODO withoun andisveryverylong behaves weird, cannot find
         string plaintext= "THISISAPLAINTEXTTOBEENCRYPTEDANDISVERYVERYLONG";
         WHEN("ciphertext encrypted with RS:GHK, RP:BLO") {
             enigma.set_ring_setting("GHK");
@@ -31,13 +32,13 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                cout << "found\n";
-                cout << solutions.size();
+                // cout << "found\n";
+                // cout << solutions.size();
                 cout << "\n";
-                solutions[0].rotors[0].print();
-                solutions[0].rotors[1].print();
-                solutions[0].rotors[2].print();
-                solutions[0].reflector->print();
+                solutions.front().rotors[0].print();
+                solutions.front().rotors[1].print();
+                solutions.front().rotors[2].print();
+                solutions.front().reflector->print();
                 cout << "after print\n";
                 enigma.set_setting(solutions[0]);
                 CHECK(enigma.encrypt(ciphertext) == plaintext);

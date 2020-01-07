@@ -1,6 +1,7 @@
 //#include "enigma.h";
 #include "bombe.hpp"   //wire, diagonal board
 #include "statistics.hpp"
+const int PROGRESS_BAR_WIDTH= 20;
 
 void update_performance(double &mean, double &var, std::chrono::duration<double> measurement,
                         int &records) {
@@ -163,15 +164,28 @@ BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector) {
     m_rotor_count   = rotors.size();
     m_diagonal_board= new DiagonalBoard(m_letters);
     m_enigma        = new Enigma(rotors, reflector);
+    m_identifier    = "";
+    for (unsigned int r= 0; r < rotors.size(); ++r) {
+        m_identifier+= rotors[r].get_name();
+        m_identifier+= "-";
+    }
+    m_identifier+= reflector.get_name();
 }
 BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting) {
     // plugboard, rotor position are ignored
+    // TODO delegate to top constructor
     m_letters                         = (enigma_setting.rotors.begin())->get_wires();
     m_rotor_count                     = enigma_setting.rotors.size();
     m_setting.starting_ring_setting   = enigma_setting.ring_setting;
     m_setting.starting_rotor_positions= enigma_setting.rotor_position;
     m_diagonal_board                  = new DiagonalBoard(m_letters);
     m_enigma                          = new Enigma(enigma_setting);
+    m_identifier                      = "";
+    for (unsigned int r= 0; r < enigma_setting.rotors.size(); ++r) {
+        m_identifier+= enigma_setting.rotors[r].get_name();
+        m_identifier+= "-";
+    }
+    m_identifier+= enigma_setting.reflector->get_name();
 }
 BombeUnit::~BombeUnit() {
     delete m_diagonal_board;
@@ -270,11 +284,9 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
             m_enigma->get_wires() - m_enigma.get_rotors()[j].get_notches();
     }
     total_permutations*= m_enigma->get_wires();*/
-    cout << "before search\n";
     total_permutations= m_enigma->compute_total_permutations_brute_force();   // TODO
-    cout << "zafter search\n";
-    ring_settings= total_permutations / m_enigma->get_wires();   // TODO
-    ring_settings= min(ring_settings, m_setting.max_ring_settings);
+    ring_settings     = total_permutations / m_enigma->get_wires();           // TODO
+    ring_settings     = min(ring_settings, m_setting.max_ring_settings);
 
     // find candidates
     vector<int> candidates  = probable_search(ciphertext, crib);
@@ -292,9 +304,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
         // for each ring setting
         for (int rs= 0; rs < ring_settings; ++rs) {
             init_enigma_encryptions(crib_n, rotor_positions);
-            printf("[%3d] (candidate %2d/%2d), over %5d permutations, ",
-                   (int)(100 * rs / ring_settings), i, candidates_n, total_permutations);
-            cout << m_enigma->get_ring_setting_as_string() << flush << "\n";
+            print_progress(rs, ring_settings, i, candidates_n);
             if (m_setting.time_performance) {
                 start_ring_setting= std::chrono::system_clock::now();
             }
@@ -309,6 +319,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                         if (tripplecheck(crib, ciphertext, candidate,
                                          rotor_positions)) {   // final test
                             m_enigma->set_rotor_position(rotor_positions[0]);
+                            m_enigma->get_setting().reflector->print();
                             solutions.push_back(m_enigma->get_setting());
                             m_enigma->set_rotor_position(rotor_positions.back());
                             if (m_setting.stop_on_first_valid) { return solutions; }
@@ -462,7 +473,20 @@ void BombeUnit::interactive_wirechecking() {
         m_diagonal_board->print();
     }
 }
-
+void BombeUnit::print_progress(int ring_setting, int max_ring_settings, int candidate,
+                               int max_candidates) {
+    cout << "\r";
+    string progress_bar= "[";
+    for (int i= 0; i < PROGRESS_BAR_WIDTH; ++i) {
+        progress_bar+=
+            i <= (PROGRESS_BAR_WIDTH * (ring_setting + 1)) / max_ring_settings ? "#" : " ";
+    }
+    progress_bar+= "]";
+    cout << progress_bar;
+    cout << " [" << m_identifier << "]";
+    printf(" (candidate %2d/%2d) ", candidate, max_candidates);
+    cout << "RS: " << m_enigma->get_ring_setting_as_string() << flush;
+}
 void BombeUnit::print_encryptions() const {
     cout << "size of encryptions: " << m_enigma_encryptions.size() << "\n";
     for (int wire= 0; wire < m_letters; ++wire) {
@@ -485,9 +509,9 @@ void BombeUnit::print_performance() const {
 // bool compare_enigmaSetting(struct EnigmaSetting setting1, struct EnigmaSetting setting2, int
 // length) TODO find if equivalent over a given length
 
-Bombe::Bombe(const initializer_list<Rotor> rotors, const Reflector reflector) {
-    m_rotors   = vector<Rotor>(rotors);
-    m_reflector= new Reflector(reflector);
+Bombe::Bombe(const initializer_list<Rotor> rotors, const Reflector reflector) :
+    m_reflector{Reflector(reflector)} {
+    m_rotors= vector<Rotor>(rotors);
 }
 /*Bombe::Bombe(struct EnigmaSetting enigma_setting) {
     m_unit_setting= enigma_setting;   // XXX shallow copy might not be appropriate
@@ -505,10 +529,15 @@ vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const stri
     if (m_setting.only_one_configuration) {
         rotor_configurations.erase(rotor_configurations.begin() + 1, rotor_configurations.end());
     }
+    /*for (vector<Rotor> rotor_configuration : rotor_configurations) {
+        for (Rotor r : rotor_configuration) { r.print(); cout << r.get_name() << "-"; }
+        m_reflector.print();
+        cout << "\n\n\n";
+    }*/
     // spawn units that analyze
     for (vector<Rotor> rotor_configuration : rotor_configurations) {
         // TODO thread it
-        BombeUnit unit(rotor_configuration, *m_reflector);
+        BombeUnit unit(rotor_configuration, m_reflector);
         // translate settings
         unit.get_setting().only_one_candidate      = m_setting.only_one_candidate;
         unit.get_setting().max_ring_settings       = m_setting.max_ring_settings;
@@ -517,8 +546,19 @@ vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const stri
         unit.get_setting().only_one_candidate      = m_setting.only_one_candidate;
         unit.get_setting().stop_on_first_valid     = m_setting.stop_on_first_valid;
         vector<struct EnigmaSetting> solutions_unit= unit.analyze(ciphertext, crib);
-        solutions.insert(solutions.end(), solutions_unit.begin(), solutions_unit.end());
-        if (m_setting.stop_on_first_valid && solutions_unit.size() > 0) { return solutions; }
+        cout << "\n";
+        // solutions.insert(solutions.end(), solutions_unit.begin(), solutions_unit.end());
+        for (struct EnigmaSetting solution : solutions_unit) {
+            solutions.push_back(solution);
+            solution.reflector->print();
+            solutions[0].reflector->print();
+        }
+
+        if (m_setting.stop_on_first_valid && solutions.size() > 0) {
+            cout << "HIT\n";
+            solutions[0].reflector->print();
+            return solutions;
+        }
     }
     return solutions;
 }

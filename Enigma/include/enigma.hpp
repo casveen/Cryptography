@@ -32,14 +32,15 @@ class Rotor {
     encryption.*/
   protected:
     int *m_wiring_in, *m_wiring_out,
-        *m_notch;              // determines at which positions the next rotor is engaged
-    int  m_wires, m_notches;   // typically 26 and 1
-    bool m_verbose= false;     // prints entire encryption under encryption
+        *m_notch;                // determines at which positions the next rotor is engaged
+    int    m_wires, m_notches;   // typically 26 and 1
+    bool   m_verbose= false;     // prints entire encryption under encryption
+    string m_name   = "CUSTOM";
 
   public:
-    Rotor(const int, const int= 1);
-    Rotor(const string, const int= 1);
-    Rotor(const string, const string);
+    Rotor(const int, const int= 1, string= "CUSTOM");
+    Rotor(const string, const int= 1, string= "CUSTOM");
+    Rotor(const string, const string, string= "CUSTOM");
     Rotor(Rotor const &copy);
     Rotor &operator=(Rotor rhs);
     void   swap(Rotor &s) noexcept;
@@ -53,6 +54,7 @@ class Rotor {
     const int *get_notch() const;
     int        get_notch(int) const;
     int        get_notches() const;
+    string     get_name() const;
     // setters
     void set_wiring_in(int, int);
     void set_wiring_out(int, int);
@@ -76,7 +78,7 @@ class Reflector: public Rotor {
   public:
     Reflector(int wires);
     Reflector(const string);
-    Reflector(const string, const string);
+    Reflector(const string, const string, string= "CUSTOM");
     Reflector(Reflector const &copy);
     void randomize();
     bool is_valid() const;

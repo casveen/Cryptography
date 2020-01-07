@@ -59,6 +59,7 @@ struct BombeUnitSetting {
 
 class BombeUnit {
   private:
+    string         m_identifier= "A bombeunit";
     int            m_letters= 26, m_rotor_count= 3;
     DiagonalBoard *m_diagonal_board;
     vector<int *>  m_enigma_encryptions;
@@ -93,6 +94,7 @@ class BombeUnit {
     bool           tripplecheck(const string &, const string &, int, vector<string> &);
     void           interactive_wirechecking();
     vector<string> get_special_rotor_positions();
+    void           print_progress(int, int, int, int);
 };
 
 struct BombeSetting {
@@ -113,7 +115,7 @@ class Bombe {
     vector<BombeUnit>       m_units;
     vector<Rotor>           m_rotors;
     vector<vector<Rotor>>   m_rotor_configurations;
-    Reflector *             m_reflector;
+    Reflector               m_reflector;
     struct BombeSetting     m_setting;
     struct BombeUnitSetting m_unit_setting;
 

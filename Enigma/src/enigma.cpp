@@ -2,7 +2,8 @@
 using namespace std;
 
 // ROTOR
-Rotor::Rotor(int wires, int notches /*1*/) : m_wires{wires}, m_notches{notches} {
+Rotor::Rotor(int wires, int notches /*1*/, string name /*CUSTOM*/) :
+    m_wires{wires}, m_notches{notches}, m_name{name} {
     // base constructor
     m_notch= new int[m_notches];
     // make ok spread of notched from A
@@ -16,14 +17,16 @@ Rotor::Rotor(int wires, int notches /*1*/) : m_wires{wires}, m_notches{notches} 
         m_wiring_out[j]= j;
     }
 }
-Rotor::Rotor(const string in, int notches /*1*/) : Rotor{(int)in.length(), notches} {
+Rotor::Rotor(const string in, int notches /*1*/, string name /*CUSTOM*/) :
+    Rotor{(int)in.length(), notches, name} {
     for (int i= 0; i < m_wires; i++) {
         int wire          = (int)in[i] - (int)'A';
         m_wiring_in[i]    = wire;
         m_wiring_out[wire]= i;
     }
 }
-Rotor::Rotor(const string in, const string notch) : Rotor(in, (int)notch.length()) {
+Rotor::Rotor(const string in, const string notch, string name) :
+    Rotor(in, (int)notch.length(), name) {
     for (int i= 0; i < m_notches; i++) { m_notch[i]= (int)notch[i] - (int)'A'; }
 }
 
@@ -39,6 +42,7 @@ Rotor::Rotor(Rotor const &copy) {
     // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
     m_wires     = copy.m_wires;
     m_notches   = copy.m_notches;
+    m_name      = copy.m_name;
     m_wiring_in = new int[m_wires];
     m_wiring_out= new int[m_wires];
     m_notch     = new int[m_notches];
@@ -51,7 +55,6 @@ Rotor::Rotor(Rotor const &copy) {
 }
 Rotor &Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
-    // cout << "ASSIGN\n";
     rhs.swap(*this);   // Now swap data with the copy.
                        // The rhs parameter will delete the array when it
                        // goes out of scope at the end of the function
@@ -64,6 +67,7 @@ void Rotor::swap(Rotor &s) noexcept {
     swap(this->m_notches, s.m_notches);
     swap(this->m_wires, s.m_wires);
     swap(this->m_notch, s.m_notch);
+    swap(this->m_name, s.m_name);
 }
 // getters
 int        Rotor::get_wires() const { return m_wires; }
@@ -74,6 +78,7 @@ int        Rotor::get_wiring_out(int i) const { return m_wiring_out[i]; }
 const int *Rotor::get_notch() const { return m_notch; }
 int        Rotor::get_notch(int n) const { return m_notch[n]; }
 int        Rotor::get_notches() const { return m_notches; }
+string     Rotor::get_name() const { return m_name; }
 // setters
 void Rotor::set_wiring_in(int pos, int set) { m_wiring_in[pos]= set; }
 void Rotor::set_wiring_out(int pos, int set) { m_wiring_out[pos]= set; }
@@ -188,8 +193,8 @@ bool Rotor::is_valid() const {
 Reflector::Reflector(int wires) : Rotor(wires) {
     for (int j= 0; j < wires; j++) { m_wiring_in[j]= j + 1 - 2 * (j % 2); }
 }
-Reflector::Reflector(string wiring) : Rotor(wiring) {}
-Reflector::Reflector(string wiring, string notches) : Rotor(wiring, notches) {}
+Reflector::Reflector(string wiring) : Rotor(wiring, "", "CUSTOM") {}
+Reflector::Reflector(string wiring, string notches, string name) : Rotor(wiring, notches, name) {}
 Reflector::Reflector(Reflector const &copy) : Rotor(copy) {}
 // Reflector &operator=(Reflector rhs): ;
 
@@ -397,7 +402,7 @@ struct EnigmaSetting Cartridge::get_setting() const {
     for (int w= 0; w < m_rotor_count; ++w) {
         out.rotors.push_back(Rotor(*m_rotors[w]));   // make a copy
     }
-    out.reflector     = m_reflector;
+    out.reflector     = Reflector(m_reflector);
     out.plugboard     = m_plugboard;
     out.ring_setting  = get_ring_setting_as_string();
     out.rotor_position= get_rotor_position_as_string();
