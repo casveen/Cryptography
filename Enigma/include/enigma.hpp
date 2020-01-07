@@ -32,7 +32,7 @@ class Rotor {
     encryption.*/
   protected:
     int *m_wiring_in, *m_wiring_out,
-        *m_notch;   // determines at which positions the next rotor is engaged
+        *m_notch;              // determines at which positions the next rotor is engaged
     int  m_wires, m_notches;   // typically 26 and 1
     bool m_verbose= false;     // prints entire encryption under encryption
 
@@ -131,6 +131,7 @@ class Cartridge {
   public:
     Cartridge(int, int);   // CONSTRUCTOR, random rotors
     Cartridge(const initializer_list<Rotor>, Reflector, const bool= true);
+    Cartridge(const vector<Rotor>, Reflector, const bool= true);
     Cartridge(Rotor, const initializer_list<Rotor>, Reflector);
     Cartridge(struct EnigmaSetting);
     Cartridge &operator=(Cartridge rhs);
@@ -244,13 +245,13 @@ class Enigma {
     string     description= "A general implementation of an enigma";
     Cartridge *m_cartridge;
     int        m_rotors_number, m_wires;
-    bool m_verbose= false, m_verbose_exploded= false, m_verbose_wheels= false,
+    bool       m_verbose= false, m_verbose_exploded= false, m_verbose_wheels= false,
          m_verbose_cartridge= false;
 
   public:
     Enigma(int rotors_number, int wires);
-    Enigma(const std::initializer_list<Rotor> rotors,
-           const Reflector                    reflector);
+    Enigma(const std::initializer_list<Rotor> rotors, const Reflector reflector);
+    Enigma(const vector<Rotor> rotors, const Reflector reflector);
     Enigma(struct EnigmaSetting setting);
     ~Enigma();
     // getters
@@ -280,7 +281,7 @@ class Enigma {
     void set_plugboard(const string);
     // other
     string indicator_procedure_early(string);
-    string indicator_procedure_WW2(string, string);   // wehrmacht, luftwaffe
+    string indicator_procedure_WW2(string, string);               // wehrmacht, luftwaffe
     string indicator_procedure_kenngruppenbuch(string, string);   // naval
     string indicator_procedure_verfahrenkenngruppe(string, string);
     // void indicator_procedure_kriegsmarine(string, string);
@@ -298,7 +299,7 @@ class Enigma {
     void   print() const;
     string preprocess(string in) const;
     void   encrypt(istream &, ostream &);
-
+    int    compute_total_permutations_brute_force();
     // FACTORY
     /*
     static Enigma make_random_enigma(int rotors, int wires) {
