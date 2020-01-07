@@ -75,16 +75,17 @@ class BombeUnit {
     BombeUnit(struct EnigmaSetting);
     ~BombeUnit();
     // setters
+    void set_identifier(string);
     void set_ring_setting(const string);
     void set_rotor_position(const string);
     // getters
     struct BombeUnitSetting &get_setting();
+    string                   get_identifier() const;
     // other
-    vector<int>                  probable_search(const string &, const string &);
-    int                          find_most_wired_letter(const string &, const string &);
+
     void                         init_enigma_encryptions(int, vector<string> &);
     void                         reset_diagonal_board();
-    vector<struct EnigmaSetting> analyze(const string &, const string &);
+    vector<struct EnigmaSetting> analyze(const string &, const string &, int, int);
     void                         setup_diagonal_board(const string &, const string &);
     bool                         check_one_wire(int);
     bool                         bundle_contradiction(int);
@@ -94,24 +95,30 @@ class BombeUnit {
     bool           tripplecheck(const string &, const string &, int, vector<string> &);
     void           interactive_wirechecking();
     vector<string> get_special_rotor_positions();
-    void           print_progress(int, int, int, int);
+    void           print_progress(int, int);
 };
 
 struct BombeSetting {
     // if true, stops as soon as a valid config is found
     bool stop_on_first_valid= false;
     // bool   verbose;
-    bool       only_one_candidate      = false;
-    bool       only_one_configuration  = false;
-    int        max_ring_settings       = 26 * 26;
-    int        rotor_count             = 3;
-    string     starting_ring_setting   = "AAA";   // TODO should adapt to more rotors
-    string     starting_rotor_positions= "AAA";
-    const bool time_performance        = true;   // XXX can only be set in code...
+    bool       only_one_candidate           = false;
+    bool       only_one_configuration       = false;
+    int        max_ring_settings            = 26 * 26;
+    int        rotor_count                  = 3;
+    string     starting_ring_setting        = "AAA";   // TODO should adapt to more rotors
+    string     starting_rotor_positions     = "AAA";
+    const bool time_performance             = true;   // XXX can only be set in code...
+    double     performance_ring_setting_mean= 0;      // performance of a rs run
+    double     performance_ring_setting_var = 0;
+    int        records_ring_setting         = 0;
+    int        records_bombeunits           = 0;
 };
 
 class Bombe {
   private:
+    int                     m_letters= 26;
+    bool                    m_verbose= false;
     vector<BombeUnit>       m_units;
     vector<Rotor>           m_rotors;
     vector<vector<Rotor>>   m_rotor_configurations;
@@ -122,7 +129,11 @@ class Bombe {
   public:
     Bombe(const initializer_list<Rotor> rotors, const Reflector reflector);
     // Bombe(struct EnigmaSetting enigma_setting);
+    vector<struct EnigmaSetting> analyze_unit(const string &, const string &, vector<Rotor> &, int,
+                                              int);
+    vector<int>                  probable_search(const string &, const string &);
     vector<struct EnigmaSetting> analyze(const string &, const string &);
+    int                          find_most_wired_letter(const string &, const string &);
     // void                         banburismus(const string, const string crib);
     // float index_of_coincidence(const string, const string);
     struct BombeSetting &get_setting();
