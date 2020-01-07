@@ -38,6 +38,7 @@ class Rotor {
     string m_name   = "CUSTOM";
 
   public:
+    Rotor();
     Rotor(const int, const int= 1, string= "CUSTOM");
     Rotor(const string, const int= 1, string= "CUSTOM");
     Rotor(const string, const string, string= "CUSTOM");
@@ -76,12 +77,14 @@ class Reflector: public Rotor {
     /*A form of rotor, but it usually does not rotate. A reflector has a
     symmetric wiring, meaning that if A is wired to K, K is also wired to A*/
   public:
+    Reflector();
     Reflector(int wires);
     Reflector(const string);
     Reflector(const string, const string, string= "CUSTOM");
     Reflector(Reflector const &copy);
-    void randomize();
-    bool is_valid() const;
+    Reflector &operator=(Reflector rhs);
+    void       randomize();
+    bool       is_valid() const;
 };
 
 class Plugboard {
@@ -94,6 +97,7 @@ class Plugboard {
     vector<int> m_wiring;
 
   public:
+    Plugboard();
     Plugboard(int);
     Plugboard(const string, int);
     Plugboard(Plugboard const &copy);
@@ -109,6 +113,7 @@ class Plugboard {
     // getters
     vector<int> &get_wiring();
     int          get_wiring(int) const;
+    void         print() const;
 };
 
 class Cartridge {
@@ -234,10 +239,10 @@ class Cartridge {
 
 struct EnigmaSetting {
     vector<Rotor> rotors;
-    Reflector *   reflector;
-    Rotor *       stator;
+    Reflector     reflector;
+    Rotor         stator;
     bool          trivial_stator= true;
-    Plugboard *   plugboard;
+    Plugboard     plugboard;
     string        ring_setting;
     string        rotor_position;
 };

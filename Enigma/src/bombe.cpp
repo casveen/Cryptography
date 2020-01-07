@@ -185,7 +185,7 @@ BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting) {
         m_identifier+= enigma_setting.rotors[r].get_name();
         m_identifier+= "-";
     }
-    m_identifier+= enigma_setting.reflector->get_name();
+    m_identifier+= enigma_setting.reflector.get_name();
 }
 BombeUnit::~BombeUnit() {
     delete m_diagonal_board;
@@ -319,7 +319,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                         if (tripplecheck(crib, ciphertext, candidate,
                                          rotor_positions)) {   // final test
                             m_enigma->set_rotor_position(rotor_positions[0]);
-                            m_enigma->get_setting().reflector->print();
+                            // m_enigma->get_setting().reflector.print();
                             solutions.push_back(m_enigma->get_setting());
                             m_enigma->set_rotor_position(rotor_positions.back());
                             if (m_setting.stop_on_first_valid) { return solutions; }
@@ -546,19 +546,10 @@ vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const stri
         unit.get_setting().only_one_candidate      = m_setting.only_one_candidate;
         unit.get_setting().stop_on_first_valid     = m_setting.stop_on_first_valid;
         vector<struct EnigmaSetting> solutions_unit= unit.analyze(ciphertext, crib);
-        cout << "\n";
         // solutions.insert(solutions.end(), solutions_unit.begin(), solutions_unit.end());
-        for (struct EnigmaSetting solution : solutions_unit) {
-            solutions.push_back(solution);
-            solution.reflector->print();
-            solutions[0].reflector->print();
-        }
+        for (struct EnigmaSetting solution : solutions_unit) { solutions.push_back(solution); }
 
-        if (m_setting.stop_on_first_valid && solutions.size() > 0) {
-            cout << "HIT\n";
-            solutions[0].reflector->print();
-            return solutions;
-        }
+        if (m_setting.stop_on_first_valid && solutions.size() > 0) { return solutions; }
     }
     return solutions;
 }

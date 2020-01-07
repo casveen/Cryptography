@@ -2,6 +2,9 @@
 using namespace std;
 
 // ROTOR
+Rotor::Rotor() : Rotor(0, 0, "DEFAULTCONSTRUCTED") {
+    // default constructor
+}
 Rotor::Rotor(int wires, int notches /*1*/, string name /*CUSTOM*/) :
     m_wires{wires}, m_notches{notches}, m_name{name} {
     // base constructor
@@ -40,18 +43,31 @@ Rotor::Rotor(Rotor const &copy) {
     // cout << "COPYING ROTOR\n";
     // Copy constructor, very important, assures there is no shallow copy
     // src::https://stackoverflow.com/questions/255612/dynamically-allocating-an-array-of-objects
-    m_wires     = copy.m_wires;
-    m_notches   = copy.m_notches;
-    m_name      = copy.m_name;
-    m_wiring_in = new int[m_wires];
+    // cout << "COPYING ROTOR; m_wires:" << copy.m_wires << "\n";
+    m_wires= copy.m_wires;
+    // cout << "COPYING ROTOR; m_notches:" << copy.m_notches << "\n";
+    m_notches= copy.m_notches;
+    // cout << "COPYING ROTOR; m_name:" << copy.m_name << "\n";
+    m_name= copy.m_name;
+    // cout << "COPYING ROTOR; make in:"
+    //     << "\n";
+    m_wiring_in= new int[m_wires];
+    // cout << "COPYING ROTOR; make out:"
+    //     << "\n";
     m_wiring_out= new int[m_wires];
-    m_notch     = new int[m_notches];
+    // cout << "COPYING ROTOR; make notch:"
+    //     << "\n";
+    m_notch= new int[m_notches];
     // Don't need to worry about copying integers.
     // But if the object has a copy constructor then
     // it would also need to worry about throws from the copy constructor.
+    // cout << "COPYING ROTOR; copying in: \n";
     std::copy(&copy.m_wiring_in[0], &copy.m_wiring_in[m_wires], m_wiring_in);
+    // cout << "COPYING ROTOR; copying out: \n";
     std::copy(&copy.m_wiring_out[0], &copy.m_wiring_out[m_wires], m_wiring_out);
+    // cout << "COPYING ROTOR; copying notch: \n";
     std::copy(&copy.m_notch[0], &copy.m_notch[m_notches], m_notch);
+    // cout << "COPYING ROTOR: all done: \n";
 }
 Rotor &Rotor::operator=(Rotor rhs) {
     // Pass by value (thus generating a copy)
@@ -190,13 +206,23 @@ bool Rotor::is_valid() const {
     return true;
 }
 // Reflector::Reflector() : Rotor() {}
+Reflector::Reflector() : Reflector(0) {
+    // m_wires  = 0;
+    // m_notches= 0;
+    // cout << "default reflector\n";
+}
 Reflector::Reflector(int wires) : Rotor(wires) {
     for (int j= 0; j < wires; j++) { m_wiring_in[j]= j + 1 - 2 * (j % 2); }
 }
 Reflector::Reflector(string wiring) : Rotor(wiring, "", "CUSTOM") {}
 Reflector::Reflector(string wiring, string notches, string name) : Rotor(wiring, notches, name) {}
 Reflector::Reflector(Reflector const &copy) : Rotor(copy) {}
-// Reflector &operator=(Reflector rhs): ;
+Reflector &Reflector::operator=(Reflector rhs) {
+    // cout << "copy assign reflector\n";
+    Rotor::operator=(rhs);
+    // cout << "copy assign end\n";
+    return *this;
+}
 
 void Reflector::randomize() {
     int w1, w2, v1, v2;
@@ -228,6 +254,7 @@ bool Reflector::is_valid() const {
 
 // Plugboard::Plugboard() {}
 // read from string, format AB.CD.       wires A to B, C to D etc
+Plugboard::Plugboard() {}
 Plugboard::Plugboard(int t_wires) {
     // allocate to wiring array
     m_wires = t_wires;
@@ -286,6 +313,10 @@ void Plugboard::set_wiring(const string in) {
 void         Plugboard::set_wiring(int pos, int set) { m_wiring[pos]= set; }
 vector<int> &Plugboard::get_wiring() { return m_wiring; }
 int          Plugboard::get_wiring(int i) const { return m_wiring[i]; }
+void         Plugboard::print() const {
+    for (int wire= 0; wire < m_wires; wire++) { printf("%2d ", m_wiring[wire]); }
+    cout << "\n";
+}
 
 // CARTRIDGE
 // Cartridge::Cartridge() {}   // XXX should really not be neccesary...
@@ -334,6 +365,7 @@ Cartridge::Cartridge(Rotor stator, const std::initializer_list<Rotor> rotors, Re
 Cartridge::Cartridge(struct EnigmaSetting setting) : m_trivial_stator(setting.trivial_stator) {
     m_rotor_count= (signed int)setting.rotors.size();   // TODO check if not 0
     m_wires      = setting.rotors[0].get_wires();       // begin?
+    // TODO set_setting instead?
     // alloc and set everything.
     m_positions   = new int[m_rotor_count];
     m_ring_setting= new int[m_rotor_count];
@@ -341,13 +373,13 @@ Cartridge::Cartridge(struct EnigmaSetting setting) : m_trivial_stator(setting.tr
     for (int r= 0; r < m_rotor_count; ++r) { m_rotors[r]= new Rotor(setting.rotors[r]); }
     if (!setting.trivial_stator) {
         cout << "stator set\n";
-        m_stator= new Rotor(*setting.stator);
+        m_stator= new Rotor(setting.stator);
     }
-    m_reflector= new Reflector(*setting.reflector);
-    m_plugboard= new Plugboard(*setting.plugboard);
+    m_reflector= new Reflector(setting.reflector);
+    m_plugboard= new Plugboard(setting.plugboard);
     set_ring_setting(setting.ring_setting);
     set_rotor_position(setting.rotor_position);
-    cout << m_trivial_stator << "\n";
+    // cout << m_trivial_stator << "\n";
 }
 /*
 Cartridge::Cartridge(Cartridge const &copy) {
@@ -402,8 +434,9 @@ struct EnigmaSetting Cartridge::get_setting() const {
     for (int w= 0; w < m_rotor_count; ++w) {
         out.rotors.push_back(Rotor(*m_rotors[w]));   // make a copy
     }
-    out.reflector     = Reflector(m_reflector);
-    out.plugboard     = m_plugboard;
+    out.reflector= Reflector(*m_reflector);
+    if (!m_trivial_stator) { out.stator= Rotor(*m_stator); }
+    out.plugboard     = Plugboard(*m_plugboard);
     out.ring_setting  = get_ring_setting_as_string();
     out.rotor_position= get_rotor_position_as_string();
     return out;
@@ -474,8 +507,8 @@ void Cartridge::set_setting(struct EnigmaSetting setting) {
     // alloc and set everything.
     m_rotors= new Rotor *[m_rotor_count];
     for (int r= 0; r < m_rotor_count; ++r) { m_rotors[r]= new Rotor(setting.rotors[r]); }
-    m_reflector= new Reflector(*setting.reflector);
-    m_plugboard= new Plugboard(*setting.plugboard);
+    m_reflector= new Reflector(setting.reflector);
+    m_plugboard= new Plugboard(setting.plugboard);
     set_ring_setting(setting.ring_setting);
     set_rotor_position(setting.rotor_position);
 }

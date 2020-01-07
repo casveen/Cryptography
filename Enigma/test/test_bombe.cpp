@@ -32,21 +32,28 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                // cout << "found\n";
-                // cout << solutions.size();
+                cout << "found\n";
+                cout << solutions.size();
                 cout << "\n";
                 solutions.front().rotors[0].print();
                 solutions.front().rotors[1].print();
                 solutions.front().rotors[2].print();
-                solutions.front().reflector->print();
+                solutions.front().reflector.print();
+                cout << "printing plugboard\n";
+                solutions.front().plugboard.print();
+                cout << "printed plugboard\n";
                 cout << "after print\n";
                 enigma.set_setting(solutions[0]);
+                cout << "setting set, now checking\n";
                 CHECK(enigma.encrypt(ciphertext) == plaintext);
+                cout << "checked if same\n";
                 CHECK(solutions[0].rotor_position == "BLO");
+                cout << "checked pos\n";
                 CHECK(solutions[0].ring_setting == "GHK");
+                cout << "checked ring setting\n";
                 Plugboard correct_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
                 for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard->get_wiring(i) == correct_plugboard.get_wiring(i));
+                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
                 }
             }
         }
@@ -56,8 +63,8 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
 SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
 
     GIVEN("Enigma with rotors I, II, III, reflector UKW and a long plaintext") {
-        BombeUnit            bombe({I, II, III}, UKWR);
-        struct EnigmaSetting enigma_setting;
+        BombeUnit bombe({I, II, III}, UKWR);
+        // struct EnigmaSetting enigma_setting;
         bombe.get_setting().stop_on_first_valid= true;
         Enigma enigma({I, II, III}, UKWR);
         // enigma.set_verbose(true);
@@ -151,7 +158,7 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
                 // compare plugboards
                 Plugboard correct_plugboard("AC. BD. EG. IR. JT. QZ", 26);
                 for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard->get_wiring(i) == correct_plugboard.get_wiring(i));
+                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
                 }
             }
         }
@@ -178,7 +185,7 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
                 // compare plugboards
                 Plugboard correct_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
                 for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard->get_wiring(i) == correct_plugboard.get_wiring(i));
+                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
                 }
             }
         }
@@ -213,7 +220,7 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
                 CHECK(solutions[0].ring_setting == "ABB");
                 Plugboard correct_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
                 for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard->get_wiring(i) == correct_plugboard.get_wiring(i));
+                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
                 }
             }   // THEN
         }       // WHEN

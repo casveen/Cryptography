@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
 
     // make description of all rotors
     string ALLROTORDESC= "NAME   DESCRIPTION \n";
-    for (auto map : {COMMERCIALROTORMAP, ROCKETROTORMAP, SWISSKROTORMAP,
-                     KRIEGSMARINEROTORMAP, WEHRMACHTROTORMAP}) {
+    for (auto map : {COMMERCIALROTORMAP, ROCKETROTORMAP, SWISSKROTORMAP, KRIEGSMARINEROTORMAP,
+                     WEHRMACHTROTORMAP}) {
         for (auto it= map.begin(); it != map.end(); ++it) {
             int name_length= (it->first).length();
             ALLROTORDESC+= it->first + ":";
@@ -78,21 +78,15 @@ int main(int argc, char *argv[]) {
     // Declare the supported options.
     po::options_description desc("Allowed options");
     desc.add_options()("help, h", "produce help message");
-    desc.add_options()(
-        "ringsetting, rs", po::value<string>(),
-        "set ring setting.\nUSAGE: string of #rotors capital letters");
-    desc.add_options()("rotorposition, rp", po::value<string>(),
-                       "set rotor positions");
-    desc.add_options()("inputfile, i", po::value<string>(),
-                       "set file to encrypt");
+    desc.add_options()("ringsetting, rs", po::value<string>(),
+                       "set ring setting.\nUSAGE: string of #rotors capital letters");
+    desc.add_options()("rotorposition, rp", po::value<string>(), "set rotor positions");
+    desc.add_options()("inputfile, i", po::value<string>(), "set file to encrypt");
     desc.add_options()("rotors", po::value<string>(),
                        "set rotors that are used, from last to first");
-    desc.add_options()("plugboard, p, plug", po::value<string>(),
-                       "set plugboard wiring");
-    desc.add_options()("plaintext, m", po::value<string>(),
-                       "string that is to be encrypted");
-    desc.add_options()("reflector, r", po::value<string>(),
-                       "set reflector wiring");
+    desc.add_options()("plugboard, p, plug", po::value<string>(), "set plugboard wiring");
+    desc.add_options()("plaintext, m", po::value<string>(), "string that is to be encrypted");
+    desc.add_options()("reflector, r", po::value<string>(), "set reflector wiring");
     // TODO or wiring
     desc.add_options()("stator, s", po::value<string>(), "set stator");
     desc.add_options()("o", po::value<string>(),
@@ -110,8 +104,8 @@ int main(int argc, char *argv[]) {
     string        rotor_position;
     string        ring_setting;
     string        plugging;
-    Reflector *   reflector;
-    Rotor *       stator;
+    Reflector     reflector;
+    Rotor         stator;
     bool          trivial_stator= true;
 
     // HELP
@@ -154,7 +148,7 @@ int main(int argc, char *argv[]) {
     if (vm.count("reflector")) {
         string reflector_name= vm["reflector"].as<string>();
         if (ALLREFLECTORMAP.count(reflector_name)) {
-            reflector= new Reflector(ALLREFLECTORMAP.at(reflector_name).first);
+            reflector= Reflector(ALLREFLECTORMAP.at(reflector_name).first);
         } else {   // wrong name
             cerr << "ERROR: Reflector name " << reflector_name
                  << " is wrong or not implemented yet. Use the following "
@@ -174,7 +168,7 @@ int main(int argc, char *argv[]) {
         string stator_name= vm["stator"].as<string>();
         trivial_stator    = false;
         if (ALLROTORMAP.count(stator_name)) {
-            stator= new Rotor(ALLROTORMAP.at(stator_name).first);
+            stator= Rotor(ALLROTORMAP.at(stator_name).first);
         } else {   // wrong name
             cerr << "ERROR: stator name " << stator_name
                  << " is wrong or not implemented yet. Use the following "
@@ -194,8 +188,7 @@ int main(int argc, char *argv[]) {
         rotor_position= "";
         rotor_position.append(rotors.size(), 'A');
         if (!quiet) {
-            cout << "WARNING: rotor positions not provided, using "
-                 << rotor_position << "\n";
+            cout << "WARNING: rotor positions not provided, using " << rotor_position << "\n";
         }
     }
 
@@ -206,8 +199,7 @@ int main(int argc, char *argv[]) {
         ring_setting= "";
         ring_setting.append(rotors.size(), 'A');
         if (!quiet) {
-            cout << "WARNING: ring setting not provided, using " << ring_setting
-                 << "\n";
+            cout << "WARNING: ring setting not provided, using " << ring_setting << "\n";
         }
     }
 
@@ -234,11 +226,10 @@ int main(int argc, char *argv[]) {
     }
 
     // MAKE THE ENIGMA AND CONFIGURE
-    Plugboard *          plugboard= new Plugboard(plugging, 26);
     struct EnigmaSetting setting;
     setting.rotors        = rotors;
     setting.reflector     = reflector;
-    setting.plugboard     = plugboard;   // copied by enigma
+    setting.plugboard     = Plugboard(plugging, 26);
     setting.ring_setting  = ring_setting;
     setting.rotor_position= rotor_position;
     setting.stator        = stator;
@@ -264,8 +255,6 @@ int main(int argc, char *argv[]) {
         enigma.encrypt(instream, outstream);
     }
     outfilestream.close();
-    delete reflector;   // XXX double free of reflector?
-    delete plugboard;
     return 0;
 }
 
