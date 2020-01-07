@@ -296,7 +296,6 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     // analyze each candidate
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int i= 0; i < candidates_n; i++) {
-        cout << i << "\n";
         int candidate= candidates[i];
         m_enigma->set_ring_setting(m_setting.starting_ring_setting);
         m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
