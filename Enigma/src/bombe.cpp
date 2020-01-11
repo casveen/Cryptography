@@ -252,10 +252,13 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
         init_enigma_encryptions(crib_n, rotor_positions);
-        print_progress(rs, ring_settings, (int)solutions.size());
+
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
+            // print_progress(rs, ring_settings, (int)solutions.size());
+            // cout << "     RP:" << m_enigma->get_rotor_position_as_string()
+            //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
 
             reset_diagonal_board();
             setup_diagonal_board(ciphertext, crib);
@@ -264,6 +267,10 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                 if (doublecheck_and_get_plugboard()) {   // second test
                     if (tripplecheck(crib, ciphertext, position,
                                      rotor_positions)) {   // final test
+                        cout << "RS:" << m_enigma->get_ring_setting_as_string() << "   RP:"
+                             << rotor_positions[rotor_positions.size() - crib.length() - 1]
+                             << "   P:" << m_enigma->get_cartridge()->get_positions_as_string()
+                             << "\n";
                         m_enigma->set_rotor_position(rotor_positions[0]);
                         solutions.push_back(m_enigma->get_setting());
                         m_enigma->set_rotor_position(rotor_positions.back());

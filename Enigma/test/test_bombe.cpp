@@ -5,10 +5,10 @@
 #include "rotors.cpp"   //all rotors,
 
 SCENARIO("Using custom rotors of non-standard size") {
-    const Rotor     CI  = Rotor("FEDCBA", "B", "I6");
-    const Rotor     CII = Rotor("DFABEC", "C", "II6");
-    const Rotor     CIII= Rotor("FCBDAE", "D", "III6");
-    const Reflector CUKW= Reflector("FCBEDA", "", "UKW6");
+    const Rotor     CI  = Rotor("FEDCABHG", "B", "I8");
+    const Rotor     CII = Rotor("DFGABEHC", "C", "II8");
+    const Rotor     CIII= Rotor("GFCBDAEH", "D", "III8");
+    const Reflector CUKW= Reflector("FCBEDAHG", "", "UKW8");
     Bombe           bombe({CI, CII, CIII}, CUKW);
     Enigma          enigma({CI, CII, CIII}, CUKW);
     bombe.get_setting().stop_on_first_valid     = false;
@@ -16,24 +16,23 @@ SCENARIO("Using custom rotors of non-standard size") {
     bombe.get_setting().starting_ring_setting   = "AAA";
     bombe.get_setting().starting_rotor_positions= "AAA";
     bombe.get_setting().rotor_count             = 3;
-    string plaintext                            = "FEDCABBACEF";
+    string plaintext                            = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     // string crib                                 = "FEDCABBACEF";
     WHEN("Given ciphertext encrypted with ring-setting AAA, "
          "ring-position AAA and steckering") {
-        enigma.set_ring_setting("AAA");
-        enigma.set_rotor_position("AAA");
-        enigma.set_plugboard("AB.CD.EF");
-        string ciphertext                           = enigma.encrypt(plaintext);
-        bombe.get_setting().starting_rotor_positions= "AAA";
-        bombe.get_setting().starting_ring_setting   = "AAA";
+        enigma.set_ring_setting("BCD");
+        enigma.set_rotor_position("DDD");
+        enigma.set_plugboard("AG.CH.EF");
+        string ciphertext= enigma.encrypt(plaintext);
         THEN("Running bombe with a complete crib should return the above "
              "setting") {
             vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
             enigma.set_setting(solutions[0]);
-            CHECK(enigma.encrypt(ciphertext) == plaintext);
-            CHECK(solutions[0].rotor_position == "AAA");
+            REQUIRE(enigma.encrypt(ciphertext) == plaintext);
+            REQUIRE(solutions[0].rotor_position == "AAA");
         }
     }
+    cin.get();
 }
 
 SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {

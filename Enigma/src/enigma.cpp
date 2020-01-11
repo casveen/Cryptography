@@ -1201,10 +1201,14 @@ string Enigma::indicator_procedure_WW2(string start_pos, string message_key) {
 }
 int Enigma::compute_total_permutations_brute_force() {
     // get setting, turn until we have the same setting
+    cout << "BRUTE FORCE PERMUTATIONS\n";
     string initial_rotor_position= get_rotor_position_as_string();
     turn();
     int turns= 1;
     while (get_rotor_position_as_string() != initial_rotor_position) {
+
+        cout << "BRUTE FORCE PERMUTATIONS       " << get_rotor_position_as_string() << " - "
+             << initial_rotor_position << "\n";
         turn();
         turns++;
         if (turns > pow(m_wires, m_rotors_number)) {
