@@ -1,6 +1,6 @@
 // make some performance runs, recording performance for a bad crib
 //#include "bombe.h"
-int MAX_RING_SETTINGS= 200;
+int MAX_RING_SETTINGS= 50;
 #include "bombe.hpp"
 #include "enigma.hpp"
 #include "rotors.cpp"   //all rotors,
@@ -109,6 +109,7 @@ struct BombeSetting benchmark5() {
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;
     bombe.get_setting().stop_on_first_valid     = false;
+    bombe.get_setting().rotor_count             = 4;
     // bombe.get_setting().time_performance        = true;
     // bombe.get_setting().stop_on_first_valid= true;
     Enigma enigma({IV, V, VI, I}, UKWR);
@@ -132,6 +133,7 @@ struct BombeSetting benchmark6() {
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;
     bombe.get_setting().stop_on_first_valid     = false;
+    bombe.get_setting().rotor_count             = 4;
     // bombe.get_setting().time_performance        = true;
     // bombe.get_setting().stop_on_first_valid= true;
     Enigma enigma({IV, V, VI, I}, UKWR);
@@ -155,6 +157,7 @@ struct BombeSetting benchmark7() {
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;
     bombe.get_setting().stop_on_first_valid     = false;
+    bombe.get_setting().rotor_count             = 4;
     // bombe.get_setting().time_performance        = true;
     // bombe.get_setting().stop_on_first_valid= true;
     Enigma enigma({IV, V, VI, I}, UKWR);
@@ -179,6 +182,7 @@ struct BombeSetting benchmark8() {
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;
     bombe.get_setting().stop_on_first_valid     = false;
+    bombe.get_setting().rotor_count             = 4;
     // bombe.get_setting().time_performance        = true;
     // bombe.get_setting().stop_on_first_valid= true;
     Enigma enigma({I, VII, VI, II}, UKWR);

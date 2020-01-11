@@ -50,14 +50,14 @@ struct BombeUnitSetting {
     // bool   verbose;
     bool       only_one_candidate           = false;
     int        max_ring_settings            = 26 * 26 * 26 * 26;
-    string     starting_ring_setting        = "EPDA";   // TODO should adapt to more rotors
+    string     starting_ring_setting        = "AAAA";   // TODO should adapt to more rotors
     string     starting_rotor_positions     = "AAAA";
     bool       interactive_wiring_mode      = false;
     const bool time_performance             = true;   // XXX can only be set in code...
     double     performance_ring_setting_mean= 0;      // performance of a rs run
     double     performance_ring_setting_var = 0;
     int        records_ring_setting         = 0;
-    const bool debug_doublecheck_show_wiring= true;
+    const bool debug_doublecheck_show_wiring= false;
 };
 
 class BombeUnit {

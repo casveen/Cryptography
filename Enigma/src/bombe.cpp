@@ -252,7 +252,6 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
         init_enigma_encryptions(crib_n, rotor_positions);
-        cout << "\n";
         print_progress(rs, ring_settings, (int)solutions.size());
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
@@ -261,17 +260,10 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
             reset_diagonal_board();
             setup_diagonal_board(ciphertext, crib);
             // BEGIN TESTS
-            if (check_one_wire(most_wired_letter)) {   // first test
-                cout << "\n";
-                cout << m_enigma->get_ring_setting_as_string() << "-";
-                // tripplecheck(crib, ciphertext, position, rotor_positions);
-                cout << m_enigma->get_rotor_position_as_string() << "---";
-                cout << "1-";
+            if (check_one_wire(most_wired_letter)) {     // first test
                 if (doublecheck_and_get_plugboard()) {   // second test
-                    cout << "2-";
                     if (tripplecheck(crib, ciphertext, position,
                                      rotor_positions)) {   // final test
-                        cout << "3";
                         m_enigma->set_rotor_position(rotor_positions[0]);
                         solutions.push_back(m_enigma->get_setting());
                         m_enigma->set_rotor_position(rotor_positions.back());
@@ -404,7 +396,7 @@ bool BombeUnit::doublecheck_and_get_plugboard() {
                 }
             }
         } else {   // undeterminable... try some more! TODO
-            cout << bundle << "OH NO!\n";
+            // cout << bundle << "OH NO!\n";
         }
     }
     return true;
@@ -414,12 +406,12 @@ bool BombeUnit::tripplecheck(const string &crib, const string &ciphertext, int c
     // test if the given configuration encrypts the crib to plaintext
     // turn back
     m_enigma->set_rotor_position(rotor_positions[rotor_positions.size() - crib.length() - 1]);
-    cout << "enigma recrypting " << ciphertext << " with RS "
+    /*cout << "enigma recrypting " << ciphertext << " with RS "
          << m_enigma->get_ring_setting_as_string() << ", RP "
          << m_enigma->get_rotor_position_as_string() << " PLUGBOARD";
-    m_enigma->get_cartridge()->get_plugboard()->print();
+    m_enigma->get_cartridge()->get_plugboard()->print();*/
     string recrypt= m_enigma->encrypt(ciphertext);
-    cout << "(" << recrypt << ")";
+    // cout << "(" << recrypt << ")";
     if (m_setting.interactive_wiring_mode) { interactive_wirechecking(); }
     return (recrypt == crib);
 }

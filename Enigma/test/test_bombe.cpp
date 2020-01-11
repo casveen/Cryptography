@@ -4,17 +4,49 @@
 #include "enigma.hpp"
 #include "rotors.cpp"   //all rotors,
 
+SCENARIO("Using custom rotors of non-standard size") {
+    const Rotor     CI  = Rotor("FEDCBA", "B", "I6");
+    const Rotor     CII = Rotor("DFABEC", "C", "II6");
+    const Rotor     CIII= Rotor("FCBDAE", "D", "III6");
+    const Reflector CUKW= Reflector("FCBEDA", "", "UKW6");
+    Bombe           bombe({CI, CII, CIII}, CUKW);
+    Enigma          enigma({CI, CII, CIII}, CUKW);
+    bombe.get_setting().stop_on_first_valid     = false;
+    bombe.get_setting().only_one_configuration  = true;
+    bombe.get_setting().starting_ring_setting   = "AAA";
+    bombe.get_setting().starting_rotor_positions= "AAA";
+    bombe.get_setting().rotor_count             = 3;
+    string plaintext                            = "FEDCABBACEF";
+    // string crib                                 = "FEDCABBACEF";
+    WHEN("Given ciphertext encrypted with ring-setting AAA, "
+         "ring-position AAA and steckering") {
+        enigma.set_ring_setting("AAA");
+        enigma.set_rotor_position("AAA");
+        enigma.set_plugboard("AB.CD.EF");
+        string ciphertext                           = enigma.encrypt(plaintext);
+        bombe.get_setting().starting_rotor_positions= "AAA";
+        bombe.get_setting().starting_ring_setting   = "AAA";
+        THEN("Running bombe with a complete crib should return the above "
+             "setting") {
+            vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
+            enigma.set_setting(solutions[0]);
+            CHECK(enigma.encrypt(ciphertext) == plaintext);
+            CHECK(solutions[0].rotor_position == "AAA");
+        }
+    }
+}
+
 SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {
     GIVEN("Donitz message portion, and its configuration") {
         Bombe bombe({VIII, VI, V, BETA}, THINREFLECTORC);
         // struct EnigmaSetting enigma_setting;
-        bombe.get_setting().stop_on_first_valid     = false;
+        bombe.get_setting().stop_on_first_valid     = true;
         bombe.get_setting().only_one_configuration  = true;
-        bombe.get_setting().starting_ring_setting   = "EPEJ";
+        bombe.get_setting().starting_ring_setting   = "EPEI";
         bombe.get_setting().starting_rotor_positions= "AAAA";
         bombe.get_setting().rotor_count             = 4;
         string ciphertext                           = "RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJWLQXXT";
-        string crib                                 = "FOLGENDESISTSOFORT";
+        string crib                                 = "FOLGENDESISTSOFORTBEKANNT";
         WHEN("Running bombe close to configuration") {
             THEN("Bombe should find the configuration") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, crib);
