@@ -183,7 +183,6 @@ int main(int argc, char *argv[]) {
     // ROTOR POSITIONS
     if (vm.count("rotorposition")) {
         rotor_position= vm["rotorposition"].as<string>();
-        cout << rotor_position;
     } else {
         rotor_position= "";
         rotor_position.append(rotors.size(), 'A');

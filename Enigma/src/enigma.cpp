@@ -1,4 +1,5 @@
 #include "enigma.hpp"
+#include <cmath>
 using namespace std;
 
 // ROTOR
@@ -1206,6 +1207,11 @@ int Enigma::compute_total_permutations_brute_force() {
     while (get_rotor_position_as_string() != initial_rotor_position) {
         turn();
         turns++;
+        if (turns > pow(m_wires, m_rotors_number)) {
+            initial_rotor_position= get_rotor_position_as_string();
+            turn();
+            turns= 1;
+        }
     }
     return turns;
 }

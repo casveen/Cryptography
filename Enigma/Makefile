@@ -16,6 +16,8 @@ OBJECT_FILES     = $(SOURCE_NAME:%.cpp=$(BUILD)/%.o)
 ##DEPENDENCIES
 ENIGMA_DEP_NAMES = enigma_main.o enigma.o rotors.o
 ENIGMA_DEP       = $(ENIGMA_DEP_NAMES:%=$(BUILD)/%)
+BOMBE_DEP_NAMES = enigma.o rotors.o bombe.o bombe_main.o
+BOMBE_DEP       = $(BOMBE_DEP_NAMES:%=$(BUILD)/%)
 TEST_DEP_NAMES   = test.o test_enigma.o test_bombe.o enigma.o bombe.o
 TEST_DEP         = $(TEST_DEP_NAMES:%=$(BUILD)/%)
 BENCHMARKER_DEP_NAMES   = benchmarker.o enigma.o bombe.o
@@ -35,7 +37,6 @@ vpath %.cpp src test
 #vpath %.exe bin
 
 
-
 #check:
 #	@echo $(SOURCE_NAME:%=$(BUILD)/%)
 
@@ -44,6 +45,9 @@ all : $(EXECUTABLE_NAME)
 
 enigma.exe : $(ENIGMA_DEP)
 	$(CC) -o bin/enigma.exe $(FLAGS) $^ $(LIB)
+
+bombe.exe : $(BOMBE_DEP)
+	$(CC) -o bin/bombe.exe $(FLAGS) $^ $(LIB)
 
 benchmarker.exe : $(BENCHMARKER_DEP)
 	$(CC) -o bin/benchmarker.exe $(FLAGS) $^ $(INC)

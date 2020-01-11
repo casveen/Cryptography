@@ -5,6 +5,8 @@ using namespace std;
 #include "enigma.hpp"
 //#include "queue"
 #include <chrono>
+#include <cstddef>
+#include <iostream>
 
 // wiring
 class Wire {
@@ -47,14 +49,15 @@ struct BombeUnitSetting {
     bool stop_on_first_valid= false;
     // bool   verbose;
     bool       only_one_candidate           = false;
-    int        max_ring_settings            = 26 * 26;
-    string     starting_ring_setting        = "AAA";   // TODO should adapt to more rotors
-    string     starting_rotor_positions     = "AAA";
+    int        max_ring_settings            = 26 * 26 * 26 * 26;
+    string     starting_ring_setting        = "EPDA";   // TODO should adapt to more rotors
+    string     starting_rotor_positions     = "AAAA";
     bool       interactive_wiring_mode      = false;
     const bool time_performance             = true;   // XXX can only be set in code...
     double     performance_ring_setting_mean= 0;      // performance of a rs run
     double     performance_ring_setting_var = 0;
     int        records_ring_setting         = 0;
+    const bool debug_doublecheck_show_wiring= true;
 };
 
 class BombeUnit {
@@ -95,7 +98,7 @@ class BombeUnit {
     bool           tripplecheck(const string &, const string &, int, vector<string> &);
     void           interactive_wirechecking();
     vector<string> get_special_rotor_positions();
-    void           print_progress(int, int);
+    void           print_progress(int, int, int);
 };
 
 struct BombeSetting {
@@ -104,10 +107,10 @@ struct BombeSetting {
     // bool   verbose;
     bool       only_one_candidate           = false;
     bool       only_one_configuration       = false;
-    int        max_ring_settings            = 26 * 26;
+    int        max_ring_settings            = 26 * 26 * 26 * 26;
     int        rotor_count                  = 3;
-    string     starting_ring_setting        = "AAA";   // TODO should adapt to more rotors
-    string     starting_rotor_positions     = "AAA";
+    string     starting_ring_setting        = "EPEL";   // TODO should adapt to more rotors
+    string     starting_rotor_positions     = "AAAA";
     const bool time_performance             = true;   // XXX can only be set in code...
     double     performance_ring_setting_mean= 0;      // performance of a rs run
     double     performance_ring_setting_var = 0;
@@ -117,23 +120,27 @@ struct BombeSetting {
 
 class Bombe {
   private:
-    int                     m_letters= 26;
-    bool                    m_verbose= false;
-    vector<BombeUnit>       m_units;
-    vector<Rotor>           m_rotors;
-    vector<vector<Rotor>>   m_rotor_configurations;
-    Reflector               m_reflector;
+    int                   m_letters= 26;
+    bool                  m_verbose= false;
+    vector<BombeUnit>     m_units;
+    vector<Rotor>         m_rotors;
+    vector<vector<Rotor>> m_rotor_configurations;
+    vector<Reflector>     m_reflector;
+    // ofstream                m_outstream;
     struct BombeSetting     m_setting;
     struct BombeUnitSetting m_unit_setting;
 
   public:
     Bombe(const initializer_list<Rotor> rotors, const Reflector reflector);
+    Bombe(vector<Rotor> rotors, vector<Reflector> reflector);
     // Bombe(struct EnigmaSetting enigma_setting);
-    vector<struct EnigmaSetting> analyze_unit(const string &, const string &, vector<Rotor> &, int,
-                                              int);
+    vector<struct EnigmaSetting> analyze_unit(const string &, const string &, vector<Rotor> &,
+                                              Reflector &, int, int);
     vector<int>                  probable_search(const string &, const string &);
     vector<struct EnigmaSetting> analyze(const string &, const string &);
     int                          find_most_wired_letter(const string &, const string &);
+    // void                         set_outstream(ostream &);
+    string preprocess(string) const;
     // void                         banburismus(const string, const string crib);
     // float index_of_coincidence(const string, const string);
     struct BombeSetting &get_setting();

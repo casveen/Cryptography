@@ -1,6 +1,6 @@
 // make some performance runs, recording performance for a bad crib
 //#include "bombe.h"
-int MAX_RING_SETTINGS= 50;
+int MAX_RING_SETTINGS= 200;
 #include "bombe.hpp"
 #include "enigma.hpp"
 #include "rotors.cpp"   //all rotors,
@@ -229,5 +229,5 @@ int main() {
     printf("| 4 ROTOR VERY LARGE CRIB  %6.2E   %6.2E   %7d |\n",
            setting8.performance_ring_setting_mean, setting8.performance_ring_setting_var,
            setting8.records_ring_setting);
-    printf("---------------------------------------------------\n");
+    printf("----------------------------------------------------------\n");
 }

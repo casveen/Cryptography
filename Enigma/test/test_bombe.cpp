@@ -4,6 +4,31 @@
 #include "enigma.hpp"
 #include "rotors.cpp"   //all rotors,
 
+SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {
+    GIVEN("Donitz message portion, and its configuration") {
+        Bombe bombe({VIII, VI, V, BETA}, THINREFLECTORC);
+        // struct EnigmaSetting enigma_setting;
+        bombe.get_setting().stop_on_first_valid     = false;
+        bombe.get_setting().only_one_configuration  = true;
+        bombe.get_setting().starting_ring_setting   = "EPEJ";
+        bombe.get_setting().starting_rotor_positions= "AAAA";
+        bombe.get_setting().rotor_count             = 4;
+        string ciphertext                           = "RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJWLQXXT";
+        string crib                                 = "FOLGENDESISTSOFORT";
+        WHEN("Running bombe close to configuration") {
+            THEN("Bombe should find the configuration") {
+                vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, crib);
+                CHECK(solutions[0].ring_setting == "EPEL");
+                CHECK(solutions[0].rotor_position == "CDTJ");
+            }
+        }
+    }
+}
+// 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+// A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z
+// 4  5 12 16  0  1  6 20  8  9 10 23  2 13 14 17  3 15 25 19  7 21 22 11 24 18
+// 4  5 12 16  0  1  6 20  8 13 10 23  2  9 14 17  3 15 25 19  7 21 22 11 24 18 correct
+
 SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
     GIVEN("Enigma with rotors I, II, III, reflector UKW and a long plaintext") {
         Bombe bombe({I, II, III}, UKWR);
