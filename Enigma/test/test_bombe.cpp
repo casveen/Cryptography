@@ -3,26 +3,26 @@
 #include "catch.hpp"
 #include "enigma.hpp"
 #include "rotors.cpp"   //all rotors,
-
+/*
 SCENARIO("Using custom rotors of non-standard size") {
-    const Rotor     CI  = Rotor("FEDCABHG", "B", "I8");
-    const Rotor     CII = Rotor("DFGABEHC", "C", "II8");
-    const Rotor     CIII= Rotor("GFCBDAEH", "D", "III8");
-    const Reflector CUKW= Reflector("FCBEDAHG", "", "UKW8");
-    Bombe           bombe({CI, CII, CIII}, CUKW);
-    Enigma          enigma({CI, CII, CIII}, CUKW);
+    const Rotor     CI  = Rotor("DFEBCA", "A", "I6");
+    const Rotor     CII = Rotor("DEBFAC", "B", "II6");
+    const Rotor     CIII= Rotor("DFBCAE", "C", "III6");
+    const Reflector CUKW= Reflector("DCBAFE", "", "UKW6");
+    Bombe           bombe({I, II, III}, UKWR);
+    Enigma          enigma({I, II, III}, UKWR);
     bombe.get_setting().stop_on_first_valid     = false;
     bombe.get_setting().only_one_configuration  = true;
     bombe.get_setting().starting_ring_setting   = "AAA";
     bombe.get_setting().starting_rotor_positions= "AAA";
     bombe.get_setting().rotor_count             = 3;
-    string plaintext                            = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    string plaintext                            = "AABBCCDEFGHIJK";
     // string crib                                 = "FEDCABBACEF";
     WHEN("Given ciphertext encrypted with ring-setting AAA, "
          "ring-position AAA and steckering") {
-        enigma.set_ring_setting("BCD");
-        enigma.set_rotor_position("DDD");
-        enigma.set_plugboard("AG.CH.EF");
+        enigma.set_ring_setting("ACC");
+        enigma.set_rotor_position("CAB");
+        enigma.set_plugboard("AD.BC");
         string ciphertext= enigma.encrypt(plaintext);
         THEN("Running bombe with a complete crib should return the above "
              "setting") {
@@ -33,7 +33,7 @@ SCENARIO("Using custom rotors of non-standard size") {
         }
     }
     cin.get();
-}
+}*/
 
 SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {
     GIVEN("Donitz message portion, and its configuration") {
@@ -67,6 +67,20 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
         bombe.get_setting().stop_on_first_valid   = true;
         bombe.get_setting().only_one_configuration= true;
         Enigma enigma({I, II, III}, UKWR);
+        string initial_ring_setting  = enigma.get_ring_setting_as_string();
+        string initial_rotor_position= enigma.get_rotor_position_as_string();
+        /*for (int j= 0; j < 26; j++) {
+            enigma.set_rotor_position(initial_rotor_position);
+            for (int i= 0; i < 26; ++i) {
+                for (int p= 0; p < 3; ++p) { cout << (char)(enigma.get_positions()[p] + (int)'A'); }
+                cout << " ";
+                enigma.turn();
+            }
+            cout << "\n";
+            enigma.next_ring_setting();
+        }*/
+        enigma.set_ring_setting(initial_ring_setting);
+        enigma.set_rotor_position(initial_rotor_position);
         // enigma.set_verbose(true);
         string plaintext= "THISISAPLAINTEXTTOBEENCRYPTEDWITHTHEENIGMAANDISVERYV"
                           "ERYLONGITSSUPPOSEDTOBESOLONGASTOENGAGEBOTHTHEFASTAND"

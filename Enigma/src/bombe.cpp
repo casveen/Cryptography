@@ -240,6 +240,7 @@ void BombeUnit::setup_diagonal_board(const string &ciphertext, const string &cri
 vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const string &crib,
                                                 int most_wired_letter, int position) {
     vector<struct EnigmaSetting> solutions;
+    // vector<vector<shint>>        all_rotor_positions= m_enigma->get_all_rotor_positions();
     int total_permutations= m_enigma->compute_total_permutations_brute_force(),
         crib_n            = crib.length(),   // ciphertext_n= ciphertext.length();
         ring_settings     = min((int)pow(m_letters, m_rotor_count), m_setting.max_ring_settings);
@@ -252,13 +253,13 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
         init_enigma_encryptions(crib_n, rotor_positions);
-
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
-            // print_progress(rs, ring_settings, (int)solutions.size());
+            print_progress(rs, ring_settings, (int)solutions.size());
             // cout << "     RP:" << m_enigma->get_rotor_position_as_string()
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
+            // cout << flush;
 
             reset_diagonal_board();
             setup_diagonal_board(ciphertext, crib);
@@ -267,7 +268,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                 if (doublecheck_and_get_plugboard()) {   // second test
                     if (tripplecheck(crib, ciphertext, position,
                                      rotor_positions)) {   // final test
-                        cout << "RS:" << m_enigma->get_ring_setting_as_string() << "   RP:"
+                        cout << "\nRS:" << m_enigma->get_ring_setting_as_string() << "   RP:"
                              << rotor_positions[rotor_positions.size() - crib.length() - 1]
                              << "   P:" << m_enigma->get_cartridge()->get_positions_as_string()
                              << "\n";
@@ -308,7 +309,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     }   // for ring setting
     cout << "\r";
     if (m_setting.time_performance && m_verbose) { print_performance(); }
-
+    cout << "done";
     return solutions;
 }
 
@@ -354,7 +355,7 @@ bool BombeUnit::bundle_contradiction(int bundle) {
     return m_diagonal_board->bundle_contradiction(bundle);
 }
 bool BombeUnit::check_one_wire(int most_wired_letter) {
-    m_diagonal_board->activate(most_wired_letter, 4);
+    m_diagonal_board->activate(most_wired_letter, min(4, m_letters - 1));
     return (!bundle_contradiction(most_wired_letter));
 }
 bool BombeUnit::doublecheck_and_get_plugboard() {
@@ -609,7 +610,7 @@ vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const stri
                 for (struct EnigmaSetting solution : solutions_unit) {
                     solutions.push_back(solution);
                 }
-                // if (m_setting.stop_on_first_valid && solutions.size() > 0) { return solutions; }
+                if (m_setting.stop_on_first_valid && solutions.size() > 0) { return solutions; }
             }
         }
     }
@@ -631,3 +632,23 @@ string Bombe::preprocess(string in) const {
     std::for_each(in.begin(), in.end(), [](char &c) { c= ::toupper(c); });
     return in;
 }
+
+// void Bombe::get_equivalent_settings(vector<int> position) {
+// posiiton: physical position of rotors, ie rotor_position-ring_setting
+
+/*If a message of length m is encrypted with a particular ring setting and rotor posiiton,
+then encrypting the same message with rotor position turned one step forward and ring setting
+one step "backward"(compensating for turn of rotor) should give the exact same message unless
+there was a notch turnover when encrypting. That is, there are a lot of settings of the enigma
+that would encrypt to the exact same message.*/
+
+/*
+The algorithm;
+initially all configurations where rotor and ring setting gives the same position are candidates
+from here we have to eliminate the rest. This is done by turning the enigma, and checking if the
+position is the same as for the original when turned
+*/
+
+// for each rotorp position, there is exactly one ring setting that gives the sa,,e position as
+// the original posiiton
+//}

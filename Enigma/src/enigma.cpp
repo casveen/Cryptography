@@ -639,6 +639,27 @@ void Cartridge::turn() {
         }
     }
 }
+string Cartridge::turn_string(string rotor_position) const {
+    // single turn, should be optimal
+    int  carry= 1, carry_p= 0;
+    bool in_notch= false;
+    for (int p= 0; p < m_rotor_count; p++) {
+        for (int n= 0; n < m_rotors[p]->get_notches(); n++) {
+            in_notch= ((m_positions[p] + m_ring_setting[p]) % m_wires == m_rotors[p]->get_notch(n));
+            if (in_notch) break;
+        }
+        rotor_position[p]= (char)(((rotor_position[p] - (int)'A') + carry) % m_wires + (int)'A');
+        carry_p          = carry;
+        carry            = 0;
+        if (in_notch) {
+            if (carry_p != 1 && p != m_rotor_count - 1) {
+                rotor_position[p]=
+                    (char)(((rotor_position[p] - (int)'A') + 1) % m_wires + (int)'A');
+            }
+            carry= 1;
+        }
+    }
+}
 int Cartridge::plugboard_encrypt(int i) const { return m_plugboard->encrypt(i); }
 
 int Cartridge::encrypt_without_turning(int i) const {
@@ -879,8 +900,11 @@ void Enigma::set_plugboard(const string str) { m_cartridge->set_plugboard(str); 
 void Enigma::randomize() { m_cartridge->randomize(); }
 void Enigma::reset() { m_cartridge->reset_positions(); }
 // void Enigma::turn(int turns) { m_cartridge->turn(turns); }
-void Enigma::turn() { m_cartridge->turn(); }
-int  Enigma::encrypt(int m) {
+void   Enigma::turn() { m_cartridge->turn(); }
+string Enigma::turn_string(string rotor_position) const {
+    return m_cartridge->turn_string(rotor_position);
+}
+int Enigma::encrypt(int m) {
     m_cartridge->turn();
     // cout<<"encr "<<m<<"\n";
 
@@ -1199,16 +1223,46 @@ string Enigma::indicator_procedure_WW2(string start_pos, string message_key) {
     // set_rotor_position(str);
     return start_pos + encrypted_message_key;
 }
+vector<vector<shint>> Enigma::get_all_rotor_positions() {
+    cout << "get all posiitons\n";
+    vector<vector<shint>> rotor_positions;
+    vector<shint>         rotor_position;
+    string                initial_ring_setting  = get_ring_setting_as_string();
+    string                initial_rotor_position= get_rotor_position_as_string();
+    string                set                   = "";
+    for (int i= 0; i < m_rotors_number; ++i) { set+= "A"; }
+    set_ring_setting(set);
+    turn();   // to ensure not in a impossible rotor posiiton
+    string first_rotor_position= get_rotor_position_as_string();
+    turn();
+    int turns= 1;
+
+    while (get_rotor_position_as_string() != first_rotor_position) {
+        rotor_position.clear();
+        for (char c : get_rotor_position_as_string()) {
+            rotor_position.push_back((shint)c - (int)'A');
+        }
+        rotor_positions.push_back(rotor_position);
+        turn();
+        turns++;
+    }
+    // reset state
+    set_ring_setting(initial_ring_setting);
+    set_rotor_position(initial_rotor_position);
+    cout << "got all positions\n";
+    return rotor_positions;
+}
+
 int Enigma::compute_total_permutations_brute_force() {
     // get setting, turn until we have the same setting
-    cout << "BRUTE FORCE PERMUTATIONS\n";
+    // cout << "BRUTE FORCE PERMUTATIONS\n";
     string initial_rotor_position= get_rotor_position_as_string();
     turn();
     int turns= 1;
     while (get_rotor_position_as_string() != initial_rotor_position) {
 
-        cout << "BRUTE FORCE PERMUTATIONS       " << get_rotor_position_as_string() << " - "
-             << initial_rotor_position << "\n";
+        // cout << "BRUTE FORCE PERMUTATIONS       " << get_rotor_position_as_string() << " - "
+        //     << initial_rotor_position << "\n";
         turn();
         turns++;
         if (turns > pow(m_wires, m_rotors_number)) {

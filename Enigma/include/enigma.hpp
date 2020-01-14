@@ -23,6 +23,8 @@ using namespace std;
 #include <typeinfo>
 #include <utility>
 #include <vector>
+
+typedef short unsigned int shint;
 //#inlcude "alphabet"
 
 class Rotor {
@@ -176,6 +178,7 @@ class Cartridge {
     void        reset_positions();
     void        reset_ring_setting();
     void        turn(int);
+    string      turn_string(string) const;
     void        turn();
     int         encrypt_without_turning(int i) const;
     vector<int> encrypt_stepwise(int) const;
@@ -276,6 +279,7 @@ class Enigma {
     string                 get_encryption_as_string() const;
     vector<pair<int, int>> get_encryption_onesided() const;
     Cartridge *            get_cartridge() const;
+    vector<vector<shint>>  get_all_rotor_positions();
     // setters
     void set_setting(struct EnigmaSetting);
     void set_coder();
@@ -294,6 +298,7 @@ class Enigma {
     // void indicator_procedure_kriegsmarine(string, string);
     // void   turn(int);
     void   turn();
+    string turn_string(string) const;
     void   reset();
     void   randomize();
     int    encrypt(int m);
