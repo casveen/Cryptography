@@ -69,6 +69,7 @@ class BombeUnit {
     vector<vector<shint>> m_all_rotor_positions;
     Enigma *              m_enigma;
     bool                  m_verbose= false;
+    vector<vector<bool>>  m_configuration_grid;
     // rotor positions
     // track encryptions
     struct BombeUnitSetting m_setting;

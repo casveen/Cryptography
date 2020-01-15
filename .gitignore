@@ -6,3 +6,4 @@ Enigma/readingmaterial/*
 *.o
 *.exe
 *.map
+*.out.*

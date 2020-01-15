@@ -13,15 +13,6 @@ void update_performance(double &mean, double &var, std::chrono::duration<double>
     var          = (records * var + (t - mean_p) * (t - mean)) / (records + 1);
     records++;
 }
-/*void update_performance_from_average(double &mean, double &var, double measurement, int &records)
-{
-    //mean i
-    double t     = measurement;
-    double mean_p= mean;
-    mean         = mean_p + (t - mean_p) / (records + 1);
-    var          = (records * var + (t - mean_p) * (t - mean)) / (records + 1);
-    records++;
-}*/
 
 Wire::~Wire() {
     // do not deallocate aythng, handled by diag board
@@ -182,21 +173,11 @@ BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector) {
     }
     m_identifier+= reflector.get_name();
 }
-BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting) {
+BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting) :
+    BombeUnit(enigma_setting.rotors, enigma_setting.reflector) {
     // plugboard, rotor position are ignored
-    // TODO delegate to top constructor
-    m_letters                         = (enigma_setting.rotors.begin())->get_wires();
-    m_rotor_count                     = enigma_setting.rotors.size();
     m_setting.starting_ring_setting   = enigma_setting.ring_setting;
     m_setting.starting_rotor_positions= enigma_setting.rotor_position;
-    m_diagonal_board                  = new DiagonalBoard(m_letters);
-    m_enigma                          = new Enigma(enigma_setting);
-    m_identifier                      = "";
-    for (unsigned int r= 0; r < enigma_setting.rotors.size(); ++r) {
-        m_identifier+= enigma_setting.rotors[r].get_name();
-        m_identifier+= "-";
-    }
-    m_identifier+= enigma_setting.reflector.get_name();
 }
 BombeUnit::~BombeUnit() {
     delete m_diagonal_board;
@@ -252,11 +233,12 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
+        print_progress(rs, ring_settings, (int)solutions.size());
         init_enigma_encryptions(crib_n, rotor_positions);
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
-            print_progress(rs, ring_settings, (int)solutions.size());
+
             // cout << "     RP:" << m_enigma->get_rotor_position_as_string()
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
             // cout << flush;
@@ -619,11 +601,7 @@ vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const stri
 struct BombeSetting &Bombe::get_setting() {
     return m_setting;
 }
-/*void Bombe::set_outstream(ostream &outstream) {
-    // m_outstream= outstream;
-    streambuf *streambuffer= outstream.rdbuf();
-    m_outstream.rdbuf(streambuffer);
-}*/
+
 string Bombe::preprocess(string in) const {
     // remove everything that is not an alpha
     std::regex nonalpha("[^a-zA-Z]");
