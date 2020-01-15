@@ -62,12 +62,13 @@ struct BombeUnitSetting {
 
 class BombeUnit {
   private:
-    string         m_identifier= "A bombeunit";
-    int            m_letters= 26, m_rotor_count= 3;
-    DiagonalBoard *m_diagonal_board;
-    vector<int *>  m_enigma_encryptions;
-    Enigma *       m_enigma;
-    bool           m_verbose= false;
+    string                m_identifier= "A bombeunit";
+    int                   m_letters= 26, m_rotor_count= 3;
+    DiagonalBoard *       m_diagonal_board;
+    vector<int *>         m_enigma_encryptions;
+    vector<vector<shint>> m_all_rotor_positions;
+    Enigma *              m_enigma;
+    bool                  m_verbose= false;
     // rotor positions
     // track encryptions
     struct BombeUnitSetting m_setting;
@@ -99,6 +100,7 @@ class BombeUnit {
     void           interactive_wirechecking();
     vector<string> get_special_rotor_positions();
     void           print_progress(int, int, int);
+    void           get_equivalent_settings(vector<int>);
 };
 
 struct BombeSetting {

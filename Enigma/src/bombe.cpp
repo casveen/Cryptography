@@ -240,7 +240,6 @@ void BombeUnit::setup_diagonal_board(const string &ciphertext, const string &cri
 vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const string &crib,
                                                 int most_wired_letter, int position) {
     vector<struct EnigmaSetting> solutions;
-    // vector<vector<shint>>        all_rotor_positions= m_enigma->get_all_rotor_positions();
     int total_permutations= m_enigma->compute_total_permutations_brute_force(),
         crib_n            = crib.length(),   // ciphertext_n= ciphertext.length();
         ring_settings     = min((int)pow(m_letters, m_rotor_count), m_setting.max_ring_settings);
@@ -249,6 +248,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     vector<string> rotor_positions;
     m_enigma->set_ring_setting(m_setting.starting_ring_setting);
     m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
+    m_all_rotor_positions= m_enigma->get_all_rotor_positions();
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
@@ -633,22 +633,32 @@ string Bombe::preprocess(string in) const {
     return in;
 }
 
-// void Bombe::get_equivalent_settings(vector<int> position) {
-// posiiton: physical position of rotors, ie rotor_position-ring_setting
+void BombeUnit::get_equivalent_settings(vector<int> position) {
+    // posiiton: physical position of rotors, ie rotor_position-ring_setting
 
-/*If a message of length m is encrypted with a particular ring setting and rotor posiiton,
-then encrypting the same message with rotor position turned one step forward and ring setting
-one step "backward"(compensating for turn of rotor) should give the exact same message unless
-there was a notch turnover when encrypting. That is, there are a lot of settings of the enigma
-that would encrypt to the exact same message.*/
+    /*If a message of length m is encrypted with a particular ring setting and rotor posiiton,
+    then encrypting the same message with rotor position turned one step forward and ring setting
+    one step "backward"(compensating for turn of rotor) should give the exact same message unless
+    there was a notch turnover when encrypting. That is, there are a lot of settings of the enigma
+    that would encrypt to the exact same message.*/
 
-/*
-The algorithm;
-initially all configurations where rotor and ring setting gives the same position are candidates
-from here we have to eliminate the rest. This is done by turning the enigma, and checking if the
-position is the same as for the original when turned
-*/
+    /*
+    The algorithm;
+    initially all configurations where rotor and ring setting gives the same position are candidates
+    from here we have to eliminate the rest. This is done by turning the enigma, and checking if the
+    position is the same as for the original when turned
+    */
 
-// for each rotorp position, there is exactly one ring setting that gives the sa,,e position as
-// the original posiiton
-//}
+    // for each rotorp position, there is exactly one ring setting that gives the sa,,e position as
+    // the original posiiton
+    string ring_setting;
+    for (vector<shint> rotor_position : m_all_rotor_positions) {
+        // there is exactly one ring setting so that position is the origianl position
+        ring_setting= "";
+        for (int i= 0; i < position.size(); ++i) {
+            ring_setting+=
+                (char)((rotor_position[i] - position[i] + m_letters) % m_letters + (int)'A');
+        }
+        // now test if it holds
+    }
+}
