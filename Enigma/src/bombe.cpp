@@ -159,9 +159,8 @@ bool DiagonalBoard::bundle_contradiction(int bundle) const {
     return false;
 }
 
-BombeUnit::BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector) :
-    BombeUnit(vector<Rotor>(rotors), reflector) {}
 BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector) {
+    // Top constructor
     m_letters       = (rotors.begin())->get_wires();
     m_rotor_count   = rotors.size();
     m_diagonal_board= new DiagonalBoard(m_letters);
@@ -172,7 +171,11 @@ BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector) {
         m_identifier+= "-";
     }
     m_identifier+= reflector.get_name();
+    // find all rotor positions, and make configuration grid
+    m_configuration_grid= new ConfigurationGrid(*m_enigma);
 }
+BombeUnit::BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector) :
+    BombeUnit(vector<Rotor>(rotors), reflector) {}
 BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting) :
     BombeUnit(enigma_setting.rotors, enigma_setting.reflector) {
     // plugboard, rotor position are ignored
@@ -229,7 +232,6 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     vector<string> rotor_positions;
     m_enigma->set_ring_setting(m_setting.starting_ring_setting);
     m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
-    m_all_rotor_positions= m_enigma->get_all_rotor_positions();
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
@@ -611,32 +613,158 @@ string Bombe::preprocess(string in) const {
     return in;
 }
 
-void BombeUnit::get_equivalent_settings(vector<int> position) {
-    // posiiton: physical position of rotors, ie rotor_position-ring_setting
+// void BombeUnit::get_equivalent_settings(vector<int> position) {
+// posiiton: physical position of rotors, ie rotor_position-ring_setting
 
-    /*If a message of length m is encrypted with a particular ring setting and rotor posiiton,
-    then encrypting the same message with rotor position turned one step forward and ring setting
-    one step "backward"(compensating for turn of rotor) should give the exact same message unless
-    there was a notch turnover when encrypting. That is, there are a lot of settings of the enigma
-    that would encrypt to the exact same message.*/
+/*If a message of length m is encrypted with a particular ring setting and rotor posiiton,
+then encrypting the same message with rotor position turned one step forward and ring setting
+one step "backward"(compensating for turn of rotor) should give the exact same message unless
+there was a notch turnover when encrypting. That is, there are a lot of settings of the enigma
+that would encrypt to the exact same message.*/
 
-    /*
-    The algorithm;
-    initially all configurations where rotor and ring setting gives the same position are candidates
-    from here we have to eliminate the rest. This is done by turning the enigma, and checking if the
-    position is the same as for the original when turned
-    */
+/*
+The algorithm;
+initially all configurations where rotor and ring setting gives the same position are candidates
+from here we have to eliminate the rest. This is done by turning the enigma, and checking if the
+position is the same as for the original when turned
+*/
 
-    // for each rotorp position, there is exactly one ring setting that gives the sa,,e position as
-    // the original posiiton
-    string ring_setting;
-    for (vector<shint> rotor_position : m_all_rotor_positions) {
-        // there is exactly one ring setting so that position is the origianl position
-        ring_setting= "";
-        for (int i= 0; i < position.size(); ++i) {
-            ring_setting+=
-                (char)((rotor_position[i] - position[i] + m_letters) % m_letters + (int)'A');
-        }
-        // now test if it holds
+// for each rotorp position, there is exactly one ring setting that gives the sa,,e position as
+// the original posiiton
+/*string ring_setting;
+for (vector<shint> rotor_position : m_all_rotor_positions) {
+    // there is exactly one ring setting so that position is the origianl position
+    ring_setting= "";
+    for (int i= 0; i < position.size(); ++i) {
+        ring_setting+=
+            (char)((rotor_position[i] - position[i] + m_letters) % m_letters + (int)'A');
     }
+    // now test if it holds
+}
+}*/
+
+ConfigurationGrid::ConfigurationGrid(Enigma &enigma) {
+    m_letters            = enigma.get_wires();
+    m_rotor_count        = enigma.get_rotors();
+    m_all_rotor_positions= enigma.get_all_rotor_positions();
+    try {
+        cout << "\rAllocating to inverse";
+        // larger than it needs to be...only m_all_rotor_poositions.size()<<letter^rotors
+        m_all_rotor_positions_inverse= vector<shint>(pow(m_letters, m_rotor_count), 0);
+    } catch (bad_alloc &ba) {
+        cerr << "ERROR:Failed to allocate inverse of all rotor positions, disable configuration "
+                "grid";
+    }
+    for (int rs= 0; rs < pow(m_letters, m_rotor_count); ++rs) {   // for each ring setting
+        try {
+            cout << "\rAllocating checked, " << rs << "/" << pow(m_letters, m_rotor_count)
+                 << "     ";
+            vector<bool> row= vector<bool>(m_all_rotor_positions.size(), false);
+            m_checked.push_back(row);
+        } catch (bad_alloc &ba) {
+            cerr << "ERROR:Failed to allocate checklist in configuration grid, disable "
+                    "configuration "
+                    "grid";
+        }
+    }
+    for (int rp= 0; rp < m_all_rotor_positions.size(); ++rp) {
+        cout << "\rSetting to inverse, " << rp << "/" << m_all_rotor_positions.size() << "     ";
+        vector<shint> rotor_position= m_all_rotor_positions[rp];
+        m_all_rotor_positions_inverse[vector_to_int_hash(rotor_position)]= rp;
+    }
+    cout << "SUCCESFULLY MADE CONFIGURATION GRID\n";
+}
+
+void ConfigurationGrid::reset_checked() {
+    for (int rs= 0; rs < pow(m_letters, m_rotor_count); ++rs) {
+        for (unsigned int rp= 0; rp < m_all_rotor_positions.size(); ++rp) {
+            m_checked[rs][rp]= false;
+        }
+    }
+}
+
+bool ConfigurationGrid::get_checked(const string &ring_setting, const string &rotor_position) {
+    // translate to index
+    int rs= ring_setting_string_to_int(ring_setting),
+        rp= rotor_position_string_to_int(rotor_position);
+    return m_checked[rs][rp];
+}
+
+void ConfigurationGrid::set_checked(const string &ring_setting, const string &rotor_position,
+                                    int crib_length) {
+    // translate to index
+    int rs= ring_setting_string_to_int(ring_setting),
+        rp= rotor_position_string_to_int(rotor_position);
+    // get position and all subsequent
+    vector<vector<shint>> positions_original;
+    for (int p= 0; p < crib_length; ++p) {   // offset from start
+        vector<shint> position;
+        for (int i= 0; i < m_rotor_count; ++i) {   // index of rotor_position
+            position.push_back((shint)(
+                (m_all_rotor_positions[rp + p][i] - ((int)ring_setting[i] - (int)'A') + m_letters) %
+                m_letters));
+        }
+        positions_original.push_back(position);
+    }
+    // get equivalents, one candidae per rotor position.
+    // starting index is at rp, rs
+    // rss+rpp
+    for (unsigned int rpp= 0; rpp < m_all_rotor_positions.size(); ++rpp) {
+        // vector<shint> position;
+        // find the ring setting corresponding to this rotor position(rs so that
+        // rp-rs=r_original[0])
+        // int ring_setting_hash=0; //rp-rs=p => rs=rp-p
+        vector<shint> ring_setting;
+        for (int i= 0; i < m_rotor_count; ++i) {
+            ring_setting.push_back(m_all_rotor_positions[rpp][i] - positions_original[0][i]);
+        }
+        int rss= vector_to_int_hash(ring_setting);
+        // now we can search from rss, rpp, along rpp axis and compare to original
+        // p=0 isalready good
+        bool equal= true;
+        for (int p= 1; p < crib_length; ++p) {
+            for (int i= 0; i < m_rotor_count; ++i) {
+                int position_p_i=
+                    (m_all_rotor_positions[rp + p][i] - ring_setting[i] + m_letters) % m_letters;
+                if (position_p_i != positions_original[p][i]) {
+                    equal= false;
+                    break;
+                }
+            }
+            if (!equal) break;
+        }
+        if (equal) { m_checked[rss][rpp]= true; }
+    }
+}
+
+shint ConfigurationGrid::rotor_position_string_to_int(const string &ring_setting) {
+    // a injective mapping from ring setting strings to int. Essentially a hash
+    // must map correctly to m_all_rotor_positions
+    // that is, m_all_rotor_positions[rotor_position_string_to_int[rotor_position]]=rotor_position
+    // here we use the array m_all_rotor_positions_inverse, but first we have make an index from the
+    // string, to look up in the inverse array
+    return m_all_rotor_positions_inverse[string_to_int_hash(ring_setting)];
+}
+
+shint ConfigurationGrid::ring_setting_string_to_int(const string &ring_setting) {
+    // a injective mapping from ring setting strings to int. Essentially a hash
+    return string_to_int_hash(ring_setting);
+}
+
+shint ConfigurationGrid::string_to_int_hash(const string &str) {
+    shint as_int= 0;
+    for (int i= m_rotor_count - 1; i >= 0; --i) {   // TODO reverse iterator
+        as_int*= m_letters;
+        as_int+= (char)(str[i] - (int)'A');
+    }
+    return as_int;
+}
+
+shint ConfigurationGrid::vector_to_int_hash(const vector<shint> &vec) {
+    shint as_int= 0;
+    for (int i= m_rotor_count - 1; i >= 0; --i) {   // TODO reverse iterator
+        as_int*= m_letters;
+        as_int+= vec[i];
+    }
+    return as_int;
 }

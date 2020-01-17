@@ -44,6 +44,40 @@ class DiagonalBoard {
     int   bundle_sum(int) const;
 };
 
+class ConfigurationGrid {
+    /*The Configuration grid is owned by a bombeunit, but its precomputation used for bookkeeping is
+    done by the bombe, ie the class that delegates the work to the units.
+    Throghout the checking of all rotor positions and ring settings, there are a lot of ring
+    settings and rotor positions that have the same confiduration of the enigma throughout
+    encryption. Therefore there will usually be lots of configurations that encrypts the crib to the
+    given ciphertext. The configuration board keeps track of which configurations are already
+    searched. This approach slows down the individual checks, but will drastically lower the amount
+    of checks done at the cost of a lot of bookkeeping. This class is probably the source of the
+    largest meemory footprint in the program.*/
+  private:
+    int m_letters;
+    int m_rotor_count;
+    // vector of rotor positions, element i corresponds to column i of grid
+    vector<vector<shint>> m_all_rotor_positions;
+    // satisfies
+    // m_all_rotor_positions[m_all_rotor_positions_inverse[rotor_position_string_to_int(rotor_position)]]=rotor_position
+    // TODO make a narrower hash function
+    vector<shint> m_all_rotor_positions_inverse;
+    // rows are ring setting(num=letter^rotors) columns are rotor positions
+    // is true if the given ring setting and rotor posiiton is checked
+    vector<vector<bool>> m_checked;
+
+  public:
+    ConfigurationGrid(Enigma &enigma);
+    void  reset_checked();
+    bool  get_checked(const string &ring_setting, const string &rotor_position);
+    void  set_checked(const string &ring_setting, const string &rotor_position, int);
+    shint ring_setting_string_to_int(const string &);
+    shint rotor_position_string_to_int(const string &);
+    shint string_to_int_hash(const string &str);
+    shint vector_to_int_hash(const vector<shint> &);
+};
+
 struct BombeUnitSetting {
     // if true, stops as soon as a valid config is found
     bool stop_on_first_valid= false;
@@ -62,17 +96,18 @@ struct BombeUnitSetting {
 
 class BombeUnit {
   private:
-    string                m_identifier= "A bombeunit";
-    int                   m_letters= 26, m_rotor_count= 3;
-    DiagonalBoard *       m_diagonal_board;
-    vector<int *>         m_enigma_encryptions;
-    vector<vector<shint>> m_all_rotor_positions;
-    Enigma *              m_enigma;
-    bool                  m_verbose= false;
-    vector<vector<bool>>  m_configuration_grid;
+    string             m_identifier= "A bombeunit";
+    int                m_letters= 26, m_rotor_count= 3;
+    DiagonalBoard *    m_diagonal_board;
+    vector<int *>      m_enigma_encryptions;
+    ConfigurationGrid *m_configuration_grid;
+
+    Enigma *m_enigma;
+    bool    m_verbose= false;
     // rotor positions
     // track encryptions
     struct BombeUnitSetting m_setting;
+    // this object is used to keep track of enigma settings explored
 
   public:
     BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector);
@@ -101,7 +136,7 @@ class BombeUnit {
     void           interactive_wirechecking();
     vector<string> get_special_rotor_positions();
     void           print_progress(int, int, int);
-    void           get_equivalent_settings(vector<int>);
+    // void           get_equivalent_settings(vector<int>);
 };
 
 struct BombeSetting {

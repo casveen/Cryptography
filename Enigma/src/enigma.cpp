@@ -1245,9 +1245,6 @@ vector<vector<shint>> Enigma::get_all_rotor_positions() {
         rotor_positions.push_back(rotor_position);
         turn();
         turns++;
-        /*cout << "\r" << rotor_positions.size() << " --- " << get_rotor_position_as_string() << " -
-           "
-             << first_rotor_position;*/
     }
     // reset state
     set_ring_setting(initial_ring_setting);
