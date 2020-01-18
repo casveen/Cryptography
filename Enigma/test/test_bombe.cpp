@@ -41,11 +41,11 @@ SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {
         // struct EnigmaSetting enigma_setting;
         bombe.get_setting().stop_on_first_valid     = true;
         bombe.get_setting().only_one_configuration  = true;
-        bombe.get_setting().starting_ring_setting   = "EPEI";
+        bombe.get_setting().starting_ring_setting   = "EPEL";
         bombe.get_setting().starting_rotor_positions= "AAAA";
         bombe.get_setting().rotor_count             = 4;
         string ciphertext                           = "RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJWLQXXT";
-        string crib                                 = "FOLGENDE";
+        string crib                                 = "FOLGENDESISTSOFORT";
         WHEN("Running bombe close to configuration") {
             THEN("Bombe should find the configuration") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, crib);

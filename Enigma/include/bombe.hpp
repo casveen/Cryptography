@@ -1,6 +1,8 @@
 #ifndef BOMBE_H   // include guard
 #define BOMBE_H
 
+const bool DEFAULT_USE_CONFIGURATION_GRID= false;
+
 using namespace std;
 #include "enigma.hpp"
 //#include "queue"
@@ -57,6 +59,7 @@ class ConfigurationGrid {
   private:
     int m_letters;
     int m_rotor_count;
+    int m_crib_length= -1;
     // vector of rotor positions, element i corresponds to column i of grid
     vector<vector<shint>> m_all_rotor_positions;
     // satisfies
@@ -66,12 +69,17 @@ class ConfigurationGrid {
     // rows are ring setting(num=letter^rotors) columns are rotor positions
     // is true if the given ring setting and rotor posiiton is checked
     vector<vector<bool>> m_checked;
+    // used in setchecked, stored here to avoid unnecessary frees and allocs
+    // the m_ prefix is not used as it technically is not used as an attribute
+    vector<vector<shint>> positions_original;
+    vector<shint>         current_ring_setting;
 
   public:
     ConfigurationGrid(Enigma &enigma);
     void  reset_checked();
     bool  get_checked(const string &ring_setting, const string &rotor_position);
-    void  set_checked(const string &ring_setting, const string &rotor_position, int);
+    void  set_checked(const string &ring_setting, const string &rotor_position);
+    void  set_crib_length(int);
     shint ring_setting_string_to_int(const string &);
     shint rotor_position_string_to_int(const string &);
     shint string_to_int_hash(const string &str);
@@ -102,17 +110,21 @@ class BombeUnit {
     vector<int *>      m_enigma_encryptions;
     ConfigurationGrid *m_configuration_grid;
 
-    Enigma *m_enigma;
-    bool    m_verbose= false;
+    Enigma *   m_enigma;
+    bool       m_verbose               = false;
+    const bool m_use_configuration_grid= true;
     // rotor positions
     // track encryptions
     struct BombeUnitSetting m_setting;
     // this object is used to keep track of enigma settings explored
 
   public:
-    BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector);
-    BombeUnit(const vector<Rotor> rotors, const Reflector reflector);
-    BombeUnit(struct EnigmaSetting);
+    BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector,
+              const bool use_configuration_board= DEFAULT_USE_CONFIGURATION_GRID);
+    BombeUnit(const vector<Rotor> rotors, const Reflector reflector,
+              const bool use_configuration_board= DEFAULT_USE_CONFIGURATION_GRID);
+    BombeUnit(struct EnigmaSetting,
+              const bool use_configuration_board= DEFAULT_USE_CONFIGURATION_GRID);
     ~BombeUnit();
     // setters
     void set_identifier(string);
@@ -158,8 +170,9 @@ struct BombeSetting {
 
 class Bombe {
   private:
-    int                   m_letters= 26;
-    bool                  m_verbose= false;
+    int                   m_letters                  = 26;
+    bool                  m_verbose                  = false;
+    const bool            m_using_configuration_board= true;
     vector<BombeUnit>     m_units;
     vector<Rotor>         m_rotors;
     vector<vector<Rotor>> m_rotor_configurations;

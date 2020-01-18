@@ -159,7 +159,9 @@ bool DiagonalBoard::bundle_contradiction(int bundle) const {
     return false;
 }
 
-BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector) {
+BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector,
+                     const bool use_configuration_grid /*true*/) :
+    m_use_configuration_grid{use_configuration_grid} {
     // Top constructor
     m_letters       = (rotors.begin())->get_wires();
     m_rotor_count   = rotors.size();
@@ -172,12 +174,14 @@ BombeUnit::BombeUnit(const vector<Rotor> rotors, const Reflector reflector) {
     }
     m_identifier+= reflector.get_name();
     // find all rotor positions, and make configuration grid
-    m_configuration_grid= new ConfigurationGrid(*m_enigma);
+    if (m_use_configuration_grid) { m_configuration_grid= new ConfigurationGrid(*m_enigma); }
 }
-BombeUnit::BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector) :
-    BombeUnit(vector<Rotor>(rotors), reflector) {}
-BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting) :
-    BombeUnit(enigma_setting.rotors, enigma_setting.reflector) {
+BombeUnit::BombeUnit(const std::initializer_list<Rotor> rotors, const Reflector reflector,
+                     const bool use_configuration_grid /*true*/) :
+    BombeUnit(vector<Rotor>(rotors), reflector, use_configuration_grid) {}
+BombeUnit::BombeUnit(struct EnigmaSetting enigma_setting,
+                     const bool           use_configuration_grid /*true*/) :
+    BombeUnit(enigma_setting.rotors, enigma_setting.reflector, use_configuration_grid) {
     // plugboard, rotor position are ignored
     m_setting.starting_ring_setting   = enigma_setting.ring_setting;
     m_setting.starting_rotor_positions= enigma_setting.rotor_position;
@@ -230,6 +234,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     // cout << "Enigma starting from " << m_enigma->get_rotor_position_as_string() << "\n";
 
     vector<string> rotor_positions;
+    if (m_use_configuration_grid) { m_configuration_grid->set_crib_length(crib_n); }
     m_enigma->set_ring_setting(m_setting.starting_ring_setting);
     m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
     // for each ring setting
@@ -245,9 +250,11 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
             // cout << flush;
             // TODO actual rotor pos!
-            if (!m_configuration_grid->get_checked(
-                    m_enigma->get_ring_setting_as_string(),
-                    rotor_positions[rotor_positions.size() - crib.length() - 1])) {
+            if (!m_use_configuration_grid ||
+                (m_use_configuration_grid &&
+                 !m_configuration_grid->get_checked(
+                     m_enigma->get_ring_setting_as_string(),
+                     rotor_positions[rotor_positions.size() - crib.length() - 1]))) {
                 reset_diagonal_board();
                 setup_diagonal_board(ciphertext, crib);
                 // BEGIN TESTS
@@ -267,9 +274,11 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                         m_enigma->set_plugboard("");   // reset plugboard
                     }
                 }
-                m_configuration_grid->set_checked(
-                    m_enigma->get_ring_setting_as_string(),
-                    rotor_positions[rotor_positions.size() - crib.length() - 1], crib_n);
+                if (m_use_configuration_grid) {
+                    m_configuration_grid->set_checked(
+                        m_enigma->get_ring_setting_as_string(),
+                        rotor_positions[rotor_positions.size() - crib.length() - 1]);
+                }
             }
 
             // END TESTS
@@ -706,54 +715,40 @@ const std::string gc("\033[1;30m");
 const std::string bgc("\033[0;40m");
 const std::string bgr("\033[0;40m");
 
-void ConfigurationGrid::set_checked(const string &ring_setting, const string &rotor_position,
-                                    int crib_length) {
+void ConfigurationGrid::set_checked(const string &ring_setting, const string &rotor_position) {
     // translate to index
     // cout << "CONF::set_checked:    get rs, rp\n";
     int rs= ring_setting_string_to_int(ring_setting),
         rp= rotor_position_string_to_int(rotor_position);
     // get position and all subsequent
-    // cout << "CONF::set_checked:    got rs, rp, getting original position\n";
-    vector<vector<shint>> positions_original;
-    for (int p= 0; p < crib_length; ++p) {   // offset from start
-        vector<shint> position;
+    for (int p= 0; p < m_crib_length; ++p) {       // offset from start
         for (int i= 0; i < m_rotor_count; ++i) {   // index of rotor_position
-            int position_i= (m_all_rotor_positions[(rp + p) % m_all_rotor_positions.size()][i] -
-                             ((int)ring_setting[i] - (int)'A') + m_letters) %
-                            m_letters;
-            // cout << position_i << ",";
-            position.push_back((shint)(position_i));
+            int position_p_i= (m_all_rotor_positions[(rp + p) % m_all_rotor_positions.size()][i] -
+                               ((int)ring_setting[i] - (int)'A') + m_letters) %
+                              m_letters;
+            positions_original[p][i]= position_p_i;
         }
-        positions_original.push_back(position);
     }
-    // cout << "CONF::set_checked:    got original position\n";
     // get equivalents, one candidae per rotor position.
-    // starting index is at rp, rs
-    // rss+rpp
     int set_count= 0;
-    // cout << "-------------Setting from " << rs << "," << rp << "\n";
     for (unsigned int rpp= 0; rpp < m_all_rotor_positions.size(); ++rpp) {
         // vector<shint> position;
         // find the ring setting corresponding to this rotor position(rs so that
         // rp-rs=r_original[0])
-        // int ring_setting_hash=0; //rp-rs=p => rs=rp-p
-        // cout << "-";
-        vector<shint> ring_setting;
         for (int i= 0; i < m_rotor_count; ++i) {
-            ring_setting.push_back(
-                (m_all_rotor_positions[rpp][i] - positions_original[0][i] + m_letters) % m_letters);
+            current_ring_setting[i]=
+                ((m_all_rotor_positions[rpp][i] - positions_original[0][i] + m_letters) %
+                 m_letters);
         }
-        int rss= vector_to_int_hash(ring_setting);
+        int rss= vector_to_int_hash(current_ring_setting);
         // now we can search from rss, rpp, along rpp axis and compare to original
         // p=0 isalready good
         bool equal= true;
-        // cout << "-";
-        for (int p= 1; p < crib_length; ++p) {
+        for (int p= 1; p < m_crib_length; ++p) {
             for (int i= 0; i < m_rotor_count; ++i) {
-
                 int position_p_i=
                     (m_all_rotor_positions[(rpp + p) % m_all_rotor_positions.size()][i] -
-                     ring_setting[i] + m_letters) %
+                     current_ring_setting[i] + m_letters) %
                     m_letters;
                 if (position_p_i != positions_original[p][i]) {
                     equal= false;
@@ -770,17 +765,19 @@ void ConfigurationGrid::set_checked(const string &ring_setting, const string &ro
             }
             m_checked[rss][rpp]= true;
             set_count++;
-            // cout << rpp << "," << rss << " ";
-            // cin.get();
-            // cout << "\n";
-        }   // else {
-        //    cout << wc << rpp << "/" << m_all_rotor_positions.size() << "," << rss << "/"
-        //         << m_checked.size() << rc << " \n";
-        //}
-        // cout << "|";
+        }
     }
     // cout << "set " << set_count << flush;
     return;
+}
+
+void ConfigurationGrid::set_crib_length(int crib_length) {
+    m_crib_length= crib_length;
+    // now we can properly allocate positions_original and current ring setting
+    for (int p= 0; p < crib_length; ++p) {   // offset from start
+        positions_original.push_back(vector<shint>(m_rotor_count, 0));
+    }
+    current_ring_setting= vector<shint>(m_rotor_count, 0);
 }
 
 shint ConfigurationGrid::rotor_position_string_to_int(const string &ring_setting) {

@@ -198,6 +198,33 @@ struct BombeSetting benchmark8() {
     return bombe.get_setting();
 }
 
+struct BombeSetting benchmark9() {
+    // make up a setting and use bombe on something completely unrelated,
+    // record the performance
+    Bombe bombe({I, II, III, IV}, UKWR, true);
+    bombe.get_setting().starting_rotor_positions= "AAAA";
+    bombe.get_setting().starting_ring_setting   = "AAAA";
+    bombe.get_setting().max_ring_settings       = MAX_RING_SETTINGS;
+    bombe.get_setting().only_one_candidate      = true;
+    bombe.get_setting().only_one_configuration  = true;
+    bombe.get_setting().stop_on_first_valid     = false;
+    bombe.get_setting().rotor_count             = 4;
+
+    // bombe.get_setting().time_performance        = true;
+    // bombe.get_setting().stop_on_first_valid= true;
+    Enigma enigma({I, VII, VI, II}, UKWR);
+    // enigma.set_verbose(true);
+    string plaintext= "THISISAPLAINTEXTTOBEENCRYPTEDWITHTHEENIGMAANDISVERYVERYVERYLONG";
+    //"SOMEUNRELATEDTEXTANDSOMEMOREUNRELATEDTEXTTHATISUNRELATED"
+    enigma.set_rotor_position("AAAA");
+    enigma.set_ring_setting("AAAA");
+    enigma.set_plugboard("");
+    string                       ciphertext= enigma.encrypt(plaintext);
+    vector<struct EnigmaSetting> solutions=
+        bombe.analyze(ciphertext, "SOMEUNRELATEDTEXTANDSOMEMOREUNRELATEDTEXTTHATSUNRELATED");
+    return bombe.get_setting();
+}
+
 int main() {
     printf("----------------------------------------------------------\n");
     printf("|                          MEAN       VAR        RECORDS |\n");

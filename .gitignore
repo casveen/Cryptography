@@ -7,3 +7,4 @@ Enigma/readingmaterial/*
 *.exe
 *.map
 *.out.*
+Enigma/gmon.out
