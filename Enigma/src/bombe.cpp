@@ -241,28 +241,35 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
 
-            // cout << "     RP:" << m_enigma->get_rotor_position_as_string()
+            // cout << "\rRP:" << m_enigma->get_rotor_position_as_string();
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
             // cout << flush;
-
-            reset_diagonal_board();
-            setup_diagonal_board(ciphertext, crib);
-            // BEGIN TESTS
-            if (check_one_wire(most_wired_letter)) {     // first test
-                if (doublecheck_and_get_plugboard()) {   // second test
-                    if (tripplecheck(crib, ciphertext, position,
-                                     rotor_positions)) {   // final test
-                        cout << "\nRS:" << m_enigma->get_ring_setting_as_string() << "   RP:"
-                             << rotor_positions[rotor_positions.size() - crib.length() - 1]
-                             << "   P:" << m_enigma->get_cartridge()->get_positions_as_string()
-                             << "\n";
-                        m_enigma->set_rotor_position(rotor_positions[0]);
-                        solutions.push_back(m_enigma->get_setting());
-                        m_enigma->set_rotor_position(rotor_positions.back());
-                        if (m_setting.stop_on_first_valid) { return solutions; }
+            // TODO actual rotor pos!
+            if (!m_configuration_grid->get_checked(
+                    m_enigma->get_ring_setting_as_string(),
+                    rotor_positions[rotor_positions.size() - crib.length() - 1])) {
+                reset_diagonal_board();
+                setup_diagonal_board(ciphertext, crib);
+                // BEGIN TESTS
+                if (check_one_wire(most_wired_letter)) {     // first test
+                    if (doublecheck_and_get_plugboard()) {   // second test
+                        if (tripplecheck(crib, ciphertext, position,
+                                         rotor_positions)) {   // final test
+                            cout << "\nRS:" << m_enigma->get_ring_setting_as_string() << "   RP:"
+                                 << rotor_positions[rotor_positions.size() - crib.length() - 1]
+                                 << "   P:" << m_enigma->get_cartridge()->get_positions_as_string()
+                                 << "\n";
+                            m_enigma->set_rotor_position(rotor_positions[0]);
+                            solutions.push_back(m_enigma->get_setting());
+                            m_enigma->set_rotor_position(rotor_positions.back());
+                            if (m_setting.stop_on_first_valid) { return solutions; }
+                        }
+                        m_enigma->set_plugboard("");   // reset plugboard
                     }
-                    m_enigma->set_plugboard("");   // reset plugboard
                 }
+                m_configuration_grid->set_checked(
+                    m_enigma->get_ring_setting_as_string(),
+                    rotor_positions[rotor_positions.size() - crib.length() - 1], crib_n);
             }
 
             // END TESTS
@@ -648,13 +655,14 @@ ConfigurationGrid::ConfigurationGrid(Enigma &enigma) {
     m_rotor_count        = enigma.get_rotors();
     m_all_rotor_positions= enigma.get_all_rotor_positions();
     try {
-        cout << "\rAllocating to inverse";
+        cout << "\rAllocating to inverse ";
         // larger than it needs to be...only m_all_rotor_poositions.size()<<letter^rotors
         m_all_rotor_positions_inverse= vector<shint>(pow(m_letters, m_rotor_count), 0);
     } catch (bad_alloc &ba) {
         cerr << "ERROR:Failed to allocate inverse of all rotor positions, disable configuration "
                 "grid";
     }
+    cout << "DONE\n";
     for (int rs= 0; rs < pow(m_letters, m_rotor_count); ++rs) {   // for each ring setting
         try {
             cout << "\rAllocating checked, " << rs << "/" << pow(m_letters, m_rotor_count)
@@ -667,11 +675,13 @@ ConfigurationGrid::ConfigurationGrid(Enigma &enigma) {
                     "grid";
         }
     }
+    cout << "DONE\n";
     for (int rp= 0; rp < m_all_rotor_positions.size(); ++rp) {
         cout << "\rSetting to inverse, " << rp << "/" << m_all_rotor_positions.size() << "     ";
         vector<shint> rotor_position= m_all_rotor_positions[rp];
         m_all_rotor_positions_inverse[vector_to_int_hash(rotor_position)]= rp;
     }
+    cout << "DONE\n";
     cout << "SUCCESFULLY MADE CONFIGURATION GRID\n";
 }
 
@@ -690,42 +700,61 @@ bool ConfigurationGrid::get_checked(const string &ring_setting, const string &ro
     return m_checked[rs][rp];
 }
 
+const std::string wc("\033[0;31m");
+const std::string rc("\033[0;33m");
+const std::string gc("\033[1;30m");
+const std::string bgc("\033[0;40m");
+const std::string bgr("\033[0;40m");
+
 void ConfigurationGrid::set_checked(const string &ring_setting, const string &rotor_position,
                                     int crib_length) {
     // translate to index
+    // cout << "CONF::set_checked:    get rs, rp\n";
     int rs= ring_setting_string_to_int(ring_setting),
         rp= rotor_position_string_to_int(rotor_position);
     // get position and all subsequent
+    // cout << "CONF::set_checked:    got rs, rp, getting original position\n";
     vector<vector<shint>> positions_original;
     for (int p= 0; p < crib_length; ++p) {   // offset from start
         vector<shint> position;
         for (int i= 0; i < m_rotor_count; ++i) {   // index of rotor_position
-            position.push_back((shint)(
-                (m_all_rotor_positions[rp + p][i] - ((int)ring_setting[i] - (int)'A') + m_letters) %
-                m_letters));
+            int position_i= (m_all_rotor_positions[(rp + p) % m_all_rotor_positions.size()][i] -
+                             ((int)ring_setting[i] - (int)'A') + m_letters) %
+                            m_letters;
+            // cout << position_i << ",";
+            position.push_back((shint)(position_i));
         }
         positions_original.push_back(position);
     }
+    // cout << "CONF::set_checked:    got original position\n";
     // get equivalents, one candidae per rotor position.
     // starting index is at rp, rs
     // rss+rpp
+    int set_count= 0;
+    // cout << "-------------Setting from " << rs << "," << rp << "\n";
     for (unsigned int rpp= 0; rpp < m_all_rotor_positions.size(); ++rpp) {
         // vector<shint> position;
         // find the ring setting corresponding to this rotor position(rs so that
         // rp-rs=r_original[0])
         // int ring_setting_hash=0; //rp-rs=p => rs=rp-p
+        // cout << "-";
         vector<shint> ring_setting;
         for (int i= 0; i < m_rotor_count; ++i) {
-            ring_setting.push_back(m_all_rotor_positions[rpp][i] - positions_original[0][i]);
+            ring_setting.push_back(
+                (m_all_rotor_positions[rpp][i] - positions_original[0][i] + m_letters) % m_letters);
         }
         int rss= vector_to_int_hash(ring_setting);
         // now we can search from rss, rpp, along rpp axis and compare to original
         // p=0 isalready good
         bool equal= true;
+        // cout << "-";
         for (int p= 1; p < crib_length; ++p) {
             for (int i= 0; i < m_rotor_count; ++i) {
+
                 int position_p_i=
-                    (m_all_rotor_positions[rp + p][i] - ring_setting[i] + m_letters) % m_letters;
+                    (m_all_rotor_positions[(rpp + p) % m_all_rotor_positions.size()][i] -
+                     ring_setting[i] + m_letters) %
+                    m_letters;
                 if (position_p_i != positions_original[p][i]) {
                     equal= false;
                     break;
@@ -733,8 +762,25 @@ void ConfigurationGrid::set_checked(const string &ring_setting, const string &ro
             }
             if (!equal) break;
         }
-        if (equal) { m_checked[rss][rpp]= true; }
+        // cout << "-";
+        if (equal) {
+            if (m_checked[rss][rpp]) {
+                cout << "WARNING: checked[" << rss << "," << rpp
+                     << "] already set, this should not be possible";
+            }
+            m_checked[rss][rpp]= true;
+            set_count++;
+            // cout << rpp << "," << rss << " ";
+            // cin.get();
+            // cout << "\n";
+        }   // else {
+        //    cout << wc << rpp << "/" << m_all_rotor_positions.size() << "," << rss << "/"
+        //         << m_checked.size() << rc << " \n";
+        //}
+        // cout << "|";
     }
+    // cout << "set " << set_count << flush;
+    return;
 }
 
 shint ConfigurationGrid::rotor_position_string_to_int(const string &ring_setting) {
@@ -768,3 +814,5 @@ shint ConfigurationGrid::vector_to_int_hash(const vector<shint> &vec) {
     }
     return as_int;
 }
+// 12634,35845
+// 12634,62740s

@@ -45,7 +45,7 @@ SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {
         bombe.get_setting().starting_rotor_positions= "AAAA";
         bombe.get_setting().rotor_count             = 4;
         string ciphertext                           = "RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJWLQXXT";
-        string crib                                 = "FOLGENDESISTSOFORTBEKANNT";
+        string crib                                 = "FOLGENDE";
         WHEN("Running bombe close to configuration") {
             THEN("Bombe should find the configuration") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, crib);
