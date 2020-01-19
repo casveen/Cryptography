@@ -3,6 +3,54 @@
 #include "catch.hpp"
 #include "enigma.hpp"
 #include "rotors.cpp"   //all rotors,
+
+bool is_exact_setting(Enigma &enigma, vector<struct EnigmaSetting> solutions, string ring_setting,
+                      string rotor_position, string correct_plugboard_string, string ciphertext,
+                      string crib, int crib_pos) {
+    unsigned int solution_count= solutions.size();
+    for (struct EnigmaSetting solution : solutions) {
+        bool all_correct= true;
+        enigma.set_setting(solution);
+        string encrypted_crib= enigma.encrypt(crib);
+        bool   check         = (encrypted_crib == ciphertext.substr(crib_pos, crib.length()));
+        if (check == false && solution_count == 1) {
+            cerr << "WRONG DECRYPTION: encrypt(" << crib << ")=" << encrypted_crib
+                 << "=/=" << ciphertext.substr(crib_pos, crib.length()) << "\n";
+        }
+        all_correct= all_correct && check;
+
+        check= (solution.rotor_position == rotor_position);
+        if (check == false && solution_count == 1) {
+            cerr << "WRONG ROTOR POSITION: " << rotor_position << "=/=" << solution.rotor_position
+                 << "\n";
+        }
+        all_correct= all_correct && check;
+
+        check= (solution.ring_setting == ring_setting);
+        if (check == false && solution_count == 1) {
+            cerr << "WRONG RING SETTING: " << ring_setting << "=/=" << solution.ring_setting
+                 << "\n";
+        }
+        all_correct= all_correct && check;
+
+        if (correct_plugboard_string != "") {
+            Plugboard correct_plugboard(correct_plugboard_string, 26);
+            for (int i= 0; i < 26; ++i) {
+                check= (solution.plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
+                if (check == false && solution_count == 1) {
+                    cerr << "WRONG PLUGBOARD: correct_plugboard[" << i
+                         << "]=" << correct_plugboard.get_wiring(i)
+                         << "=/=" << solution.plugboard.get_wiring(i) << "=solution_plugboard[" << i
+                         << "]\n";
+                }
+                all_correct= all_correct && check;
+            }
+        }
+        if (all_correct) { return true; }
+    }
+    return false;
+}
+
 /*
 SCENARIO("Using custom rotors of non-standard size") {
     const Rotor     CI  = Rotor("DFEBCA", "A", "I6");
@@ -45,12 +93,13 @@ SCENARIO("bombe on concrete wikipedia example", "[bombedonitz]") {
         bombe.get_setting().starting_rotor_positions= "AAAA";
         bombe.get_setting().rotor_count             = 4;
         string ciphertext                           = "RBBFPMHPHGCZXTDYGAHGUFXGEWKBLKGJWLQXXT";
-        string crib                                 = "FOLGENDESISTSOFORTBEKANNT";
+        string crib                                 = "FOLGENDESISTSOFORTBEKANNTZU";
         WHEN("Running bombe close to configuration") {
             THEN("Bombe should find the configuration") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, crib);
-                CHECK(solutions[0].ring_setting == "EPEL");
-                CHECK(solutions[0].rotor_position == "CDTJ");
+                Enigma                       enigma({VIII, VI, V, BETA}, THINREFLECTORC);
+                CHECK(is_exact_setting(enigma, solutions, "EPEL", "CDTJ",
+                                       "AE.BF.CM.DQ.HU.JN.LX.PR.SZ.VW", ciphertext, crib, 0));
             }
         }
     }
@@ -69,16 +118,6 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
         Enigma enigma({I, II, III}, UKWR);
         string initial_ring_setting  = enigma.get_ring_setting_as_string();
         string initial_rotor_position= enigma.get_rotor_position_as_string();
-        /*for (int j= 0; j < 26; j++) {
-            enigma.set_rotor_position(initial_rotor_position);
-            for (int i= 0; i < 26; ++i) {
-                for (int p= 0; p < 3; ++p) { cout << (char)(enigma.get_positions()[p] + (int)'A'); }
-                cout << " ";
-                enigma.turn();
-            }
-            cout << "\n";
-            enigma.next_ring_setting();
-        }*/
         enigma.set_ring_setting(initial_ring_setting);
         enigma.set_rotor_position(initial_rotor_position);
         // enigma.set_verbose(true);
@@ -97,9 +136,8 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                enigma.set_setting(solutions[0]);
-                CHECK(enigma.encrypt(ciphertext) == plaintext);
-                CHECK(solutions[0].rotor_position == "AAA");
+                CHECK(is_exact_setting(enigma, solutions, "AAA", "AAA", "", ciphertext, plaintext,
+                                       0));
             }
         }
 
@@ -116,11 +154,8 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                // enigma.set_setting(solutions[0]);
-                // enigma.reset();
-                enigma.set_setting(solutions[0]);
-                CHECK(enigma.encrypt(ciphertext) == plaintext);
-                CHECK(solutions[0].rotor_position == "CAA");
+                CHECK(is_exact_setting(enigma, solutions, "AAA", "CAA", "", ciphertext, plaintext,
+                                       0));
             }
         }
 
@@ -135,11 +170,8 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                // enigma.reset();
-                // enigma.set_setting(solutions[0]);
-                // cout<<"\n\nTEST: "<<enigma.encrypt(ciphertext)<<"\n";
-                REQUIRE(solutions[0].rotor_position == "CDE");
-                REQUIRE(solutions[0].ring_setting == "FGH");
+                CHECK(is_exact_setting(enigma, solutions, "FGH", "CDE", "", ciphertext, plaintext,
+                                       0));
             }
         }
 
@@ -157,15 +189,8 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                enigma.set_setting(solutions[0]);
-                CHECK(enigma.encrypt(ciphertext) == plaintext);
-                CHECK(solutions[0].rotor_position == "MCW");
-                CHECK(solutions[0].ring_setting == "BBA");
-                // compare plugboards
-                Plugboard correct_plugboard("AC. BD. EG. IR. JT. QZ", 26);
-                for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
-                }
+                CHECK(is_exact_setting(enigma, solutions, "BBA", "MCW", "AC. BD. EG. IR. JT. QZ",
+                                       ciphertext, plaintext, 0));
             }
         }
 
@@ -181,15 +206,9 @@ SCENARIO("bombeunit finds the configuration of an enimga", "[bombeunit]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                enigma.set_setting(solutions[0]);
-                CHECK(enigma.encrypt(ciphertext) == plaintext);
-                CHECK(solutions[0].rotor_position == "HAP");
-                CHECK(solutions[0].ring_setting == "AFG");
-                // compare plugboards
-                Plugboard correct_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
-                for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
-                }
+                CHECK(is_exact_setting(enigma, solutions, "AFG", "HAP",
+                                       "AK. IE. DV. CQ. BN, MO, PJ. WR. UX", ciphertext, plaintext,
+                                       0));
             }
         }
     }
@@ -218,14 +237,9 @@ SCENARIO("bombe finds the configuration of an enimga", "[bombe]") {
             THEN("Running bombe with a complete crib should return the above "
                  "setting") {
                 vector<struct EnigmaSetting> solutions= bombe.analyze(ciphertext, plaintext);
-                enigma.set_setting(solutions[0]);
-                CHECK(enigma.encrypt(ciphertext) == plaintext);
-                CHECK(solutions[0].rotor_position == "BLO");
-                CHECK(solutions[0].ring_setting == "GHK");
-                Plugboard correct_plugboard("AK. IE. DV. CQ. BN, MO, PJ. WR. UX", 26);
-                for (int i= 0; i < 26; ++i) {
-                    CHECK(solutions[0].plugboard.get_wiring(i) == correct_plugboard.get_wiring(i));
-                }
+                CHECK(is_exact_setting(enigma, solutions, "GHK", "BLO",
+                                       "AK. IE. DV. CQ. BN, MO, PJ. WR. UX", ciphertext, plaintext,
+                                       0));
             }
         }
     }

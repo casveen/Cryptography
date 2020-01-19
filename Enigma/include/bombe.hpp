@@ -57,18 +57,20 @@ class ConfigurationGrid {
     of checks done at the cost of a lot of bookkeeping. This class is probably the source of the
     largest meemory footprint in the program.*/
   private:
-    int m_letters;
-    int m_rotor_count;
-    int m_crib_length= -1;
+    int      m_letters;
+    int      m_rotor_count;
+    int      m_crib_length           = -1;
+    long int m_total_configurations  = 0;
+    long int m_checked_configurations= 0;
     // vector of rotor positions, element i corresponds to column i of grid
     vector<vector<shint>> m_all_rotor_positions;
     // satisfies
     // m_all_rotor_positions[m_all_rotor_positions_inverse[rotor_position_string_to_int(rotor_position)]]=rotor_position
     // TODO make a narrower hash function
-    vector<shint> m_all_rotor_positions_inverse;
+    vector<unsigned int> m_all_rotor_positions_inverse;
     // rows are ring setting(num=letter^rotors) columns are rotor positions
     // is true if the given ring setting and rotor posiiton is checked
-    vector<vector<bool>> m_checked;
+    vector<bool> m_checked;
     // used in setchecked, stored here to avoid unnecessary frees and allocs
     // the m_ prefix is not used as it technically is not used as an attribute
     vector<vector<shint>> positions_original;
@@ -76,14 +78,16 @@ class ConfigurationGrid {
 
   public:
     ConfigurationGrid(Enigma &enigma);
-    void  reset_checked();
-    bool  get_checked(const string &ring_setting, const string &rotor_position);
-    void  set_checked(const string &ring_setting, const string &rotor_position);
-    void  set_crib_length(int);
-    shint ring_setting_string_to_int(const string &);
-    shint rotor_position_string_to_int(const string &);
-    shint string_to_int_hash(const string &str);
-    shint vector_to_int_hash(const vector<shint> &);
+    void         reset_checked();
+    bool         get_checked(const string &ring_setting, const string &rotor_position);
+    void         set_checked(const string &ring_setting, const string &rotor_position);
+    void         set_crib_length(int);
+    long int     get_total_configurations() const;
+    long int     get_checked_configurations() const;
+    unsigned int ring_setting_string_to_int(const string &);
+    unsigned int rotor_position_string_to_int(const string &);
+    unsigned int string_to_int_hash(const string &str);
+    unsigned int vector_to_int_hash(const vector<shint> &);
 };
 
 struct BombeUnitSetting {
@@ -112,7 +116,7 @@ class BombeUnit {
 
     Enigma *   m_enigma;
     bool       m_verbose               = false;
-    const bool m_use_configuration_grid= true;
+    const bool m_use_configuration_grid= DEFAULT_USE_CONFIGURATION_GRID;
     // rotor positions
     // track encryptions
     struct BombeUnitSetting m_setting;
@@ -166,6 +170,9 @@ struct BombeSetting {
     double     performance_ring_setting_var = 0;
     int        records_ring_setting         = 0;
     int        records_bombeunits           = 0;
+    double     performance_unit_run_mean    = 0;
+    double     performance_unit_run_var     = 0;
+    int        records_unit_run             = 0;
 };
 
 class Bombe {
@@ -177,13 +184,16 @@ class Bombe {
     vector<Rotor>         m_rotors;
     vector<vector<Rotor>> m_rotor_configurations;
     vector<Reflector>     m_reflector;
+    const bool            m_use_configuration_grid= DEFAULT_USE_CONFIGURATION_GRID;
     // ofstream                m_outstream;
     struct BombeSetting     m_setting;
     struct BombeUnitSetting m_unit_setting;
 
   public:
-    Bombe(const initializer_list<Rotor> rotors, const Reflector reflector);
-    Bombe(vector<Rotor> rotors, vector<Reflector> reflector);
+    Bombe(const initializer_list<Rotor> rotors, const Reflector reflector,
+          const bool use_configuration_grid= DEFAULT_USE_CONFIGURATION_GRID);
+    Bombe(vector<Rotor> rotors, vector<Reflector> reflector,
+          const bool use_configuration_grid= DEFAULT_USE_CONFIGURATION_GRID);
     // Bombe(struct EnigmaSetting enigma_setting);
     vector<struct EnigmaSetting> analyze_unit(const string &, const string &, vector<Rotor> &,
                                               Reflector &, int, int);

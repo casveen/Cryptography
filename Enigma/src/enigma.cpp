@@ -1224,7 +1224,7 @@ string Enigma::indicator_procedure_WW2(string start_pos, string message_key) {
     return start_pos + encrypted_message_key;
 }
 vector<vector<shint>> Enigma::get_all_rotor_positions() {
-    cout << "get all positions\n";
+    // cout << "get all positions\n";
     vector<vector<shint>> rotor_positions;
     vector<shint>         rotor_position;
     string                initial_ring_setting  = get_ring_setting_as_string();
@@ -1249,7 +1249,7 @@ vector<vector<shint>> Enigma::get_all_rotor_positions() {
     // reset state
     set_ring_setting(initial_ring_setting);
     set_rotor_position(initial_rotor_position);
-    cout << "\ngot all positions\n";
+    // cout << "\ngot all positions\n";
     return rotor_positions;
 }
 

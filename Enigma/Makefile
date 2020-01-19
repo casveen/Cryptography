@@ -1,5 +1,5 @@
 CC:= g++
-FLAGS= -Wall -pedantic -Ofast -fopenmp -g -pg #openmp only needed in linking
+FLAGS= -Wall -pedantic -Ofast -fopenmp #-g -pg #openmp only needed in linking
 SRC=src
 BIN=bin
 BUILD=build
