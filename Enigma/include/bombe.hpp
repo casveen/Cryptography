@@ -77,13 +77,14 @@ class ConfigurationGrid {
     vector<shint>         current_ring_setting;
 
   public:
+    bool print_on_next= true;
     ConfigurationGrid(Enigma &enigma);
-    void     reset_checked();
-    bool     get_checked(const int *ring_setting, const vector<int> &rotor_position);
-    void     set_checked(const int *ring_setting, vector<vector<shint>>::const_iterator position);
-    void     set_crib_length(int);
-    long int get_total_configurations() const;
-    long int get_checked_configurations() const;
+    void         reset_checked();
+    bool         get_checked(const int *ring_setting, const vector<int> &rotor_position);
+    void         set_checked(vector<vector<shint>>::const_iterator position);
+    void         set_crib_length(int);
+    long int     get_total_configurations() const;
+    long int     get_checked_configurations() const;
     unsigned int ring_setting_string_to_int(const string &);
     unsigned int rotor_position_string_to_int(const string &);
     unsigned int ring_setting_array_to_int(const int *);

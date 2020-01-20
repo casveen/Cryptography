@@ -1234,6 +1234,9 @@ vector<vector<shint>> Enigma::get_all_rotor_positions() {
     set_ring_setting(set);
     for (int t= 0; t < m_wires; ++t) { turn(); }   // to ensure not in a impossible rotor posiiton
     string first_rotor_position= get_rotor_position_as_string();
+    rotor_position.clear();
+    for (char c : get_rotor_position_as_string()) { rotor_position.push_back((shint)c - (int)'A'); }
+    rotor_positions.push_back(rotor_position);
     turn();
     int turns= 1;
 

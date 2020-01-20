@@ -219,6 +219,8 @@ string BombeUnit::get_identifier() const { return m_identifier; }
 
 void BombeUnit::init_enigma_encryptions(int encryptions, vector<string> &rotor_positions,
                                         vector<vector<shint>> &positions) {
+    // m_enigma->set_ring_setting(m_setting.starting_ring_setting);
+    m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
     for (int *encryption : m_enigma_encryptions) { delete[] encryption; }
     m_enigma_encryptions.clear();
     rotor_positions.clear();
@@ -252,20 +254,21 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     vector<string>        rotor_positions;
     vector<vector<shint>> positions;
     if (m_use_configuration_grid) { m_configuration_grid->set_crib_length(crib_n); }
-    m_enigma->set_ring_setting(m_setting.starting_ring_setting);
-    m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
         // cin.get();
+        print_progress(rs, ring_settings, (int)solutions.size());
+        m_configuration_grid->print_on_next= true;
+        cout << "\n";
         // print_progress(rs, ring_settings, (int)solutions.size());
         init_enigma_encryptions(crib_n, rotor_positions, positions);
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
-            print_progress(rs, ring_settings, (int)solutions.size());
-            cout << " RP:" << m_enigma->get_rotor_position_as_string();
-            cin.get();
+
+            // cout << " RP:" << m_enigma->get_rotor_position_as_string();
+            // cin.get();
             // vector_from_array_inplace(rotor_position_at_start_of_crib, , m_rotor_count);
             // cout << "   RP:" << m_enigma->get_rotor_position_as_string() << "\n";
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
@@ -274,7 +277,7 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                 (m_use_configuration_grid &&
                  !m_configuration_grid->get_checked(
                      m_enigma->get_ring_setting(),
-                     vector_from_string(rotor_positions[positions.size() - crib_n - 1])))) {
+                     vector_from_string(rotor_positions[rotor_positions.size() - crib_n - 1])))) {
                 reset_diagonal_board();
                 setup_diagonal_board(ciphertext, crib);
                 // BEGIN TESTS
@@ -295,9 +298,8 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                     }
                 }
                 if (m_use_configuration_grid) {
-                    m_configuration_grid->set_checked(m_enigma->get_ring_setting(),
-                                                      positions.begin() + positions.size() -
-                                                          crib.length() - 1);
+                    m_configuration_grid->set_checked(positions.begin() + positions.size() -
+                                                      crib.length() - 1);
                 }
             }
 
@@ -771,8 +773,7 @@ const std::string gc("\033[1;30m");
 const std::string bgc("\033[0;40m");
 const std::string bgr("\033[0;40m");
 
-void ConfigurationGrid::set_checked(const int *                           ring_setting,
-                                    vector<vector<shint>>::const_iterator positions_original) {
+void ConfigurationGrid::set_checked(vector<vector<shint>>::const_iterator positions_original) {
     // translate to index
     // cout << "CONF::set_checked:    get rs, rp ";
     // int rs= ring_setting_array_to_int(ring_setting);
@@ -784,26 +785,29 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
     cin.get();*/
     // int    rp= rotor_position_array_to_int(rotor_position);
     // get position and all subsequent
-    /*for (int i= 0; i < m_rotor_count; ++i) {
-        for (int p= 0; p < m_crib_length;
-             ++p) {   // offset from start                           // index of rotor_position
-            printf("%2d ", positions_original[p][i]);
+    if (print_on_next) {
+        for (int i= 0; i < m_rotor_count; ++i) {
+            for (int p= 0; p < m_crib_length;
+                 ++p) {   // offset from start                           // index of rotor_position
+                printf("%2d ", positions_original[p][i]);
+            }
+            cout << "\n";
         }
         cout << "\n";
+        print_on_next= false;
     }
-    cout << "\n";*/
+    /*
+        for (int i= 0; i < m_rotor_count; ++i) {
+            for (int p= 0; p < m_crib_length; ++p) {
+                cout << gc;
+                printf("%2d ", positions_original[p][m_rotor_count - i - 1]);
+            }
+            cout << "\n";
 
-    for (int i= 0; i < m_rotor_count; ++i) {
-        for (int p= 0; p < m_crib_length; ++p) {
-            cout << gc;
-            printf("%2d ", positions_original[p][m_rotor_count - i - 1]);
+            // if (!equal) break;
         }
-        cout << "\n";
-
-        // if (!equal) break;
-    }
-    cout << rc;
-    cout << "\n";
+        cout << rc;
+        cout << "\n";*/
     //        /*int position_p_i= (m_all_rotor_positions[(rp + p) %
     //        m_all_rotor_positions.size()][i]
     //        -
@@ -831,16 +835,16 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
                                       m_letters);
         }
         rss= vector_to_int_hash(current_ring_setting);
-        cout << "rotor pos: ";
-        for (int i= 0; i < m_rotor_count; ++i) {
-            cout << (char)(m_all_rotor_positions[rpp][i] + (int)'A');
-        }
-        cout << "\n";
-        cout << "ring set: ";
-        for (int i= 0; i < m_rotor_count; ++i) {
+        // cout << "rotor pos: ";
+        // for (int i= 0; i < m_rotor_count; ++i) {
+        //    cout << (char)(m_all_rotor_positions[rpp][i] + (int)'A');
+        //}
+        // cout << "\n";
+        // cout << "ring set: ";
+        /*for (int i= 0; i < m_rotor_count; ++i) {
             cout << (char)(current_ring_setting[i] + (int)'A');
         }
-        cin.get();
+        cout << "(" << rss << ") ";*/
         if (!m_checked[rss * m_all_rotor_positions.size() + rpp]) {   // if not checked
             // now we can search from rss, rpp, along rpp axis and compare to original
             // p=0 isalready good
@@ -848,7 +852,7 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
 
             for (int i= 0; i < m_rotor_count; ++i) {
                 for (int p= 0; p < m_crib_length; ++p) {
-                    cout << gc;
+                    // cout << gc;
                     int position_p_i=
                         (m_all_rotor_positions[(rpp + p) % m_all_rotor_positions.size()][i] -
                          current_ring_setting[i] + m_letters) %
@@ -856,16 +860,16 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
 
                     if (position_p_i != positions_original[p][m_rotor_count - i - 1]) {
                         equal= false;
-                        // break;
+                        break;
                         cout << wc;
                     }
-                    printf("%2d ", position_p_i);
+                    // printf("%2d ", position_p_i);
                 }
-                cout << "\n";
+                // cout << "\n";
 
-                // if (!equal) break;
+                if (!equal) break;
             }
-            cout << "\n" << rc;
+            // cout << "\n" << rc;
             if (equal) {
                 if (m_checked[rss * m_all_rotor_positions.size() + rpp]) {
                     cout << "WARNING: checked[" << rss << "," << rpp
@@ -880,7 +884,7 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
     }
     // cout << "-";
     m_checked_configurations+= set_count;
-    cout << "set " << set_count << flush << "\n";
+    // cout << "set " << set_count << flush << "\n";
     return;
 }
 
