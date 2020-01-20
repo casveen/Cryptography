@@ -819,9 +819,8 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
                                       m_letters);
         }
         rss= vector_to_int_hash(current_ring_setting);
-        // cout << "rss: " << rss << "\n";
-        //    cout << "rotor pos: ";
-        /*for (int i= 0; i < m_rotor_count; ++i) {
+        cout << "rotor pos: ";
+        for (int i= 0; i < m_rotor_count; ++i) {
             cout << (char)(m_all_rotor_positions[rpp][i] + (int)'A');
         }
         cout << "\n";
@@ -829,28 +828,32 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
         for (int i= 0; i < m_rotor_count; ++i) {
             cout << (char)(current_ring_setting[i] + (int)'A');
         }
-        cin.get();*/
+        cin.get();
         if (!m_checked[rss * m_all_rotor_positions.size() + rpp]) {   // if not checked
             // now we can search from rss, rpp, along rpp axis and compare to original
             // p=0 isalready good
             bool equal= true;
-            for (int p= m_crib_length - 1; p > 0; --p) {
-                for (int i= 0; i < m_rotor_count; ++i) {
-                    // cout << wc;
+
+            for (int i= 0; i < m_rotor_count; ++i) {
+                for (int p= m_crib_length - 1; p > 0; --p) {
+                    cout << wc;
                     int position_p_i=
                         (m_all_rotor_positions[(rpp + p) % m_all_rotor_positions.size()][i] -
                          current_ring_setting[i] + m_letters) %
                         m_letters;
-                    // printf("%2d ", position_p_i);
+
                     if (position_p_i != positions_original[p][m_rotor_count - i - 1]) {
                         equal= false;
-                        break;
+                        // break;
+                        cout << gc;
                     }
+                    printf("%2d ", position_p_i);
                 }
-                // cout << "\n";
+                cout << "\n";
 
-                if (!equal) break;
+                // if (!equal) break;
             }
+            cout << "\n" << rc;
             if (equal) {
                 if (m_checked[rss * m_all_rotor_positions.size() + rpp]) {
                     cout << "WARNING: checked[" << rss << "," << rpp
