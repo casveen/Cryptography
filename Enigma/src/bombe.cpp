@@ -13,6 +13,19 @@ void update_performance(double &mean, double &var, std::chrono::duration<double>
     var          = (records * var + (t - mean_p) * (t - mean)) / (records + 1);
     records++;
 }
+void vector_from_array_inplace(vector<shint> &vec, const int *array, int length) {
+    for (int i= 0; i < length; ++i) { vec[i]= (shint)array[i]; }
+}
+vector<shint> vector_from_array(const int *array, int length) {
+    vector<shint> vec;
+    for (int i= 0; i < length; ++i) { vec.push_back((shint)array[i]); }
+    return vec;
+}
+vector<shint> vector_from_string(const string &str) {
+    vector<shint> vec;
+    for (int i= 0; i < str.length(); ++i) { vec.push_back((shint)((shint)str[i] - (shint)'A')); }
+    return vec;
+}
 
 Wire::~Wire() {
     // do not deallocate aythng, handled by diag board
@@ -204,16 +217,19 @@ struct BombeUnitSetting &BombeUnit::get_setting() {
 string BombeUnit::get_identifier() const { return m_identifier; }
 // other
 
-void BombeUnit::init_enigma_encryptions(int encryptions, vector<string> &positions) {
+void BombeUnit::init_enigma_encryptions(int encryptions, vector<string> &rotor_positions,
+                                        vector<vector<shint>> &positions) {
     for (int *encryption : m_enigma_encryptions) { delete[] encryption; }
     m_enigma_encryptions.clear();
+    rotor_positions.clear();
+    rotor_positions.push_back(m_enigma->get_rotor_position_as_string());
     positions.clear();
-    positions.push_back(m_enigma->get_rotor_position_as_string());
+    positions.push_back(vector_from_array(m_enigma->get_positions(), m_rotor_count));
     for (int i= 0; i < encryptions; ++i) {
-
         m_enigma->turn();   // enigma turns before encryption
         m_enigma_encryptions.push_back(m_enigma->get_encryption());
-        positions.push_back(m_enigma->get_rotor_position_as_string());
+        rotor_positions.push_back(m_enigma->get_rotor_position_as_string());
+        positions.push_back(vector_from_array(m_enigma->get_positions(), m_rotor_count));
     }
 }
 void BombeUnit::reset_diagonal_board() { m_diagonal_board->reset(); }
@@ -233,28 +249,30 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
         ring_settings     = min((int)pow(m_letters, m_rotor_count), m_setting.max_ring_settings);
     // cout << "Enigma starting from " << m_enigma->get_rotor_position_as_string() << "\n";
 
-    vector<string> rotor_positions;
+    vector<string>        rotor_positions;
+    vector<vector<shint>> positions;
     if (m_use_configuration_grid) { m_configuration_grid->set_crib_length(crib_n); }
     m_enigma->set_ring_setting(m_setting.starting_ring_setting);
     m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
-        // print_progress(rs, ring_settings, (int)solutions.size());
-
-        init_enigma_encryptions(crib_n, rotor_positions);
+        cin.get();
+        print_progress(rs, ring_settings, (int)solutions.size());
+        init_enigma_encryptions(crib_n, rotor_positions, positions);
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
 
-            // cout << "\nRP:" << m_enigma->get_rotor_position_as_string();
+            // vector_from_array_inplace(rotor_position_at_start_of_crib, , m_rotor_count);
+            // cout << "   RP:" << m_enigma->get_rotor_position_as_string() << "\n";
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
             // cout << flush;
             if (!m_use_configuration_grid ||
                 (m_use_configuration_grid &&
                  !m_configuration_grid->get_checked(
-                     m_enigma->get_ring_setting_as_string(),
-                     rotor_positions[rotor_positions.size() - crib.length() - 1]))) {
+                     m_enigma->get_ring_setting(),
+                     vector_from_string(rotor_positions[positions.size() - crib_n - 1])))) {
                 reset_diagonal_board();
                 setup_diagonal_board(ciphertext, crib);
                 // BEGIN TESTS
@@ -275,9 +293,9 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
                     }
                 }
                 if (m_use_configuration_grid) {
-                    m_configuration_grid->set_checked(
-                        m_enigma->get_ring_setting_as_string(),
-                        rotor_positions[rotor_positions.size() - crib.length() - 1]);
+                    m_configuration_grid->set_checked(m_enigma->get_ring_setting(),
+                                                      positions.begin() + positions.size() -
+                                                          crib.length() - 1);
                 }
             }
 
@@ -290,8 +308,10 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
             m_enigma_encryptions.push_back(encryption);
             if ((int)rotor_positions.size() > crib_n + position) {
                 rotor_positions.erase(rotor_positions.begin());
+                positions.erase(positions.begin());
             }
             rotor_positions.push_back(m_enigma->get_rotor_position_as_string());
+            positions.push_back(vector_from_array(m_enigma->get_positions(), m_rotor_count));
         }   // for rotor position
 
         // do the same for special rotor positions
@@ -728,11 +748,13 @@ void ConfigurationGrid::reset_checked() {
     }
 }
 
-bool ConfigurationGrid::get_checked(const string &ring_setting, const string &rotor_position) {
+bool ConfigurationGrid::get_checked(const int *ring_setting, const vector<int> &rotor_position) {
     // translate to index
     // cout << "get" << flush;
-    int rs= ring_setting_string_to_int(ring_setting),
-        rp= rotor_position_string_to_int(rotor_position);
+    // int rs= ring_setting_string_to_int(ring_setting),
+    //    rp= rotor_position_string_to_int(rotor_position);
+    int rs= ring_setting_array_to_int(ring_setting),
+        rp= rotor_position_vector_to_int(rotor_position);
     /*cout << "\ntrying to get [" << rs << "," << rp << "]=["
          << rs * m_all_rotor_positions.size() + rp << "], size=" << m_checked.size() << "\n"
          << flush;*/
@@ -747,49 +769,84 @@ const std::string gc("\033[1;30m");
 const std::string bgc("\033[0;40m");
 const std::string bgr("\033[0;40m");
 
-void ConfigurationGrid::set_checked(const string &ring_setting, const string &rotor_position) {
+void ConfigurationGrid::set_checked(const int *                           ring_setting,
+                                    vector<vector<shint>>::const_iterator positions_original) {
     // translate to index
     // cout << "CONF::set_checked:    get rs, rp ";
-    int rs= ring_setting_string_to_int(ring_setting),
-        rp= rotor_position_string_to_int(rotor_position);
-    // get position and all subsequent
-    for (int p= 0; p < m_crib_length; ++p) {       // offset from start
-        for (int i= 0; i < m_rotor_count; ++i) {   // index of rotor_position
-            int position_p_i= (m_all_rotor_positions[(rp + p) % m_all_rotor_positions.size()][i] -
-                               ((int)ring_setting[i] - (int)'A') + m_letters) %
-                              m_letters;
-            positions_original[p][i]= position_p_i;
-        }
+    // int rs= ring_setting_array_to_int(ring_setting);
+    /*cout << "computing rotor pos ";
+    for (int i= 0; i < m_rotor_count; ++i) {
+        cout << (char)((positions_original[0][i] - ring_setting[i] + m_letters) % m_letters +
+                       (int)'A');
     }
+    cin.get();*/
+    // int    rp= rotor_position_array_to_int(rotor_position);
+    // get position and all subsequent
+    /*for (int i= 0; i < m_rotor_count; ++i) {
+        for (int p= 0; p < m_crib_length;
+             ++p) {   // offset from start                           // index of rotor_position
+            printf("%2d ", positions_original[p][i]);
+        }
+        cout << "\n";
+    }
+    cout << "\n";*/
+    //        /*int position_p_i= (m_all_rotor_positions[(rp + p) %
+    //        m_all_rotor_positions.size()][i]
+    //        -
+    //                           ring_setting[i] + m_letters) %
+    //                          m_letters;*/
+    //        int position_p_i= (m_all_rotor_positions[(rp + p) %
+    //        m_all_rotor_positions.size()][i] -
+    //                           ring_setting[i] + m_letters) %
+    //                          m_letters;
+    //        positions_original[p][i]= position_p_i;
+    //    }
+    //}
     // get equivalents, one candidae per rotor position.
     // cout << "-";
     int set_count= 0;
+    int rss      = 0;
     for (unsigned int rpp= 0; rpp < m_all_rotor_positions.size(); ++rpp) {
 
         // vector<shint> position;
         // find the ring setting corresponding to this rotor position(rs so that
         // rp-rs=r_original[0])
         for (int i= 0; i < m_rotor_count; ++i) {
-            current_ring_setting[i]=
-                ((m_all_rotor_positions[rpp][i] - positions_original[0][i] + m_letters) %
-                 m_letters);
+            current_ring_setting[i]= ((m_all_rotor_positions[rpp][i] -
+                                       positions_original[0][m_rotor_count - i - 1] + m_letters) %
+                                      m_letters);
         }
-        int rss= vector_to_int_hash(current_ring_setting);
+        rss= vector_to_int_hash(current_ring_setting);
+        // cout << "rss: " << rss << "\n";
+        //    cout << "rotor pos: ";
+        /*for (int i= 0; i < m_rotor_count; ++i) {
+            cout << (char)(m_all_rotor_positions[rpp][i] + (int)'A');
+        }
+        cout << "\n";
+        cout << "ring set: ";
+        for (int i= 0; i < m_rotor_count; ++i) {
+            cout << (char)(current_ring_setting[i] + (int)'A');
+        }
+        cin.get();*/
         if (!m_checked[rss * m_all_rotor_positions.size() + rpp]) {   // if not checked
             // now we can search from rss, rpp, along rpp axis and compare to original
             // p=0 isalready good
             bool equal= true;
             for (int p= m_crib_length - 1; p > 0; --p) {
                 for (int i= 0; i < m_rotor_count; ++i) {
+                    // cout << wc;
                     int position_p_i=
                         (m_all_rotor_positions[(rpp + p) % m_all_rotor_positions.size()][i] -
                          current_ring_setting[i] + m_letters) %
                         m_letters;
-                    if (position_p_i != positions_original[p][i]) {
+                    // printf("%2d ", position_p_i);
+                    if (position_p_i != positions_original[p][m_rotor_count - i - 1]) {
                         equal= false;
                         break;
                     }
                 }
+                // cout << "\n";
+
                 if (!equal) break;
             }
             if (equal) {
@@ -800,6 +857,8 @@ void ConfigurationGrid::set_checked(const string &ring_setting, const string &ro
                 m_checked[rss * m_all_rotor_positions.size() + rpp]= true;
                 set_count++;
             }
+            // cout << "\n" << rc;
+            // cin.get();
         }
     }
     // cout << "-";
@@ -819,21 +878,41 @@ void ConfigurationGrid::set_crib_length(int crib_length) {
 
 long int ConfigurationGrid::get_total_configurations() const { return m_total_configurations; }
 long int ConfigurationGrid::get_checked_configurations() const { return m_checked_configurations; }
-
 unsigned int ConfigurationGrid::rotor_position_string_to_int(const string &rotor_position) {
     // a injective mapping from ring setting strings to int. Essentially a hash
     // must map correctly to m_all_rotor_positions
-    // that is, m_all_rotor_positions[rotor_position_string_to_int[rotor_position]]=rotor_position
-    // here we use the array m_all_rotor_positions_inverse, but first we have make an index from the
-    // string, to look up in the inverse array
+    // that is,
+    // m_all_rotor_positions[rotor_position_string_to_int[rotor_position]]=rotor_position
+    // here we use the array m_all_rotor_positions_inverse, but first we have make an index
+    // from the string, to look up in the inverse array
     return m_all_rotor_positions_inverse[string_to_int_hash(rotor_position)];
 }
-
+unsigned int ConfigurationGrid::ring_setting_array_to_int(const int *ring_setting) {
+    // a injective mapping from ring setting strings to int. Essentially a hash
+    return array_to_int_hash(ring_setting);
+}
+unsigned int ConfigurationGrid::rotor_position_array_to_int(const int *rotor_position) {
+    // a injective mapping from ring setting strings to int. Essentially a hash
+    // must map correctly to m_all_rotor_positions
+    // that is,
+    // m_all_rotor_positions[rotor_position_string_to_int[rotor_position]]=rotor_position
+    // here we use the array m_all_rotor_positions_inverse, but first we have make an index
+    // from the string, to look up in the inverse array
+    return m_all_rotor_positions_inverse[array_to_int_hash(rotor_position)];
+}
+unsigned int ConfigurationGrid::rotor_position_vector_to_int(const vector<int> &rotor_position) {
+    // a injective mapping from ring setting strings to int. Essentially a hash
+    // must map correctly to m_all_rotor_positions
+    // that is,
+    // m_all_rotor_positions[rotor_position_string_to_int[rotor_position]]=rotor_position
+    // here we use the array m_all_rotor_positions_inverse, but first we have make an index
+    // from the string, to look up in the inverse array
+    return m_all_rotor_positions_inverse[vector_to_int_hash(rotor_position)];
+}
 unsigned int ConfigurationGrid::ring_setting_string_to_int(const string &ring_setting) {
     // a injective mapping from ring setting strings to int. Essentially a hash
     return string_to_int_hash(ring_setting);
 }
-
 unsigned int ConfigurationGrid::string_to_int_hash(const string &str) {
     unsigned int as_int= 0;
     for (int i= m_rotor_count - 1; i >= 0; --i) {   // TODO reverse iterator
@@ -842,7 +921,6 @@ unsigned int ConfigurationGrid::string_to_int_hash(const string &str) {
     }
     return as_int;
 }
-
 unsigned int ConfigurationGrid::vector_to_int_hash(const vector<shint> &vec) {
     unsigned int as_int= 0;
     for (int i= m_rotor_count - 1; i >= 0; --i) {   // TODO reverse iterator
@@ -851,5 +929,11 @@ unsigned int ConfigurationGrid::vector_to_int_hash(const vector<shint> &vec) {
     }
     return as_int;
 }
-// 12634,35845
-// 12634,62740s
+unsigned int ConfigurationGrid::array_to_int_hash(const int *array) {
+    unsigned int as_int= 0;
+    for (int i= m_rotor_count - 1; i >= 0; --i) {   // TODO reverse iterator
+        as_int*= m_letters;
+        as_int+= array[i];
+    }
+    return as_int;
+}

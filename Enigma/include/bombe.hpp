@@ -78,16 +78,20 @@ class ConfigurationGrid {
 
   public:
     ConfigurationGrid(Enigma &enigma);
-    void         reset_checked();
-    bool         get_checked(const string &ring_setting, const string &rotor_position);
-    void         set_checked(const string &ring_setting, const string &rotor_position);
-    void         set_crib_length(int);
-    long int     get_total_configurations() const;
-    long int     get_checked_configurations() const;
+    void     reset_checked();
+    bool     get_checked(const int *ring_setting, const vector<int> &rotor_position);
+    void     set_checked(const int *ring_setting, vector<vector<shint>>::const_iterator position);
+    void     set_crib_length(int);
+    long int get_total_configurations() const;
+    long int get_checked_configurations() const;
     unsigned int ring_setting_string_to_int(const string &);
     unsigned int rotor_position_string_to_int(const string &);
+    unsigned int ring_setting_array_to_int(const int *);
+    unsigned int rotor_position_array_to_int(const int *);
+    unsigned int rotor_position_vector_to_int(const vector<int> &);
     unsigned int string_to_int_hash(const string &str);
     unsigned int vector_to_int_hash(const vector<shint> &);
+    unsigned int array_to_int_hash(const int *);
 };
 
 struct BombeUnitSetting {
@@ -139,8 +143,8 @@ class BombeUnit {
     string                   get_identifier() const;
     // other
 
-    void                         init_enigma_encryptions(int, vector<string> &);
-    void                         reset_diagonal_board();
+    void init_enigma_encryptions(int, vector<string> &, vector<vector<shint>> &);
+    void reset_diagonal_board();
     vector<struct EnigmaSetting> analyze(const string &, const string &, int, int);
     void                         setup_diagonal_board(const string &, const string &);
     bool                         check_one_wire(int);

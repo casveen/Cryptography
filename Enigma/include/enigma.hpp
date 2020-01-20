@@ -24,7 +24,7 @@ using namespace std;
 #include <utility>
 #include <vector>
 
-typedef char shint;
+typedef int shint;
 //#inlcude "alphabet"
 
 class Rotor {
