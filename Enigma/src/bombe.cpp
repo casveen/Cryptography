@@ -792,6 +792,18 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
         cout << "\n";
     }
     cout << "\n";*/
+
+    for (int i= 0; i < m_rotor_count; ++i) {
+        for (int p= 0; p < m_crib_length; ++p) {
+            cout << gc;
+            printf("%2d ", positions_original[p][m_rotor_count - i - 1]);
+        }
+        cout << "\n";
+
+        // if (!equal) break;
+    }
+    cout << rc;
+    cout << "\n";
     //        /*int position_p_i= (m_all_rotor_positions[(rp + p) %
     //        m_all_rotor_positions.size()][i]
     //        -
@@ -835,8 +847,8 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
             bool equal= true;
 
             for (int i= 0; i < m_rotor_count; ++i) {
-                for (int p= m_crib_length - 1; p > 0; --p) {
-                    cout << wc;
+                for (int p= 0; p < m_crib_length; ++p) {
+                    cout << gc;
                     int position_p_i=
                         (m_all_rotor_positions[(rpp + p) % m_all_rotor_positions.size()][i] -
                          current_ring_setting[i] + m_letters) %
@@ -845,7 +857,7 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
                     if (position_p_i != positions_original[p][m_rotor_count - i - 1]) {
                         equal= false;
                         // break;
-                        cout << gc;
+                        cout << wc;
                     }
                     printf("%2d ", position_p_i);
                 }
