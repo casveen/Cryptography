@@ -865,7 +865,7 @@ void ConfigurationGrid::set_checked(const int *                           ring_s
     }
     // cout << "-";
     m_checked_configurations+= set_count;
-    // cout << "set " << set_count << flush;
+    cout << "set " << set_count << flush << "\n";
     return;
 }
 
