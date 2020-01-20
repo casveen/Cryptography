@@ -257,13 +257,15 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
-        cin.get();
-        print_progress(rs, ring_settings, (int)solutions.size());
+        // cin.get();
+        // print_progress(rs, ring_settings, (int)solutions.size());
         init_enigma_encryptions(crib_n, rotor_positions, positions);
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
-
+            print_progress(rs, ring_settings, (int)solutions.size());
+            cout << " RP:" << m_enigma->get_rotor_position_as_string();
+            cin.get();
             // vector_from_array_inplace(rotor_position_at_start_of_crib, , m_rotor_count);
             // cout << "   RP:" << m_enigma->get_rotor_position_as_string() << "\n";
             //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
