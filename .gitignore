@@ -8,3 +8,4 @@ Enigma/readingmaterial/*
 *.map
 *.out.*
 Enigma/gmon.out
+Enigma/debug1

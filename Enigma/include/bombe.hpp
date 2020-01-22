@@ -73,8 +73,8 @@ class ConfigurationGrid {
     vector<bool> m_checked;
     // used in setchecked, stored here to avoid unnecessary frees and allocs
     // the m_ prefix is not used as it technically is not used as an attribute
-    vector<vector<shint>> positions_original;
-    vector<shint>         current_ring_setting;
+
+    vector<shint> current_ring_setting;
 
   public:
     bool print_on_next= true;
@@ -93,6 +93,7 @@ class ConfigurationGrid {
     unsigned int string_to_int_hash(const string &str);
     unsigned int vector_to_int_hash(const vector<shint> &);
     unsigned int array_to_int_hash(const int *);
+    unsigned int array_to_int_reverse_hash(const int *);
 };
 
 struct BombeUnitSetting {

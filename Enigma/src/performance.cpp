@@ -7,10 +7,10 @@
 int main() {
     // make up a setting and use bombe on something completely unrelated,
     // record the performance
-    Bombe bombe({I, II, VII, III}, UKWR);
+    Bombe bombe({I, II, VII, III}, UKWR, true);
     bombe.get_setting().starting_rotor_positions= "AA";
     bombe.get_setting().starting_ring_setting   = "AA";
-    bombe.get_setting().max_ring_settings       = 3;
+    bombe.get_setting().max_ring_settings       = 10;
     bombe.get_setting().rotor_count             = 2;
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;

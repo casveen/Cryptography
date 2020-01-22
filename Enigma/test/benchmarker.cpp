@@ -202,8 +202,8 @@ struct BombeSetting benchmark9() {
     // make up a setting and use bombe on something completely unrelated,
     // record the performance
     Bombe bombe({I, II, III, I}, UKWR, true);
-    bombe.get_setting().starting_rotor_positions= "AAAA";
-    bombe.get_setting().starting_ring_setting   = "AAAA";
+    bombe.get_setting().starting_rotor_positions= "AAA";
+    bombe.get_setting().starting_ring_setting   = "AAA";
     bombe.get_setting().max_ring_settings       = 26 * 26 * 26;
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;
@@ -228,8 +228,8 @@ struct BombeSetting benchmark10() {
     // make up a setting and use bombe on something completely unrelated,
     // record the performance
     Bombe bombe({VI, VII, VIII, V}, UKWR, false);
-    bombe.get_setting().starting_rotor_positions= "AAAA";
-    bombe.get_setting().starting_ring_setting   = "AAAA";
+    bombe.get_setting().starting_rotor_positions= "AAA";
+    bombe.get_setting().starting_ring_setting   = "AAA";
     bombe.get_setting().max_ring_settings       = 26 * 26 * 26;
     bombe.get_setting().only_one_candidate      = true;
     bombe.get_setting().only_one_configuration  = true;
