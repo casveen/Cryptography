@@ -639,27 +639,6 @@ void Cartridge::turn() {
         }
     }
 }
-string Cartridge::turn_string(string rotor_position) const {
-    // single turn, should be optimal
-    int  carry= 1, carry_p= 0;
-    bool in_notch= false;
-    for (int p= 0; p < m_rotor_count; p++) {
-        for (int n= 0; n < m_rotors[p]->get_notches(); n++) {
-            in_notch= ((m_positions[p] + m_ring_setting[p]) % m_wires == m_rotors[p]->get_notch(n));
-            if (in_notch) break;
-        }
-        rotor_position[p]= (char)(((rotor_position[p] - (int)'A') + carry) % m_wires + (int)'A');
-        carry_p          = carry;
-        carry            = 0;
-        if (in_notch) {
-            if (carry_p != 1 && p != m_rotor_count - 1) {
-                rotor_position[p]=
-                    (char)(((rotor_position[p] - (int)'A') + 1) % m_wires + (int)'A');
-            }
-            carry= 1;
-        }
-    }
-}
 int Cartridge::plugboard_encrypt(int i) const { return m_plugboard->encrypt(i); }
 
 int Cartridge::encrypt_without_turning(int i) const {
@@ -900,11 +879,8 @@ void Enigma::set_plugboard(const string str) { m_cartridge->set_plugboard(str); 
 void Enigma::randomize() { m_cartridge->randomize(); }
 void Enigma::reset() { m_cartridge->reset_positions(); }
 // void Enigma::turn(int turns) { m_cartridge->turn(turns); }
-void   Enigma::turn() { m_cartridge->turn(); }
-string Enigma::turn_string(string rotor_position) const {
-    return m_cartridge->turn_string(rotor_position);
-}
-int Enigma::encrypt(int m) {
+void Enigma::turn() { m_cartridge->turn(); }
+int  Enigma::encrypt(int m) {
     m_cartridge->turn();
     // cout<<"encr "<<m<<"\n";
 

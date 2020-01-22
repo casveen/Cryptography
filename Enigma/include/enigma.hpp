@@ -178,7 +178,6 @@ class Cartridge {
     void        reset_positions();
     void        reset_ring_setting();
     void        turn(int);
-    string      turn_string(string) const;
     void        turn();
     int         encrypt_without_turning(int i) const;
     vector<int> encrypt_stepwise(int) const;
@@ -298,7 +297,6 @@ class Enigma {
     // void indicator_procedure_kriegsmarine(string, string);
     // void   turn(int);
     void   turn();
-    string turn_string(string) const;
     void   reset();
     void   randomize();
     int    encrypt(int m);

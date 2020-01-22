@@ -28,7 +28,9 @@ vector<shint> vector_from_array(const int *array, int length, bool debug= false)
 }
 vector<shint> vector_from_string(const string &str) {
     vector<shint> vec;
-    for (int i= 0; i < str.length(); ++i) { vec.push_back((shint)((shint)str[i] - (shint)'A')); }
+    for (unsigned int i= 0; i < str.length(); ++i) {
+        vec.push_back((shint)((shint)str[i] - (shint)'A'));
+    }
     return vec;
 }
 
@@ -534,7 +536,7 @@ vector<struct EnigmaSetting> Bombe::analyze_unit(const string & ciphertext_subst
     m_setting.performance_ring_setting_mean= unit.get_setting().performance_ring_setting_mean;
     m_setting.performance_ring_setting_var = unit.get_setting().performance_ring_setting_var;
     m_setting.records_ring_setting         = unit.get_setting().records_ring_setting;
-    int tid                                = omp_get_thread_num();
+    // int tid                                = omp_get_thread_num();
     /*cout << "\n"
          << "thread " << tid << " finished " << unit.get_identifier() << " found "
          << solutions.size() << " solutions"
