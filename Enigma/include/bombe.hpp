@@ -57,11 +57,12 @@ class ConfigurationGrid {
     of checks done at the cost of a lot of bookkeeping. This class is probably the source of the
     largest meemory footprint in the program.*/
   private:
-    int      m_letters;
-    int      m_rotor_count;
-    int      m_crib_length           = -1;
-    long int m_total_configurations  = 0;
-    long int m_checked_configurations= 0;
+    int          m_letters;
+    int          m_rotor_count;
+    int          m_crib_length              = -1;
+    long int     m_total_configurations     = 0;
+    long int     m_checked_configurations   = 0;
+    unsigned int m_rotor_configuration_count= 0;
     // vector of rotor positions, element i corresponds to column i of grid
     vector<vector<shint>> m_all_rotor_positions;
     // satisfies
