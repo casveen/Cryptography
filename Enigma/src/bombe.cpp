@@ -224,7 +224,7 @@ string BombeUnit::get_identifier() const { return m_identifier; }
 
 void BombeUnit::init_enigma_encryptions(int encryptions, vector<string> &rotor_positions,
                                         vector<vector<shint>> &positions) {
-    // m_enigma->set_ring_setting(m_setting.starting_ring_setting);
+    m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
     for (int *encryption : m_enigma_encryptions) { delete[] encryption; }
     m_enigma_encryptions.clear();
     rotor_positions.clear();
@@ -250,15 +250,13 @@ void BombeUnit::setup_diagonal_board(const string &ciphertext, const string &cri
 vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const string &crib,
                                                 int most_wired_letter, int position) {
     vector<struct EnigmaSetting> solutions;
-    int total_permutations= m_enigma->compute_total_permutations_brute_force(),
-        crib_n            = crib.length(),   // ciphertext_n= ciphertext.length();
+    int                          crib_n= crib.length(),
+        total_permutations= m_enigma->compute_total_permutations_brute_force() + crib_n - 1,
         ring_settings     = min((int)pow(m_letters, m_rotor_count), m_setting.max_ring_settings);
     if (m_use_configuration_grid) {
         ring_settings/= m_letters;   // ignore slowest rotor TODO make use of in CG, to alloc less
     }
     ring_settings+= 1;   // maybe only if using CG
-    // cout << "Enigma starting from " << m_enigma->get_rotor_position_as_string() << "\n";
-
     vector<string>        rotor_positions;
     vector<vector<shint>> positions;
     m_enigma->set_ring_setting(m_setting.starting_ring_setting);
@@ -266,35 +264,11 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     // for each ring setting
     auto start_ring_setting= std::chrono::system_clock::now();
     for (int rs= 0; rs < ring_settings; ++rs) {
-        // cin.get();
         print_progress(rs, ring_settings, (int)solutions.size());
-        // m_configuration_grid->print_on_next= true;
-
-        // cout << "P  " << m_enigma->get_positions_as_string() << "\n";
-        // print_progress(rs, ring_settings, (int)solutions.size());
-        m_enigma->set_rotor_position(m_setting.starting_rotor_positions);
-        // cout << "RSp " << m_enigma->get_ring_setting_as_string() << "\n";
-        // cout << "RPp " << m_enigma->get_rotor_position_as_string() << "\n";
-        // cout << "Pp  ";
-        // for (int i= 0; i < m_rotor_count; ++i) { cout << m_enigma->get_positions()[i] << "-"; }
-        // cout << "\n";
         init_enigma_encryptions(crib_n, rotor_positions, positions);
-        // cout << "\n";
-        // cout << "RS " << m_enigma->get_ring_setting_as_string() << "\n";
-        // cout << "RP " << m_enigma->get_rotor_position_as_string() << "\n";
-        // cout << "P  ";
-        // for (int i= 0; i < m_rotor_count; ++i) { cout << m_enigma->get_positions()[i] << "-"; }
-        // cout << "\n";
         if (m_setting.time_performance) { start_ring_setting= std::chrono::system_clock::now(); }
         // for each rotor position
         for (int j= 0; j < total_permutations - 1; j++) {
-
-            // cout << " RP:" << m_enigma->get_rotor_position_as_string();
-            // cin.get();
-            // vector_from_array_inplace(rotor_position_at_start_of_crib, , m_rotor_count);
-            // cout << "   RP:" << m_enigma->get_rotor_position_as_string() << "\n";
-            //     << "  letters:" << m_letters << "   perms:" << total_permutations << "\n";
-            // cout << flush;
             if (!m_use_configuration_grid ||
                 (m_use_configuration_grid &&
                  !m_configuration_grid->get_checked(
@@ -352,48 +326,10 @@ vector<struct EnigmaSetting> BombeUnit::analyze(const string &ciphertext, const 
     cout << "                                                                                      "
             "      \r";
     if (m_setting.time_performance && m_verbose) { print_performance(); }
-    // cout << "done";
+    if (m_use_configuration_grid) { m_configuration_grid->find_unchecked(); }
     return solutions;
 }
 
-/*
-bool BombeUnit::doublecheck_and_get_plugboard() {
-    //bool false_stop= false;
-    // we have a valid configuration od the enigma, no we have to double check
-    // that there are no other contradictions
-    // there are a lot of double-checks here, but valid configurations are rare
-    // and this double-check is insignificant compared to the analysis.
-    Plugboard *plugboard= m_enigma->get_cartridge()->get_plugboard();
-    for (int bundle= 0; bundle < m_letters; ++bundle) {
-        for (int wire= 0; wire < m_letters; ++wire) {
-            m_diagonal_board->wipe();
-            m_diagonal_board->activate(bundle, wire);
-            // cout << "sum at bundle=" << bundle << ":"
-            //     << m_diagonal_board->bundle_sum(bundle) << "\n";
-            if (m_diagonal_board->bundle_sum(bundle) == 1) {   // exact hit
-                // cout << "EXACT HIT\n";
-                // also if exact hit, there is only one live wire per bundle
-                for (int bundle_2= 0; bundle_2 < m_letters; ++bundle_2) {
-                     //cout << "sum at bunde_2=" << (char) (bundle_2+(int)'A')
-<< ":"
-                    //      << m_diagonal_board->bundle_sum(bundle_2) << "\n";
-                    if (m_diagonal_board->bundle_sum(bundle_2) > 1) {
-                        // cout<<"FCUK\n";
-                        plugboard->reset();
-                        return false;   // a contradiciton; this was a false
-                                        // stop
-                    }
-                }
-
-                cout << (char) (bundle +(int)'A') << " is steckered to " <<
-(char) (wire +(int)'A') << "\n"; plugboard->set_wiring(bundle, wire);   // other
-way by symmetry
-            }
-        }
-    }
-    return true;
-}
-*/
 bool BombeUnit::bundle_contradiction(int bundle) {
     return m_diagonal_board->bundle_contradiction(bundle);
 }
@@ -418,7 +354,6 @@ bool BombeUnit::doublecheck_and_get_plugboard() {
         m_diagonal_board->print_connections();
         cin.get();
     }
-
     for (int bundle= 0; bundle < m_letters; ++bundle) {
         int sum= m_diagonal_board->bundle_sum(bundle);
         if (sum == 1) {   // steckered is live
@@ -447,7 +382,6 @@ bool BombeUnit::doublecheck_and_get_plugboard() {
                 }
             }
         } else {   // undeterminable... try some more! TODO
-            // cout << bundle << "OH NO!\n";
         }
     }
     return true;
@@ -457,12 +391,7 @@ bool BombeUnit::tripplecheck(const string &crib, const string &ciphertext, int c
     // test if the given configuration encrypts the crib to plaintext
     // turn back
     m_enigma->set_rotor_position(rotor_positions[rotor_positions.size() - crib.length() - 1]);
-    /*cout << "enigma recrypting " << ciphertext << " with RS "
-         << m_enigma->get_ring_setting_as_string() << ", RP "
-         << m_enigma->get_rotor_position_as_string() << " PLUGBOARD";
-    m_enigma->get_cartridge()->get_plugboard()->print();*/
     string recrypt= m_enigma->encrypt(ciphertext);
-    // cout << "(" << recrypt << ")";
     if (m_setting.interactive_wiring_mode) { interactive_wirechecking(); }
     return (recrypt == crib);
 }
@@ -601,8 +530,6 @@ vector<struct EnigmaSetting> Bombe::analyze_unit(const string & ciphertext_subst
         // std::chrono::duration<double> measurement= (stop_unit_run - start_unit_run);
         // cout << " unit run: " << measurement.count();
     }
-
-    // solutions.insert(solutions.end(), solutions_unit.begin(), solutions_unit.end());
     // update perofrmance timing
     m_setting.performance_ring_setting_mean= unit.get_setting().performance_ring_setting_mean;
     m_setting.performance_ring_setting_var = unit.get_setting().performance_ring_setting_var;
@@ -615,7 +542,7 @@ vector<struct EnigmaSetting> Bombe::analyze_unit(const string & ciphertext_subst
     return solutions;
 }
 int Bombe::find_most_wired_letter(const string &ciphertext, const string &crib) {
-    // make histogram, find most frequent element
+    // make histogram of both crib and cipher letters, find most frequent element
     int *histogram= new int[m_letters];
     for (int i= 0; i < m_letters; ++i) { histogram[i]= 0; }
     for (unsigned int i= 0; i < min(ciphertext.length(), crib.length()); ++i) {
@@ -632,13 +559,6 @@ int Bombe::find_most_wired_letter(const string &ciphertext, const string &crib) 
     delete[] histogram;
     return max_index;
 }
-/*Bombe::Bombe(struct EnigmaSetting enigma_setting) {
-    m_unit_setting= enigma_setting;   // XXX shallow copy might not be appropriate
-}*/
-
-/*vector<vector<Rotor>> Bombe::get_rotor_configurations(vector<Rotor> in) {
-    return choices_of<Rotor>(m_rotors);
-}*/
 
 vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const string &crib) {
     vector<struct EnigmaSetting> solutions;
@@ -652,7 +572,7 @@ vector<struct EnigmaSetting> Bombe::analyze(const string &ciphertext, const stri
     }
 
     // spawn units that analyze. For each candidate, for each configuration of rotors
-    // unsaefe!!!
+    // TODO thread unsaefe!!!
     vector<Rotor> rotor_configuration;
     unsigned int  i, j, k;
     //#pragma omp parallel for collapse(3) private(rotor_configuration, i, j, k)
@@ -692,36 +612,11 @@ string Bombe::preprocess(string in) const {
     return in;
 }
 
-// void BombeUnit::get_equivalent_settings(vector<int> position) {
-// posiiton: physical position of rotors, ie rotor_position-ring_setting
-
 /*If a message of length m is encrypted with a particular ring setting and rotor posiiton,
 then encrypting the same message with rotor position turned one step forward and ring setting
 one step "backward"(compensating for turn of rotor) should give the exact same message unless
 there was a notch turnover when encrypting. That is, there are a lot of settings of the enigma
 that would encrypt to the exact same message.*/
-
-/*
-The algorithm;
-initially all configurations where rotor and ring setting gives the same position are candidates
-from here we have to eliminate the rest. This is done by turning the enigma, and checking if the
-position is the same as for the original when turned
-*/
-
-// for each rotorp position, there is exactly one ring setting that gives the sa,,e position as
-// the original posiiton
-/*string ring_setting;
-for (vector<shint> rotor_position : m_all_rotor_positions) {
-    // there is exactly one ring setting so that position is the origianl position
-    ring_setting= "";
-    for (int i= 0; i < position.size(); ++i) {
-        ring_setting+=
-            (char)((rotor_position[i] - position[i] + m_letters) % m_letters + (int)'A');
-    }
-    // now test if it holds
-}
-}*/
-
 ConfigurationGrid::ConfigurationGrid(Enigma &enigma) {
     m_letters                  = enigma.get_wires();
     m_rotor_count              = enigma.get_rotors();
@@ -772,25 +667,9 @@ void ConfigurationGrid::reset_checked() {
 
 bool ConfigurationGrid::get_checked(const int *ring_setting, const vector<int> &rotor_position) {
     // translate to index
-    // cout << "getting " << flush;
-    // int rs= ring_setting_string_to_int(ring_setting),
-    //    rp= rotor_position_string_to_int(rotor_position);
-    int rs= ring_setting_array_to_int(ring_setting),
-        rp= rotor_position_vector_to_int(rotor_position);
-    /*cout << "getting [" << rs << "," << rp << "]=[" << rs * m_all_rotor_positions.size() + rp
-         << "], RP=";
-    for (int i= 0; i < m_rotor_count; ++i) { cout << (char)(rotor_position[i] + (int)'A'); }
-    cout << " RP_frominverse=";
-    for (int i= 0; i < m_rotor_count; ++i) {
-        cout << (char)(m_all_rotor_positions[m_all_rotor_positions_inverse[rp]][i] + (int)'A');
-    }
-    cout << " RP_fromall=";
-    for (int i= 0; i < m_rotor_count; ++i) {
-        cout << (char)(m_all_rotor_positions[rp][i] + (int)'A');
-    }
-    cout << "\n";*/
+    int rs  = ring_setting_array_to_int(ring_setting),
+        rp  = rotor_position_vector_to_int(rotor_position);
     bool out= m_checked[rs * m_rotor_configuration_count + rp];
-    // cout << "got" << flush;
     return out;
 }
 
@@ -818,9 +697,11 @@ void ConfigurationGrid::set_checked(vector<vector<shint>>::const_iterator positi
         if (!m_checked[rss * m_rotor_configuration_count + rpp]) {   // if not checked
             // now we can search from rss, rpp, along rpp axis and compare to original
             // p=0 isalready good, and also the fast wheel
+            // search through all configurations starting with the same position as
+            // positions_origina return if the configuration we are looking at equals the original
             equal= [&]() {   // lambda, so as to break out of both loops quickly with return
-                for (int i= 1; i < m_rotor_count; ++i) {
-                    for (int p= 1; p < m_crib_length; ++p) {
+                for (int i= 1; i < m_rotor_count; ++i) {   // note i=1, fast rotors are always equal
+                    for (int p= 1; p < m_crib_length; ++p) {   // from p=1; first pos equal per def
                         position_p_i=
                             (m_all_rotor_positions[(rpp + p) % m_rotor_configuration_count][i] -
                              current_ring_setting[i] + m_letters) %
@@ -848,8 +729,59 @@ void ConfigurationGrid::set_crib_length(int crib_length) {
     current_ring_setting= vector<shint>(m_rotor_count, 0);
 }
 
-long int ConfigurationGrid::get_total_configurations() const { return m_total_configurations; }
-long int ConfigurationGrid::get_checked_configurations() const { return m_checked_configurations; }
+void ConfigurationGrid::find_unchecked() const {
+    // after an entire run there should not be any unchecked configurations. If Ther
+    // are any, print them and issue a warning
+    if (m_total_configurations > m_checked_configurations) {
+        int missing_counter= 0;
+        for (int rs= 0; rs < pow(m_letters, m_rotor_count); ++rs) {
+            for (unsigned int rp= 0; rp < m_rotor_configuration_count; ++rp) {
+                if (!m_checked[rs * m_rotor_configuration_count + rp]) {
+                    missing_counter++;
+                    cout << "WARNING: unchecked configuration! ";
+                    // hash to rs:
+                    cout << "[RS:";
+                    int rss= rs;
+                    for (int i= 0; i < m_rotor_count; ++i) {
+                        cout << (char)(rss % m_letters + (int)'A');
+                        rss-= rss % m_letters;
+                        rss/= m_letters;
+                    }
+                    cout << " RP:";
+                    for (int i= 0; i < m_rotor_count; ++i) {
+                        cout << (char)(m_all_rotor_positions[rp][i] + (int)'A');
+                    }
+                    cout << " P:";
+                    rss= rs;
+                    for (int i= 0; i < m_rotor_count; ++i) {
+                        cout << (m_all_rotor_positions[rp][i] - rss % m_letters + m_letters) %
+                                    m_letters;
+                        if (i < m_rotor_count - 1) { cout << "-"; }
+                        rss-= rss % m_letters;
+                        rss/= m_letters;
+                    }
+                    cout << "]\n";
+                }
+            }
+        }
+        if (missing_counter > 0) {
+            cout << "In total, missing " << m_total_configurations - m_checked_configurations
+                 << " configurations";
+        }
+    }
+    return;
+}
+
+unsigned long int ConfigurationGrid::get_total_configurations() const {
+    return m_total_configurations;
+}
+unsigned long int ConfigurationGrid::get_checked_configurations() const {
+    return m_checked_configurations;
+}
+unsigned int ConfigurationGrid::get_rotor_position_count() const {
+    return m_all_rotor_positions.size();
+}
+
 unsigned int ConfigurationGrid::rotor_position_string_to_int(const string &rotor_position) {
     // a injective mapping from ring setting strings to int. Essentially a hash
     // must map correctly to m_all_rotor_positions

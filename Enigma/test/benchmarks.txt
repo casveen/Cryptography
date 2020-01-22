@@ -72,3 +72,14 @@ four rotors small crib
 | 4 ROTOR LARGE CRIB       1.00E+01   2.36E+00        50 |
 | 4 ROTOR VERY LARGE CRIB  1.26E+01   1.06E+00        50 |
 ----------------------------------------------------------
+***************************22.01.2020********************
+From here  I rather benchmark an entire run, as methods I use from here dont
+reflect performance in the time used in searching a ring setting
+CG stands for Configuration grid.
+[####################] [exhausted 100] [I-II-III-UKWR position 1 ] RS: BAA, solutions: 0
+| 3 ROTOR W. CG: RS        1.59E+00   2.87E+01       677 |<-simple notches, much more work than double
+| 3 ROTOR W. CG: PER RUN   1.08E+03   0.00E+00         1 |
+| 3 ROTOR W/O. CG: RS      7.60E-02   3.93E-05     17576 |<- using double notches!!!
+| 3 ROTOR W/O. CG: PER RUN 1.34E+03   0.00E+00         1 |
+| 3 ROTOR W. CG: RS        1.95E-01   4.24E-02       677 |<- using double notches
+| 3 ROTOR W. CG: PER RUN   1.32E+02   0.00E+00         1 |

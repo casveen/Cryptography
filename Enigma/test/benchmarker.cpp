@@ -201,7 +201,7 @@ struct BombeSetting benchmark8() {
 struct BombeSetting benchmark9() {
     // make up a setting and use bombe on something completely unrelated,
     // record the performance
-    Bombe bombe({I, II, III, I}, UKWR, true);
+    Bombe bombe({VI, VII, VIII, V}, UKWR, true);
     bombe.get_setting().starting_rotor_positions= "AAA";
     bombe.get_setting().starting_ring_setting   = "AAA";
     bombe.get_setting().max_ring_settings       = 26 * 26 * 26;
@@ -350,6 +350,7 @@ int main() {
            setting9.records_ring_setting);
     printf("| 3 ROTOR W. CG: PER RUN   %6.2E   %6.2E   %7d |\n", setting9.performance_unit_run_mean,
            setting9.performance_unit_run_var, setting9.records_unit_run);
+    cout << "benchmark 10\n";
     struct BombeSetting setting10= benchmark10();
     printf("| 3 ROTOR W/O. CG: RS      %6.2E   %6.2E   %7d |\n",
            setting10.performance_ring_setting_mean, setting10.performance_ring_setting_var,

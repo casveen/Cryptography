@@ -80,21 +80,23 @@ class ConfigurationGrid {
   public:
     bool print_on_next= true;
     ConfigurationGrid(Enigma &enigma);
-    void         reset_checked();
-    bool         get_checked(const int *ring_setting, const vector<int> &rotor_position);
-    void         set_checked(vector<vector<shint>>::const_iterator position);
-    void         set_crib_length(int);
-    long int     get_total_configurations() const;
-    long int     get_checked_configurations() const;
-    unsigned int ring_setting_string_to_int(const string &);
-    unsigned int rotor_position_string_to_int(const string &);
-    unsigned int ring_setting_array_to_int(const int *);
-    unsigned int rotor_position_array_to_int(const int *);
-    unsigned int rotor_position_vector_to_int(const vector<int> &);
-    unsigned int string_to_int_hash(const string &str);
-    unsigned int vector_to_int_hash(const vector<shint> &);
-    unsigned int array_to_int_hash(const int *);
-    unsigned int array_to_int_reverse_hash(const int *);
+    void              reset_checked();
+    bool              get_checked(const int *ring_setting, const vector<int> &rotor_position);
+    void              set_checked(vector<vector<shint>>::const_iterator position);
+    void              set_crib_length(int);
+    unsigned long int get_total_configurations() const;
+    unsigned long int get_checked_configurations() const;
+    unsigned int      get_rotor_position_count() const;
+    void              find_unchecked() const;
+    unsigned int      ring_setting_string_to_int(const string &);
+    unsigned int      rotor_position_string_to_int(const string &);
+    unsigned int      ring_setting_array_to_int(const int *);
+    unsigned int      rotor_position_array_to_int(const int *);
+    unsigned int      rotor_position_vector_to_int(const vector<int> &);
+    unsigned int      string_to_int_hash(const string &str);
+    unsigned int      vector_to_int_hash(const vector<shint> &);
+    unsigned int      array_to_int_hash(const int *);
+    unsigned int      array_to_int_reverse_hash(const int *);
 };
 
 struct BombeUnitSetting {
