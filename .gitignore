@@ -18,3 +18,4 @@ Enigma/debug1
 *.log
 *.bcf
 *.aux
+Enigma/Cryptography/
