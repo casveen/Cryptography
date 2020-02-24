@@ -9,3 +9,12 @@ Enigma/readingmaterial/*
 *.out.*
 Enigma/gmon.out
 Enigma/debug1
+*.xlsm
+*.gz
+*.xml
+*.tex
+*.xlsx
+*.out
+*.log
+*.bcf
+*.aux
